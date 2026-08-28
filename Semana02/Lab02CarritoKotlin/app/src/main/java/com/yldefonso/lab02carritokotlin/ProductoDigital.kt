@@ -9,4 +9,8 @@ class ProductoDigital(
     override fun calcularImporte(): Double {
         return precio * cantidad
     }
+    override fun mostrarInfo(): String {
+        return String.format("%-20s x%d S/ %8.2f (descarga digital)",
+            nombre, cantidad, calcularImporte())
+    }
 }
