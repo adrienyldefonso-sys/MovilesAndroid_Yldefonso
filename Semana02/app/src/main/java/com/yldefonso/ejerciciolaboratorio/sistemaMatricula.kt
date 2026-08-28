@@ -22,7 +22,25 @@ fun leerDouble(mensaje: String): Double {
         println("Valor invalido, ingresa un numero mayor a 0.")
     }
 }
+fun determinarCargaAcademica(totalCreditos: Int): String {
+    return if (totalCreditos <= 12) {
+        "Malla regular"
+    } else if (totalCreditos in 13..18) {
+        "Carga completa"
+    } else {
+        "Requiere autorizacion"
+    }
+}
 
+fun determinarFormaPago(totalAPagar: Double): String {
+    return if (totalAPagar > 1500.0) {
+        val montoCuota = totalAPagar / 3
+        String.format("3 cuotas de S/ %.2f cada una", montoCuota)
+    } else {
+        val montoCuota = totalAPagar / 2
+        String.format("2 cuotas de S/ %.2f cada una", montoCuota)
+    }
+}
 fun main() {
     println("=========================================")
     println(" SISTEMA DE MATRICULA - TECSUP ")
@@ -39,5 +57,9 @@ fun main() {
 
     val valorCredito = leerDouble("Valor de cada credito (S/): ")
 
-    println("Datos ingresados correctamente.")
+    val totalAPagar = totalCreditos * valorCredito
+    val cargaAcademica = determinarCargaAcademica(totalCreditos)
+    val formaPago = determinarFormaPago(totalAPagar)
+
+    println("Calculos realizados correctamente.")
 }
