@@ -1,6 +1,6 @@
 package com.yldefonso.lab02carritokotlin
 
-class Software(
+class ProductoDigital(
     nombre: String,
     precio: Double,
     cantidad: Int,

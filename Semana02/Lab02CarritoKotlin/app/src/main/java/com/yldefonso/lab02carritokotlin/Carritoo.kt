@@ -1,6 +1,6 @@
 package com.yldefonso.lab02carritokotlin
 
-class TiendaCarrito {
+class Carritoo {
     private val productos = mutableListOf<Producto>()
 
     fun agregarProducto(producto: Producto) {

@@ -1,6 +1,6 @@
 package com.yldefonso.lab02carritokotlin
 
-class Accesorio(
+class ProductoFisico(
     nombre: String,
     precio: Double,
     cantidad: Int,

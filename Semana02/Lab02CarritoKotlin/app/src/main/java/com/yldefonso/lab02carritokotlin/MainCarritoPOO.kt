@@ -25,8 +25,8 @@ fun mostrarMenu() {
     println("=========================================")
     println(" CARRITO DE COMPRAS POO - TIENDA TECSUP ")
     println("=========================================")
-    println("1. Agregar Accesorio")
-    println("2. Agregar Software")
+    println("1. Agregar Producto Fisico")
+    println("2. Agregar Producto Digital")
     println("3. Buscar producto")
     println("4. Eliminar producto")
     println("5. Mostrar detalle del carrito")
@@ -36,7 +36,7 @@ fun mostrarMenu() {
 }
 
 fun main() {
-    val tienda = TiendaCarrito()
+    val carritoo = Carritoo()
     println("Bienvenido, Becker Yldefonso Solis")
 
     while (true) {
@@ -45,27 +45,27 @@ fun main() {
 
         when (opcion) {
             "1" -> {
-                print("Nombre del accesorio: ")
+                print("Nombre del producto fisico: ")
                 val nombre = readLine() ?: ""
                 val precio = leerDouble("Precio: ")
                 val cantidad = leerInt("Cantidad: ")
                 print("Tiene garantia extendida? (s/n): ")
                 val garantia = readLine()?.trim()?.lowercase() == "s"
-                tienda.agregarProducto(Accesorio(nombre, precio, cantidad, garantia))
+                carritoo.agregarProducto(ProductoFisico(nombre, precio, cantidad, garantia))
             }
             "2" -> {
-                print("Nombre del software: ")
+                print("Nombre del producto digital: ")
                 val nombre = readLine() ?: ""
                 val precio = leerDouble("Precio: ")
                 val cantidad = leerInt("Cantidad: ")
                 print("Tipo de licencia (Mensual/Anual/Perpetua): ")
                 val licencia = readLine() ?: "Mensual"
-                tienda.agregarProducto(Software(nombre, precio, cantidad, licencia))
+                carritoo.agregarProducto(ProductoDigital(nombre, precio, cantidad, licencia))
             }
             "3" -> {
                 print("Nombre del producto a buscar: ")
                 val nombre = readLine() ?: ""
-                val encontrado = tienda.buscarProducto(nombre)
+                val encontrado = carritoo.buscarProducto(nombre)
                 if (encontrado != null) {
                     println("Encontrado: ${encontrado.mostrarInfo()}")
                 } else {
@@ -75,15 +75,15 @@ fun main() {
             "4" -> {
                 print("Nombre del producto a eliminar: ")
                 val nombre = readLine() ?: ""
-                val eliminado = tienda.eliminarProducto(nombre)
+                val eliminado = carritoo.eliminarProducto(nombre)
                 if (eliminado) {
                     println("Producto '$nombre' eliminado correctamente.")
                 } else {
                     println("Producto '$nombre' no encontrado, no se elimino nada.")
                 }
             }
-            "5" -> tienda.mostrarDetalle()
-            "6" -> tienda.mostrarTotales()
+            "5" -> carritoo.mostrarDetalle()
+            "6" -> carritoo.mostrarTotales()
             "7" -> {
                 println("Gracias por usar el carrito. Hasta pronto!")
                 exitProcess(0)
@@ -91,4 +91,4 @@ fun main() {
             else -> println("Opcion invalida, intenta de nuevo.")
         }
     }
-}
+}}
