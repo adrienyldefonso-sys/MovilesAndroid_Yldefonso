@@ -61,5 +61,14 @@ fun main() {
     val cargaAcademica = determinarCargaAcademica(totalCreditos)
     val formaPago = determinarFormaPago(totalAPagar)
 
-    println("Calculos realizados correctamente.")
+    println()
+    println("=========================================")
+    println(" RESUMEN DE MATRICULA ")
+    println("=========================================")
+    println("Estudiante: $nombre")
+    println("Cursos matriculados: $cantidadCursos")
+    println("Total de creditos: $totalCreditos")
+    println(String.format("Total a pagar: S/ %.2f", totalAPagar))
+    println("Carga academica: $cargaAcademica")
+    println("Forma de pago: $formaPago")
 }
