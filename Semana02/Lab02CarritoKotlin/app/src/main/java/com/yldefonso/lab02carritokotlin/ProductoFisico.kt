@@ -1,17 +1,20 @@
 package com.yldefonso.lab02carritokotlin
 
-class ProductoFisico(
+class Accesorio(
     nombre: String,
     precio: Double,
     cantidad: Int,
-    val costoEnvio: Double
+    val tieneGarantia: Boolean
 ) : Producto(nombre, precio, cantidad) {
 
     override fun calcularImporte(): Double {
-        return (precio * cantidad) + costoEnvio
+        val recargoGarantia = if (tieneGarantia) precio * 0.05 else 0.0
+        return (precio * cantidad) + recargoGarantia
     }
+
     override fun mostrarInfo(): String {
-        return String.format("%-20s x%d S/ %8.2f (incluye envio S/ %.2f)",
-            nombre, cantidad, calcularImporte(), costoEnvio)
+        val garantiaTexto = if (tieneGarantia) "con garantia extendida" else "sin garantia"
+        return String.format("%-20s x%d S/ %8.2f (%s)",
+            nombre, cantidad, calcularImporte(), garantiaTexto)
     }
 }

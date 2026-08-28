@@ -1,6 +1,6 @@
 package com.yldefonso.lab02carritokotlin
 
-class Carritoo {
+class TiendaCarrito {
     private val productos = mutableListOf<Producto>()
 
     fun agregarProducto(producto: Producto) {
@@ -8,8 +8,12 @@ class Carritoo {
         println("Producto agregado: ${producto.nombre}")
     }
 
-    fun eliminarProducto(nombre: String) {
-        productos.removeIf { it.nombre == nombre }
+    fun eliminarProducto(nombre: String): Boolean {
+        return productos.removeIf { it.nombre.equals(nombre, ignoreCase = true) }
+    }
+
+    fun buscarProducto(nombre: String): Producto? {
+        return productos.find { it.nombre.equals(nombre, ignoreCase = true) }
     }
 
     fun obtenerCantidadProductos(): Int = productos.size
@@ -39,6 +43,10 @@ class Carritoo {
     }
 
     fun mostrarDetalle() {
+        if (productos.isEmpty()) {
+            println("El carrito esta vacio.")
+            return
+        }
         println("--------- DETALLE DEL CARRITO ---------")
         var i = 1
         for (p in productos) {
@@ -46,5 +54,31 @@ class Carritoo {
             i++
         }
         println("---------------------------------------")
+    }
+
+    fun mostrarTotales() {
+        if (productos.isEmpty()) {
+            println("El carrito esta vacio, no hay totales que calcular.")
+            return
+        }
+        val subtotal = calcularSubtotal()
+        val igv = calcularIGV(subtotal)
+        val total = calcularTotal(subtotal, igv)
+        val descuento = calcularDescuento(total)
+        val totalConDescuento = total - descuento
+
+        println(String.format("Subtotal:        S/ %8.2f", subtotal))
+        println(String.format("IGV (18%%):       S/ %8.2f", igv))
+        println(String.format("TOTAL A PAGAR:   S/ %8.2f", total))
+        if (descuento > 0) {
+            println(String.format("Descuento aplicado: S/ %.2f", descuento))
+        }
+        println(String.format("TOTAL CON DESCUENTO: S/ %8.2f", totalConDescuento))
+
+        val masCaro = productoMasCaro()
+        if (masCaro != null) {
+            println("Producto mas caro: ${masCaro.nombre} " +
+                    String.format("(S/ %.2f)", masCaro.precio))
+        }
     }
 }
