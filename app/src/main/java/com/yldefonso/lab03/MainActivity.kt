@@ -34,6 +34,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+
 @Composable
 fun PantallaRegistro(modifier: Modifier = Modifier) {
     Column(
