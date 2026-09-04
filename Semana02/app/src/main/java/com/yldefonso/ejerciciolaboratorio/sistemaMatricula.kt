@@ -1,8 +1,17 @@
 package com.yldefonso.ejerciciolaboratorio
 
+// NUEVO: leerTexto ahora valida que no se ingrese un valor vacio o solo espacios
 fun leerTexto(mensaje: String): String {
-    print(mensaje)
-    return readLine() ?: ""
+    while (true) {
+        print(mensaje)
+        val valor = readLine()?.trim()
+
+        if (!valor.isNullOrEmpty()) {
+            return valor
+        }
+
+        println("Este campo no puede estar vacio, ingresa un valor.")
+    }
 }
 
 fun leerEntero(mensaje: String): Int {
@@ -112,9 +121,7 @@ fun main() {
     println(" SISTEMA DE MATRICULA - TECSUP ")
     println("=========================================")
 
-    // NUEVO: aforo y costo de matricula ahora se ingresan por consola
     var aforoDisponible = leerEntero("Ingrese el aforo disponible: ")
-    val MONTO_MATRICULA_INSTITUCION = leerDouble("Ingrese el costo de la matricula (S/): ")
 
     if (aforoDisponible <= 0) {
         println()
@@ -161,25 +168,11 @@ fun main() {
 
         val categoria = leerCategoria("Categoria (O=Ordinario / B=Becado): ")
         var montoMatricula = 0.0
-        var seMatriculo = true
 
         if (categoria == "ORDINARIO") {
-            val pagaMatricula = leerConfirmacion("Desea pagar la matricula ahora? (S/N): ")
-
-            if (pagaMatricula) {
-                montoMatricula = MONTO_MATRICULA_INSTITUCION
-            } else {
-                println()
-                println("Debe pagar la matricula para poder realizar el proceso de matricula.")
-                seMatriculo = false
-            }
+            montoMatricula = leerDouble("Costo de la matricula (S/): ")
         } else {
             println("Matricula becada: S/ 0.00")
-        }
-
-        if (!seMatriculo) {
-            continuarMatriculando = leerConfirmacion("Desea continuar matriculando a otro estudiante? (S/N): ")
-            continue
         }
 
         val subtotalCursos = totalCreditos * valorCredito
