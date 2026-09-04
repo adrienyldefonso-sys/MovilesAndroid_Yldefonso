@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -23,7 +22,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            Lab03Theme(){
+            Lab03Theme() {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     PantallaRegistro(
                         modifier = Modifier.padding(innerPadding)
@@ -33,7 +32,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-
 
 @Composable
 fun PantallaRegistro(modifier: Modifier = Modifier) {
@@ -52,6 +50,6 @@ fun PantallaRegistro(modifier: Modifier = Modifier) {
             color = MaterialTheme.colorScheme.outline
         )
         Spacer(modifier = Modifier.height(24.dp))
-
+        // aquí irán los campos de texto
     }
 }
