@@ -25,6 +25,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.yldefonso.lab03.ui.theme.Lab03Theme
@@ -94,7 +95,6 @@ fun PantallaRegistro(modifier: Modifier = Modifier) {
             )
         }
 
-        // --- Parte 4: Botón y Card de resumen ---
         Spacer(modifier = Modifier.height(24.dp))
 
         Button(
@@ -128,6 +128,15 @@ fun PantallaRegistro(modifier: Modifier = Modifier) {
                     )
                 }
             }
+
+            // --- Parte 5: Mensaje de confirmación ---
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = "✓ Producto registrado correctamente",
+                color = Color(0xFF2E7D32),
+                style = MaterialTheme.typography.bodyMedium
+            )
         }
     }
 }
