@@ -101,14 +101,10 @@ fun leerConfirmacion(mensaje: String): Boolean {
     }
 }
 
-// ---------- NUEVO: IGV ----------
-
 fun calcularIGV(montoBase: Double): Double {
     val TASA_IGV = 0.18
     return montoBase * TASA_IGV
 }
-
-// ---------------------------------
 
 fun main() {
 
@@ -116,103 +112,139 @@ fun main() {
     println(" SISTEMA DE MATRICULA - TECSUP ")
     println("=========================================")
 
-    val MONTO_MATRICULA_INSTITUCION = 150.0
-    println("Monto de matricula institucional: S/ ${String.format("%.2f", MONTO_MATRICULA_INSTITUCION)}")
+    // NUEVO: aforo fijo definido en el codigo, ya no se pide por consola
+    var aforoDisponible = 2
+    println("Aforo disponible: $aforoDisponible vacante(s).")
 
-    val nombre = leerTexto("Nombre del estudiante: ")
-    val cantidadCursos = leerEntero("Cantidad de cursos a matricular: ")
-
-    val nombresCursos = mutableListOf<String>()
-    val creditosCursos = mutableListOf<Int>()
-
-    var totalCreditos = 0
-
-    for (i in 1..cantidadCursos) {
-
-        val nombreCurso = leerTexto("Nombre del curso $i: ")
-        val creditosCurso = leerEntero("Creditos del curso $i: ")
-
-        nombresCursos.add(nombreCurso)
-        creditosCursos.add(creditosCurso)
-
-        totalCreditos += creditosCurso
-    }
-
-    if (totalCreditos > 18) {
+    if (aforoDisponible <= 0) {
         println()
-        println("Se requiere autorizacion")
+        println("No hay vacantes disponibles. No se puede matricular.")
         return
     }
 
-    val valorCredito = leerDouble("Valor de cada credito (S/): ")
+    val MONTO_MATRICULA_INSTITUCION = 150.0
 
-    val turno = leerTurno("Turno (M=Mañana / T=Tarde / N=Noche): ")
-    val recargoTurno = obtenerRecargoTurno(turno)
+    var continuarMatriculando = true
 
-    val categoria = leerCategoria("Categoria (O=Ordinario / B=Becado): ")
-    var montoMatricula = 0.0
+    while (continuarMatriculando && aforoDisponible > 0) {
 
-    if (categoria == "ORDINARIO") {
-        val pagaMatricula = leerConfirmacion("Desea pagar la matricula ahora? (S/N): ")
+        println()
+        println("Monto de matricula institucional: S/ ${String.format("%.2f", MONTO_MATRICULA_INSTITUCION)}")
 
-        if (pagaMatricula) {
-            montoMatricula = MONTO_MATRICULA_INSTITUCION
+        val nombre = leerTexto("Nombre del estudiante: ")
+        val cantidadCursos = leerEntero("Cantidad de cursos a matricular: ")
+
+        val nombresCursos = mutableListOf<String>()
+        val creditosCursos = mutableListOf<Int>()
+
+        var totalCreditos = 0
+
+        for (i in 1..cantidadCursos) {
+
+            val nombreCurso = leerTexto("Nombre del curso $i: ")
+            val creditosCurso = leerEntero("Creditos del curso $i: ")
+
+            nombresCursos.add(nombreCurso)
+            creditosCursos.add(creditosCurso)
+
+            totalCreditos += creditosCurso
+        }
+
+        if (totalCreditos > 18) {
+            println()
+            println("Se requiere autorizacion")
+            continuarMatriculando = leerConfirmacion("Desea continuar matriculando a otro estudiante? (S/N): ")
+            continue
+        }
+
+        val valorCredito = leerDouble("Valor de cada credito (S/): ")
+
+        val turno = leerTurno("Turno (M=Mañana / T=Tarde / N=Noche): ")
+        val recargoTurno = obtenerRecargoTurno(turno)
+
+        val categoria = leerCategoria("Categoria (O=Ordinario / B=Becado): ")
+        var montoMatricula = 0.0
+        var seMatriculo = true
+
+        if (categoria == "ORDINARIO") {
+            val pagaMatricula = leerConfirmacion("Desea pagar la matricula ahora? (S/N): ")
+
+            if (pagaMatricula) {
+                montoMatricula = MONTO_MATRICULA_INSTITUCION
+            } else {
+                println()
+                println("Debe pagar la matricula para poder realizar el proceso de matricula.")
+                seMatriculo = false
+            }
+        } else {
+            println("Matricula becada: S/ 0.00")
+        }
+
+        if (!seMatriculo) {
+            continuarMatriculando = leerConfirmacion("Desea continuar matriculando a otro estudiante? (S/N): ")
+            continue
+        }
+
+        val subtotalCursos = totalCreditos * valorCredito
+        val montoRecargoTurno = subtotalCursos * recargoTurno
+
+        val totalSinIGV = subtotalCursos + montoRecargoTurno + montoMatricula
+        val igv = calcularIGV(totalSinIGV)
+        val totalAPagar = totalSinIGV + igv
+
+        val cargaAcademica = determinarCargaAcademica(totalCreditos)
+        val formaPago = determinarFormaPago(totalAPagar)
+
+        println()
+        println("=========================================")
+        println(" RESUMEN DE MATRICULA ")
+        println("=========================================")
+
+        println("ESTUDIANTE: $nombre")
+        println("TURNO: $turno")
+        println("CATEGORIA: $categoria")
+        println()
+
+        println("CURSO                         CREDITOS       COSTO")
+        println("-------------------------------------------------------")
+
+        for (i in nombresCursos.indices) {
+            val costoCurso = creditosCursos[i] * valorCredito
+
+            println(
+                String.format(
+                    "%-30s %8d     S/ %8.2f",
+                    nombresCursos[i],
+                    creditosCursos[i],
+                    costoCurso
+                )
+            )
+        }
+
+        println("-------------------------------------------------------")
+
+        println("CURSOS MATRICULADOS: $cantidadCursos")
+        println("TOTAL CREDITOS: $totalCreditos")
+        println(String.format("SUBTOTAL CURSOS: S/ %.2f", subtotalCursos))
+        println(String.format("RECARGO POR TURNO (%.0f%%): S/ %.2f", recargoTurno * 100, montoRecargoTurno))
+        println(String.format("PAGO DE MATRICULA: S/ %.2f", montoMatricula))
+        println(String.format("IGV (18%%): S/ %.2f", igv))
+        println(String.format("TOTAL A PAGAR: S/ %.2f", totalAPagar))
+        println("CARGA ACADEMICA: $cargaAcademica")
+        println("FORMA DE PAGO: $formaPago")
+
+        aforoDisponible--
+        println("AFORO RESTANTE: $aforoDisponible vacante(s).")
+
+        if (aforoDisponible > 0) {
+            continuarMatriculando = leerConfirmacion("Desea continuar matriculando a otro estudiante? (S/N): ")
         } else {
             println()
-            println("Debe pagar la matricula para poder realizar el proceso de matricula.")
-            return
+            println("Ya no hay aforo disponible. Se finaliza el proceso de matriculas.")
+            continuarMatriculando = false
         }
-    } else {
-        println("Matricula becada: S/ 0.00")
     }
 
-    val subtotalCursos = totalCreditos * valorCredito
-    val montoRecargoTurno = subtotalCursos * recargoTurno
-
-    // NUEVO: el IGV se calcula sobre la suma de cursos + recargo + matricula,
-    // y se añade como un rubro aparte antes del total final
-    val totalSinIGV = subtotalCursos + montoRecargoTurno + montoMatricula
-    val igv = calcularIGV(totalSinIGV)
-    val totalAPagar = totalSinIGV + igv
-
-    val cargaAcademica = determinarCargaAcademica(totalCreditos)
-    val formaPago = determinarFormaPago(totalAPagar)
-
     println()
-    println("=========================================")
-    println(" RESUMEN DE MATRICULA ")
-    println("=========================================")
-
-    println("ESTUDIANTE: $nombre")
-    println("TURNO: $turno")
-    println("CATEGORIA: $categoria")
-    println()
-
-    println("CURSO                         CREDITOS       COSTO")
-    println("-------------------------------------------------------")
-
-    for (i in nombresCursos.indices) {
-        val costoCurso = creditosCursos[i] * valorCredito
-
-        println(
-            String.format(
-                "%-30s %8d     S/ %8.2f",
-                nombresCursos[i],
-                creditosCursos[i],
-                costoCurso
-            )
-        )
-    }
-
-    println("-------------------------------------------------------")
-
-    println("CURSOS MATRICULADOS: $cantidadCursos")
-    println("TOTAL CREDITOS: $totalCreditos")
-    println(String.format("SUBTOTAL CURSOS: S/ %.2f", subtotalCursos))
-    println(String.format("RECARGO POR TURNO (%.0f%%): S/ %.2f", recargoTurno * 100, montoRecargoTurno))
-    println(String.format("PAGO DE MATRICULA: S/ %.2f", montoMatricula))
-    println(String.format("IGV (18%%): S/ %.2f", igv))
-    println(String.format("TOTAL A PAGAR: S/ %.2f", totalAPagar))
-    println("CARGA ACADEMICA: $cargaAcademica")
-    println("FORMA DE PAGO: $formaPago")
+    println("Fin del proceso de matriculas.")
 }
