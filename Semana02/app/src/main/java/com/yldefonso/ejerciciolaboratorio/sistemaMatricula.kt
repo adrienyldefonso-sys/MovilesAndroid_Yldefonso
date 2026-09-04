@@ -49,8 +49,6 @@ fun determinarFormaPago(totalAPagar: Double): String {
     }
 }
 
-// ---------- NUEVO: TURNO ----------
-
 fun leerTurno(mensaje: String): String {
     while (true) {
         print(mensaje)
@@ -75,13 +73,42 @@ fun obtenerRecargoTurno(turno: String): Double {
     }
 }
 
-// -----------------------------------
+fun leerCategoria(mensaje: String): String {
+    while (true) {
+        print(mensaje)
+        val valor = readLine()?.trim()?.uppercase()
+
+        when (valor) {
+            "O", "ORDINARIO" -> return "ORDINARIO"
+            "B", "BECADO" -> return "BECADO"
+        }
+
+        println("Categoria invalida. Ingresa O (Ordinario) o B (Becado).")
+    }
+}
+
+fun leerConfirmacion(mensaje: String): Boolean {
+    while (true) {
+        print(mensaje)
+        val valor = readLine()?.trim()?.uppercase()
+
+        when (valor) {
+            "S" -> return true
+            "N" -> return false
+        }
+
+        println("Respuesta invalida. Ingresa S (Si) o N (No).")
+    }
+}
 
 fun main() {
 
     println("=========================================")
     println(" SISTEMA DE MATRICULA - TECSUP ")
     println("=========================================")
+
+    val MONTO_MATRICULA_INSTITUCION = 150.0
+    println("Monto de matricula institucional: S/ ${String.format("%.2f", MONTO_MATRICULA_INSTITUCION)}")
 
     val nombre = leerTexto("Nombre del estudiante: ")
     val cantidadCursos = leerEntero("Cantidad de cursos a matricular: ")
@@ -110,13 +137,30 @@ fun main() {
 
     val valorCredito = leerDouble("Valor de cada credito (S/): ")
 
-    // NUEVO: turno y recargo
     val turno = leerTurno("Turno (M=Mañana / T=Tarde / N=Noche): ")
     val recargoTurno = obtenerRecargoTurno(turno)
 
+    // NUEVO: categoria y matricula obligatoria (posicion original, despues de turno)
+    val categoria = leerCategoria("Categoria (O=Ordinario / B=Becado): ")
+    var montoMatricula = 0.0
+
+    if (categoria == "ORDINARIO") {
+        val pagaMatricula = leerConfirmacion("Se debe de pagar la matricula para finalizar: ")
+
+        if (pagaMatricula) {
+            montoMatricula = MONTO_MATRICULA_INSTITUCION
+        } else {
+            println()
+            println("Debe pagar la matricula para poder realizar el proceso de matricula.")
+            return
+        }
+    } else {
+        println("Matricula becada: S/ 0.00")
+    }
+
     val subtotalCursos = totalCreditos * valorCredito
     val montoRecargoTurno = subtotalCursos * recargoTurno
-    val totalAPagar = subtotalCursos + montoRecargoTurno
+    val totalAPagar = subtotalCursos + montoRecargoTurno + montoMatricula
 
     val cargaAcademica = determinarCargaAcademica(totalCreditos)
     val formaPago = determinarFormaPago(totalAPagar)
@@ -128,6 +172,7 @@ fun main() {
 
     println("ESTUDIANTE: $nombre")
     println("TURNO: $turno")
+    println("CATEGORIA: $categoria")
     println()
 
     println("CURSO                         CREDITOS       COSTO")
@@ -152,6 +197,7 @@ fun main() {
     println("TOTAL CREDITOS: $totalCreditos")
     println(String.format("SUBTOTAL CURSOS: S/ %.2f", subtotalCursos))
     println(String.format("RECARGO POR TURNO (%.0f%%): S/ %.2f", recargoTurno * 100, montoRecargoTurno))
+    println(String.format("PAGO DE MATRICULA: S/ %.2f", montoMatricula))
     println(String.format("TOTAL A PAGAR: S/ %.2f", totalAPagar))
     println("CARGA ACADEMICA: $cargaAcademica")
     println("FORMA DE PAGO: $formaPago")
