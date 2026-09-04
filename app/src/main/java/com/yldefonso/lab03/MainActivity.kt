@@ -51,6 +51,6 @@ fun PantallaRegistro(modifier: Modifier = Modifier) {
             color = MaterialTheme.colorScheme.outline
         )
         Spacer(modifier = Modifier.height(24.dp))
-        // aquí irán los campos de texto
+
     }
 }
