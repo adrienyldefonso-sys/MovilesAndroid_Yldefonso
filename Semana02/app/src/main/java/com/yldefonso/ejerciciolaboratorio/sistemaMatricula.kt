@@ -112,9 +112,9 @@ fun main() {
     println(" SISTEMA DE MATRICULA - TECSUP ")
     println("=========================================")
 
-    // NUEVO: aforo fijo definido en el codigo, ya no se pide por consola
-    var aforoDisponible = 2
-    println("Aforo disponible: $aforoDisponible vacante(s).")
+    // NUEVO: aforo y costo de matricula ahora se ingresan por consola
+    var aforoDisponible = leerEntero("Ingrese el aforo disponible: ")
+    val MONTO_MATRICULA_INSTITUCION = leerDouble("Ingrese el costo de la matricula (S/): ")
 
     if (aforoDisponible <= 0) {
         println()
@@ -122,14 +122,11 @@ fun main() {
         return
     }
 
-    val MONTO_MATRICULA_INSTITUCION = 150.0
-
     var continuarMatriculando = true
 
     while (continuarMatriculando && aforoDisponible > 0) {
 
         println()
-        println("Monto de matricula institucional: S/ ${String.format("%.2f", MONTO_MATRICULA_INSTITUCION)}")
 
         val nombre = leerTexto("Nombre del estudiante: ")
         val cantidadCursos = leerEntero("Cantidad de cursos a matricular: ")
