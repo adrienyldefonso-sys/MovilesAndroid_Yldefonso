@@ -101,6 +101,15 @@ fun leerConfirmacion(mensaje: String): Boolean {
     }
 }
 
+// ---------- NUEVO: IGV ----------
+
+fun calcularIGV(montoBase: Double): Double {
+    val TASA_IGV = 0.18
+    return montoBase * TASA_IGV
+}
+
+// ---------------------------------
+
 fun main() {
 
     println("=========================================")
@@ -140,12 +149,11 @@ fun main() {
     val turno = leerTurno("Turno (M=Mañana / T=Tarde / N=Noche): ")
     val recargoTurno = obtenerRecargoTurno(turno)
 
-    // NUEVO: categoria y matricula obligatoria (posicion original, despues de turno)
     val categoria = leerCategoria("Categoria (O=Ordinario / B=Becado): ")
     var montoMatricula = 0.0
 
     if (categoria == "ORDINARIO") {
-        val pagaMatricula = leerConfirmacion("Se debe de pagar la matricula para finalizar: ")
+        val pagaMatricula = leerConfirmacion("Desea pagar la matricula ahora? (S/N): ")
 
         if (pagaMatricula) {
             montoMatricula = MONTO_MATRICULA_INSTITUCION
@@ -160,7 +168,12 @@ fun main() {
 
     val subtotalCursos = totalCreditos * valorCredito
     val montoRecargoTurno = subtotalCursos * recargoTurno
-    val totalAPagar = subtotalCursos + montoRecargoTurno + montoMatricula
+
+    // NUEVO: el IGV se calcula sobre la suma de cursos + recargo + matricula,
+    // y se añade como un rubro aparte antes del total final
+    val totalSinIGV = subtotalCursos + montoRecargoTurno + montoMatricula
+    val igv = calcularIGV(totalSinIGV)
+    val totalAPagar = totalSinIGV + igv
 
     val cargaAcademica = determinarCargaAcademica(totalCreditos)
     val formaPago = determinarFormaPago(totalAPagar)
@@ -198,6 +211,7 @@ fun main() {
     println(String.format("SUBTOTAL CURSOS: S/ %.2f", subtotalCursos))
     println(String.format("RECARGO POR TURNO (%.0f%%): S/ %.2f", recargoTurno * 100, montoRecargoTurno))
     println(String.format("PAGO DE MATRICULA: S/ %.2f", montoMatricula))
+    println(String.format("IGV (18%%): S/ %.2f", igv))
     println(String.format("TOTAL A PAGAR: S/ %.2f", totalAPagar))
     println("CARGA ACADEMICA: $cargaAcademica")
     println("FORMA DE PAGO: $formaPago")
