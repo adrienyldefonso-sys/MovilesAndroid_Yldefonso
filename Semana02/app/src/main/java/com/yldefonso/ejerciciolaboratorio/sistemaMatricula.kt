@@ -49,6 +49,34 @@ fun determinarFormaPago(totalAPagar: Double): String {
     }
 }
 
+// ---------- NUEVO: TURNO ----------
+
+fun leerTurno(mensaje: String): String {
+    while (true) {
+        print(mensaje)
+        val valor = readLine()?.trim()?.uppercase()
+
+        when (valor) {
+            "M", "MAÑANA" -> return "MAÑANA"
+            "T", "TARDE" -> return "TARDE"
+            "N", "NOCHE" -> return "NOCHE"
+        }
+
+        println("Turno invalido. Ingresa M (Manana), T (Tarde) o N (Noche).")
+    }
+}
+
+fun obtenerRecargoTurno(turno: String): Double {
+    return when (turno) {
+        "MAÑANA" -> 0.10
+        "TARDE" -> 0.15
+        "NOCHE" -> 0.20
+        else -> 0.0
+    }
+}
+
+// -----------------------------------
+
 fun main() {
 
     println("=========================================")
@@ -74,7 +102,6 @@ fun main() {
         totalCreditos += creditosCurso
     }
 
-    // Si supera los 18 créditos, termina el programa
     if (totalCreditos > 18) {
         println()
         println("Se requiere autorizacion")
@@ -83,7 +110,14 @@ fun main() {
 
     val valorCredito = leerDouble("Valor de cada credito (S/): ")
 
-    val totalAPagar = totalCreditos * valorCredito
+    // NUEVO: turno y recargo
+    val turno = leerTurno("Turno (M=Mañana / T=Tarde / N=Noche): ")
+    val recargoTurno = obtenerRecargoTurno(turno)
+
+    val subtotalCursos = totalCreditos * valorCredito
+    val montoRecargoTurno = subtotalCursos * recargoTurno
+    val totalAPagar = subtotalCursos + montoRecargoTurno
+
     val cargaAcademica = determinarCargaAcademica(totalCreditos)
     val formaPago = determinarFormaPago(totalAPagar)
 
@@ -93,14 +127,13 @@ fun main() {
     println("=========================================")
 
     println("ESTUDIANTE: $nombre")
+    println("TURNO: $turno")
     println()
 
-    // TABLA DE CURSOS
     println("CURSO                         CREDITOS       COSTO")
     println("-------------------------------------------------------")
 
     for (i in nombresCursos.indices) {
-
         val costoCurso = creditosCursos[i] * valorCredito
 
         println(
@@ -115,9 +148,10 @@ fun main() {
 
     println("-------------------------------------------------------")
 
-    // RESUMEN FINAL SIN TABLA
     println("CURSOS MATRICULADOS: $cantidadCursos")
     println("TOTAL CREDITOS: $totalCreditos")
+    println(String.format("SUBTOTAL CURSOS: S/ %.2f", subtotalCursos))
+    println(String.format("RECARGO POR TURNO (%.0f%%): S/ %.2f", recargoTurno * 100, montoRecargoTurno))
     println(String.format("TOTAL A PAGAR: S/ %.2f", totalAPagar))
     println("CARGA ACADEMICA: $cargaAcademica")
     println("FORMA DE PAGO: $formaPago")
