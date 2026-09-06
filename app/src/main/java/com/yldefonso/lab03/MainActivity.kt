@@ -16,6 +16,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -53,6 +54,10 @@ fun PantallaRegistro(modifier: Modifier = Modifier) {
     var precio by remember { mutableStateOf("") }
     var cantidad by remember { mutableStateOf("") }
     var mostrarResumen by remember { mutableStateOf(false) }
+    var mensajeError by remember { mutableStateOf<String?>(null) }
+
+    // Regex reutilizada del Lab03 en Kotlin puro: solo letras, tildes, ñ y espacios
+    val regexSoloLetras = Regex("^[A-Za-zÁÉÍÓÚáéíóúÑñ ]+$")
 
     Column(
         modifier = modifier
@@ -97,14 +102,58 @@ fun PantallaRegistro(modifier: Modifier = Modifier) {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        Button(
-            onClick = { mostrarResumen = true },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("AGREGAR PRODUCTO")
+        Row(modifier = Modifier.fillMaxWidth()) {
+            Button(
+                onClick = {
+                    val precioNum = precio.toDoubleOrNull()
+
+                    mensajeError = when {
+                        nombre.isBlank() || precio.isBlank() || cantidad.isBlank() ->
+                            "Completa todos los campos antes de agregar"
+
+                        !regexSoloLetras.matches(nombre.trim()) ->
+                            "El nombre no puede contener numeros ni simbolos"
+
+                        precioNum == null || precioNum <= 0.0 ->
+                            "El precio debe ser un numero mayor a 0"
+
+                        cantidad.toIntOrNull() == null ->
+                            "La cantidad debe ser un numero entero valido"
+
+                        else -> null
+                    }
+
+                    mostrarResumen = mensajeError == null
+                },
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("AGREGAR")
+            }
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            OutlinedButton(
+                onClick = {
+                    nombre = ""
+                    precio = ""
+                    cantidad = ""
+                    mostrarResumen = false
+                    mensajeError = null
+                },
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("LIMPIAR")
+            }
         }
 
         Spacer(modifier = Modifier.height(24.dp))
+
+        mensajeError?.let { mensaje ->
+            Text(
+                text = mensaje,
+                color = Color.Red
+            )
+        }
 
         if (mostrarResumen) {
             val precioNum = precio.toDoubleOrNull() ?: 0.0
@@ -129,7 +178,6 @@ fun PantallaRegistro(modifier: Modifier = Modifier) {
                 }
             }
 
-            // --- Parte 5: Mensaje de confirmación ---
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(

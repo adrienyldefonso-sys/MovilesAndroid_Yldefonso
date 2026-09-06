@@ -1,31 +1,16 @@
-# Laboratorio 03: Formulario de Registro de Productos en Jetpack Compose
+## Mejora con IA
 
-**Estudiante:** Yldefonso Solis Becker 
-**Paquete:** `com.yldefonso.lab03`  
-**Fecha:** 4 septiembre 2026
+Esta mejora se desarrolló en la rama `mejora-ia`, usando Gemini como asistente para generar
+una primera versión del código, la cual fue revisada y corregida manualmente antes de integrarla.
 
----
+| Prompt que usé | Qué generó Gemini | Qué acepté o corregí (y por qué) |
+|---|---|---|
+| Le pedí, dentro de `PantallaRegistro`, agregar validación de campos vacíos (si nombre, precio o cantidad están vacíos al presionar "AGREGAR PRODUCTO", no mostrar la Card y en su lugar mostrar un mensaje en rojo) y un botón "LIMPIAR" que vacíe los tres campos y oculte la Card y el error. Especifiqué no tocar los TextFields, el Row de precio/cantidad, el cálculo de importe ni el mensaje de confirmación existente. | Agregó un estado `mostrarError: Boolean`, la validación con `.isBlank()` dentro del `onClick` de "AGREGAR PRODUCTO", un `Text` en rojo condicional a ese estado, y un segundo `Button` "LIMPIAR" debajo del primero que resetea `nombre`, `precio`, `cantidad`, `mostrarResumen` y `mostrarError`. | Acepté la estructura general (nuevo estado para el error, lógica dentro del `onClick`, botón separado para limpiar) porque cumplía lo pedido. Corregí dos cosas: (1) cambié `mostrarError: Boolean` por `mensajeError: String?`, porque un solo mensaje genérico no distinguía *qué* dato faltaba o era inválido; (2) cambié el botón "LIMPIAR" de `Button` a `OutlinedButton` y lo puse en un `Row` junto a "AGREGAR", porque dos botones sólidos del mismo peso visual no comunican cuál es la acción principal — con el contorno, "AGREGAR" queda como acción primaria y "LIMPIAR" como secundaria, siguiendo la convención de Material Design. |
+| Le pedí a Gemini que explicara qué era `OutlinedButton` y por qué se recomendaba usarlo para una acción secundaria como "Limpiar" frente a un botón sólido para la acción principal. | Explicó la diferencia entre `Button` (relleno sólido, acción primaria), `OutlinedButton` (borde sin relleno, acción secundaria) y `TextButton` (sin borde ni relleno, acción terciaria/discreta), siguiendo la jerarquía visual de Material Design. | Acepté la explicación tal cual y la usé para justificar el cambio de botón mencionado arriba; no requirió corrección porque coincide con el estándar de Android que ya conocía del curso. |
+| Después de probar la app manualmente con datos como nombre `"Laptop123"`, precio `"0"` y precio `"abc"`, noté que la validación de Gemini solo revisaba campos vacíos, no si el precio era un número válido mayor a 0 ni si el nombre contenía números. Le pedí (a mí mismo, como corrección manual, no a Gemini) agregar esas dos validaciones sin tocar el resto. | — (esta corrección la hice yo directamente sobre el código de Gemini, no fue generada por IA) | Agregué una validación en cadena dentro del `when`: nombre debe cumplir una regex de solo letras/tildes/ñ/espacios (reutilizada del Lab03 en Kotlin puro), y precio debe convertir con `toDoubleOrNull()` y ser mayor a 0. Lo hice porque el código de Gemini dejaba pasar productos con nombre `"Laptop123"` o precio `"0"`/`"-5"` como si fueran válidos, lo cual no tiene sentido para un registro de productos real. |
 
-## Descripción del Proyecto
+### Resumen de las correcciones aplicadas sobre el código de Gemini
 
-Esta aplicación desarrollada en Android Studio utilizando Jetpack Compose** y Material Design 3 permite realizar el registro rápido de un producto.
-
-El formulario solicita los datos de entrada del usuario (nombre, precio unitario y cantidad), realiza la conversión segura de los datos numéricos mediante `toDoubleOrNull()` y `toIntOrNull()` junto con el operador Elvis (`?:`) para evitar errores en tiempo de ejecución, y calcula automáticamente el importe total a pagar mostrando una tarjeta de resumen (`Card`) y un mensaje de confirmación cuando el usuario presiona el botón "Agregar Producto".
-
----
-
-## Capturas de Pantalla
-![img.png](img.png)
-![img_1.png](img_1.png)
-
-## Pregunta de Análisis
-
-### **¿Qué pasaría si declaras las variables de los campos SIN `remember`?**
-
-**Respuesta y explicación:**
-
-Si declaras las variables de estado únicamente usando `mutableStateOf("")` sin la función `remember` (por ejemplo: `var nombre = mutableStateOf("")`):
-
-1. **Pérdida de estado en cada recomposición:** Cada vez que el usuario escribe un solo carácter en cualquiera de los campos (`OutlinedTextField`), Compose dispara un proceso de **recomposición** (re-ejecución) de la función `@Composable PantallaRegistro`.
-2. **Reinicio a valor inicial:** Al no usar `remember`, la variable no conservará su valor previo guardado en memoria durante la recomposición. En su lugar, la variable volverá a inicializarse desde cero con su valor por defecto `""` (cadena vacía).
-3. **Efecto visual:** Es imposible escribir en las casillas de texto, ya que la pantalla se redibuja inmediatamente restableciendo todos los datos ingresados al estado inicial. `remember` es indispensable porque actúa como el mecanismo de persistencia en memoria local del ciclo de vida del Composeable.
+- `mostrarError: Boolean` → `mensajeError: String?` (mensajes específicos por tipo de error).
+- Botón "LIMPIAR": `Button` → `OutlinedButton`, agrupado en `Row` junto a "AGREGAR" (jerarquía visual).
+- Validación agregada: nombre solo letras (sin dígitos), precio numérico y mayor a 0, cantidad numérica válida.
