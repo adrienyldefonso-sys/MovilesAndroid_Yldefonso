@@ -1,5 +1,6 @@
 package com.yldefonso.registronotas
 
+import android.R.attr.text
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -41,6 +43,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlin.math.roundToInt
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -74,6 +77,10 @@ fun RegistroNotasScreen(modifier: Modifier = Modifier) {
     var nota4 by remember { mutableStateOf(0f) }
     var redondear by remember { mutableStateOf(false) }
     var confirmado by remember { mutableStateOf(false) }
+    var mostrarResultado by remember { mutableStateOf(false)}
+    var promedioPonderado by remember {mutableStateOf(0.0)}
+    var promedioFinal by remember { mutableStateOf(0.0)}
+    var observacion by remember  { mutableStateOf("")}
 
     Column(
         modifier = modifier
@@ -102,7 +109,7 @@ fun RegistroNotasScreen(modifier: Modifier = Modifier) {
             horizontalArrangement = Arrangement.Absolute.SpaceBetween,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Redondear promedio finak")
+            Text("Redondear promedio final")
             Switch(checked = redondear, onCheckedChange = { redondear = it })
         }
         Spacer(modifier = Modifier.height(8.dp))
@@ -111,15 +118,45 @@ fun RegistroNotasScreen(modifier: Modifier = Modifier) {
             modifier = Modifier.fillMaxWidth()
         ) {
             Checkbox(checked = confirmado, onCheckedChange = { confirmado = it })
-            Text("COnfirmo que las notas son correctas")
+            Text("Confirmo que las notas son correctas")
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Text(
-            text = "Asigna las notas y confirma para contunuar",
-            color = Color.Gray
-        )
+        Button(
+            onClick = {
+                val ponderado = nota1 * 0.20 + nota2 * 0.25 + nota3 * 0.30 + nota4 * 0.25
+                promedioPonderado = ponderado
+
+                promedioFinal = if (redondear) {
+                    ponderado.roundToInt().toDouble()
+                } else {
+                    ponderado
+                }
+                observacion = when {
+                    promedioFinal >= 17.00 -> "EXCELENTE"
+                    promedioFinal >= 13.00 -> "APROBADO"
+                    promedioFinal >= 10.00 -> "EN RECUPERACION"
+                    else -> "DESAPROBADO"
+                }
+                mostrarResultado=true
+            },
+            enabled =confirmado,
+            modifier = Modifier.fillMaxWidth()
+        ){
+            Text("CALCULAR PROMEDIO")
+        }
+        Spacer(modifier=Modifier.height(16.dp))
+        if (mostrarResultado) {
+            Text("Promedio ponderado: ${"%.2f".format(promedioPonderado)}")
+            Text("Promedio final: ${"%.2f".format(promedioFinal)}")
+            Text("Observación: $observacion")
+        }else{
+            Text (
+                text = "Asigna las notas y confirma para continuar",
+                color = Color.Gray
+            )
+        }
         Spacer(modifier = Modifier.weight(1f))
 
         Text(
