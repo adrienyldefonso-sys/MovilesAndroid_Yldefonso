@@ -35,6 +35,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Card
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -42,7 +50,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             Lab04carritoyldefonsoTheme {
-                PantallaCarrito()
+                PantallaCarrito(
+
                 }
             }
         }
@@ -123,8 +132,47 @@ fun PantallaCarrito() {
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 items(productos) { producto ->
+                    TarjetaProducto(
+                        producto= producto,
+                        onEliminar = {productos.remove(producto)}
+                    )
                     Text(producto.nombre)
                 }
+            }
+        }
+    }
+}
+@Composable
+fun TarjetaProducto(producto:Producto,onEliminar: () ->Unit){
+    Card(modifier=Modifier.fillMaxWidth()){
+        Row(
+            modifier = Modifier.padding(16.dp).fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier= Modifier.weight(1f)){
+                Text(
+                    text=producto.nombre,
+                    style= MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text= "S/ ${"%.2f.".format(producto.precio)}",
+                    color= Color.Gray
+                )
+            }
+            //Calculo del importe con 2 decimales
+            Text(
+                text="S/ ${"%.2f".format(producto.precio * producto.cantidad)}",
+                fontWeight = FontWeight.Bold,
+                color=Color(0xFF6C5CA5)
+            )
+            //Boton de eliminar que solo notifica el evento para arriba
+            IconButton(onClick = onEliminar) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "Eliminar",
+                    tint = MaterialTheme.colorScheme.error
+                )
             }
         }
     }
