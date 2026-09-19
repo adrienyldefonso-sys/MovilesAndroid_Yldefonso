@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -33,6 +34,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.lazy.items
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -48,20 +50,21 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PantallaCarrito(){
+fun PantallaCarrito() {
     var nombre by remember { mutableStateOf("") }
-    var precio by remember {mutableStateOf("")}
-    var cantidad by remember {mutableStateOf("")}
+    var precio by remember { mutableStateOf("") }
+    var cantidad by remember { mutableStateOf("") }
     // -- lista observable de los productos agregados
     // gracias al mutableStateListOf(),se establece recomposicion
     val productos = remember {
-        mutableStateListOf<Producto>() }
+        mutableStateListOf<Producto>()
+    }
 
     Scaffold(
-        topBar= {
+        topBar = {
             TopAppBar(
-                title = {Text("Mi carrito TECSUP")},
-                colors= TopAppBarDefaults.topAppBarColors(
+                title = { Text("Mi carrito TECSUP") },
+                colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color(0xFF6C5CA5),
                     titleContentColor = Color.White
                 )
@@ -69,15 +72,15 @@ fun PantallaCarrito(){
         }
     ) { padding ->
         Column(
-            modifier= Modifier
+            modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
                 .padding(16.dp)
-        ){
+        ) {
             TextField(
-                value=nombre,
-                onValueChange = {nombre=it},
-                label={Text ("Nombre del producto:")}
+                value = nombre,
+                onValueChange = { nombre = it },
+                label = { Text("Nombre del producto:") }
             )
             Spacer(modifier = Modifier.height(8.dp))
             Row(
@@ -85,35 +88,44 @@ fun PantallaCarrito(){
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 TextField(
-                    value=precio,
-                    onValueChange = {precio=it},
-                    label= {Text("Precio (S/):")}
+                    value = precio,
+                    onValueChange = { precio = it },
+                    label = { Text("Precio (S/):") }
                 )
                 TextField(
-                    value=cantidad,
-                    onValueChange = {cantidad=it},
-                    label= {Text("Cantidad: ")}
+                    value = cantidad,
+                    onValueChange = { cantidad = it },
+                    label = { Text("Cantidad: ") }
                 )
             }
             Spacer(modifier = Modifier.height(12.dp))
             Button(
-                onClick={
-                    val precioNum=precio.toDoubleOrNull()?:0.0
-                    val cantidadNum=cantidad.toIntOrNull()?:0
-                    if (nombre.isNotBlank()&&precioNum>0 && cantidadNum>0){
-                        productos.add(Producto(nombre,precioNum,cantidadNum))
-                        nombre=""
-                        precio=""
-                        cantidad=""
+                onClick = {
+                    val precioNum = precio.toDoubleOrNull() ?: 0.0
+                    val cantidadNum = cantidad.toIntOrNull() ?: 0
+                    if (nombre.isNotBlank() && precioNum > 0 && cantidadNum > 0) {
+                        productos.add(Producto(nombre, precioNum, cantidadNum))
+                        nombre = ""
+                        precio = ""
+                        cantidad = ""
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
-                colors= ButtonDefaults.buttonColors(containerColor = Color(0xFF6C5CA5))
-            ){
-                Text("AGREGAR")}
-            Spacer (modifier = Modifier.height(16.dp))
-            Text("Productos: ${productos.size}")
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6C5CA5))
+            ) {
+                Text("AGREGAR")
             }
+            Spacer(modifier = Modifier.height(16.dp))
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(productos) { producto ->
+                    Text(producto.nombre)
+                }
+            }
+        }
     }
-
 }
