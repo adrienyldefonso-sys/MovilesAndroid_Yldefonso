@@ -1,12 +1,10 @@
 package com.yldefonso.navlab.navigation
-
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-
 
 @Composable
 fun AppNavigation(){
@@ -41,7 +39,7 @@ fun AppNavigation(){
             )
         ){backStackEntry->
             //Extrae el itemId,si no existe,usa 0
-            val itemId = backStackEntry.arguments?.getInt(key="itemId")?:0
+            val itemId = backStackEntry.arguments?.getInt("itemId")?:0
             DetailScreen(navController,itemId)
         }
     }
