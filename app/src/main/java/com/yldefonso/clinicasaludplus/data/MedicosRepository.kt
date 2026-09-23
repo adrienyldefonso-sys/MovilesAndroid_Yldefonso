@@ -2,7 +2,7 @@ package com.yldefonso.clinicasaludplus.data
 
 import com.yldefonso.clinicasaludplus.model.Medico
 //Simula lo que vendria de una API o una bd siendo una fuente de datos
-object MedicoRepository{
+object MedicosRepository{
     val especialidades = listOf("Todos", "Cardiología", "Pediatría", "Dermatología")
     val medicos= listOf(
         Medico(
