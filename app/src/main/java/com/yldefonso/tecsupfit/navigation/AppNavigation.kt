@@ -16,14 +16,11 @@ import com.yldefonso.tecsupfit.screens.*
 fun AppNavigation() {
     val navController = rememberNavController()
 
-    // Estado global SIN ViewModel: se crea aquí y se pasa por parámetro
-    // a cada pantalla que lo necesite (mismo patrón que Clínica Salud+).
+    // Estado global crea aquí y se pasa por parámetro a cada pantalla que lo necesite
     val reservas = remember { mutableStateListOf<Reserva>() }
 
-    // Nota: aquí NO hay drawer envolviendo el NavHost. En la Opción B la
-    // navegación secundaria es el bottomBar, que vive DENTRO del Scaffold
-    // de cada pantalla (no a nivel global), porque cada pantalla decide
-    // si lo muestra o no (ClassDetail y Confirmation no lo muestran).
+    //lA navegación secundaria es el bottomBar, que vive dentro del Scaffold
+    // de cada pantalla, porque cada pantalla decide  si lo muestra o no
     NavHost(navController = navController, startDestination = Screen.Home.route) {
 
         composable(Screen.Home.route) {
