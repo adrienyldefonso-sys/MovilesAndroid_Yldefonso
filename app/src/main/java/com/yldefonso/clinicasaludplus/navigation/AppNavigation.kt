@@ -20,6 +20,7 @@ import com.yldefonso.clinicasaludplus.model.Cita
 import com.yldefonso.clinicasaludplus.screens.BookAppointmentScreen
 import com.yldefonso.clinicasaludplus.screens.ConfirmationScreen
 import com.yldefonso.clinicasaludplus.screens.DoctorProfileScreen
+import com.yldefonso.clinicasaludplus.screens.HistorialMedicoScreen
 import com.yldefonso.clinicasaludplus.screens.HomeScreen
 import com.yldefonso.clinicasaludplus.screens.MisCitasScreen
 import kotlinx.coroutines.launch
