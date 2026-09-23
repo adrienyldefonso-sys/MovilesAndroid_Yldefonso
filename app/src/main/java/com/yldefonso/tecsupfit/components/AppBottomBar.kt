@@ -1,5 +1,4 @@
 package com.yldefonso.tecsupfit.components
-
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.RadioButtonChecked
 import androidx.compose.material.icons.outlined.RadioButtonUnchecked
@@ -10,7 +9,6 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.tecsupfit.ui.theme.TealPrimary
 import com.yldefonso.tecsupfit.navigation.Screen
-
 private data class BottomItem(val label: String, val route: String)
 private val bottomItems = listOf(
     BottomItem("Inicio", Screen.Home.route),
