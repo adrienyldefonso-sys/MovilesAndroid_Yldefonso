@@ -16,11 +16,30 @@ import com.yldefonso.tecsupfit.screens.*
 fun AppNavigation() {
     val navController = rememberNavController()
 
-    // Estado global crea aquí y se pasa por parámetro a cada pantalla que lo necesite
-    val reservas = remember { mutableStateListOf<Reserva>() }
+    // Estado global de reservas precargado con datos de prueba para demostración y sustentación
+    val reservas = remember {
+        mutableStateListOf(
+            Reserva(
+                id = 1,
+                claseId = 2,
+                claseNombre = "Cross Training",
+                horario = "6:00 pm",
+                sala = "Sala 1",
+                estado = "Confirmada"
+            ),
+            Reserva(
+                id = 2,
+                claseId = 1,
+                claseNombre = "Yoga funcional",
+                horario = "7:00 am",
+                sala = "Sala 2",
+                estado = "Completada"
+            )
+        )
+    }
 
-    //lA navegación secundaria es el bottomBar, que vive dentro del Scaffold
-    // de cada pantalla, porque cada pantalla decide  si lo muestra o no
+    // La navegación secundaria es el bottomBar, que vive dentro del Scaffold
+    // de cada pantalla, porque cada pantalla decide si lo muestra o no
     NavHost(navController = navController, startDestination = Screen.Home.route) {
 
         composable(Screen.Home.route) {
