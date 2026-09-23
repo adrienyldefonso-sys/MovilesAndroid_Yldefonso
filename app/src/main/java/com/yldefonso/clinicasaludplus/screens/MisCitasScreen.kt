@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -57,7 +58,7 @@ fun MisCitasScreen(
                 modifier = Modifier.padding(padding).padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Iteramos la lista pasando 'citas' a cada Card para permitir actualización
+                // Iteramos la lista pasando 'citas' a cada Card para permitir actualización puntual
                 items(citas, key = { it.id }) { cita ->
                     CitaCard(cita = cita, citas = citas)
                 }
@@ -120,11 +121,12 @@ private fun CitaCard(
                     )
                 }
 
-                // Si la cita es Completada, mostramos la sección de calificación
+                // Sección de calificación únicamente activa para citas en estado "Completada"
                 if (!confirmada) {
-                    Spacer(Modifier.height(8.dp))
+                    // Espaciado cómodo entre el pill de estado y el botón/texto de calificación
+                    Spacer(Modifier.height(6.dp))
                     if (cita.calificacion == null) {
-                        // Si aún no se ha calificado, muestra el botón para abrir el diálogo
+                        // Botón "Calificar atención" en PurpleMid para abrir el diálogo
                         TextButton(
                             onClick = { mostrarDialogo = true },
                             contentPadding = PaddingValues(0.dp)
@@ -132,29 +134,42 @@ private fun CitaCard(
                             Text(
                                 "Calificar atención",
                                 style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.primary
+                                color = PurpleMid,
+                                fontWeight = FontWeight.Bold
                             )
                         }
                     } else {
-                        // Si ya se calificó, muestra el puntaje asignado y ya no permite volver a calificar
-                        Text(
-                            "★ Calificado (${cita.calificacion}/5)",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.SemiBold
-                        )
+                        // Muestra el ícono de estrella y el texto "Calificado (X/5)" alineados en PurpleMid
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Star,
+                                contentDescription = "Calificación",
+                                tint = PurpleMid,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(Modifier.width(4.dp))
+                            Text(
+                                "Calificado (${cita.calificacion}/5)",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = PurpleMid,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
                 }
             }
         }
     }
 
-    // Muestra el diálogo de calificación cuando el usuario hace clic en "Calificar atención"
+    // Muestra el diálogo de calificación al pulsar en "Calificar atención"
     if (mostrarDialogo) {
         RatingDialog(
             onDismiss = { mostrarDialogo = false },
             onConfirm = { estrellas ->
-                // Busca la cita en la SnapshotStateList y la reemplaza por una copia con la calificación
+                // Al modificar un elemento de la SnapshotStateList por una copia,
+                // Compose recompone únicamente la tarjeta correspondiente
                 val index = citas.indexOfFirst { it.id == cita.id }
                 if (index != -1) {
                     citas[index] = cita.copy(calificacion = estrellas)

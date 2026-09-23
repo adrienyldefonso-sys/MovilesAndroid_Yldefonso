@@ -24,9 +24,21 @@ import com.yldefonso.clinicasaludplus.screens.*
 fun AppNavigation() {
     val navController = rememberNavController()
 
-    // Estado global de la app SIN ViewModel: se crea aquí y se pasa
-    // como parámetro a cada pantalla que lo necesite.
-    val citas = remember { mutableStateListOf<Cita>() }
+    // Estado global de la app SIN ViewModel. Precargado con dato de prueba
+    // para la sustentación/demostración de la funcionalidad de calificación de citas completadas.
+    val citas = remember {
+        mutableStateListOf(
+            Cita(
+                id = 1,
+                medicoId = 2,
+                medicoNombre = "Dr. Luis Vega",
+                especialidad = "Pediatría",
+                fecha = "Mié 15",
+                hora = "3:00 pm",
+                estado = "Completada"
+            )
+        )
+    }
 
     // Estado y control del drawer (menú lateral)
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)

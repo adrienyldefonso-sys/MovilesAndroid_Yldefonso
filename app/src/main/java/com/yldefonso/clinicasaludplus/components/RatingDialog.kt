@@ -11,6 +11,7 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -24,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.yldefonso.clinicasaludplus.ui.theme.PurpleMid
 
 /**
  * Diálogo interactivo para calificar la atención de una cita médica completada.
@@ -34,7 +36,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun RatingDialog(
     onDismiss: () -> Unit,
-    onConfirm: (Int) -> Unit,
+    onConfirm: (Int) -> Unit
 ) {
     // Estado local para almacenar la cantidad de estrellas seleccionadas (0 = ninguna, 1 a 5)
     var estrellasSeleccionadas by remember { mutableStateOf(0) }
@@ -45,7 +47,7 @@ fun RatingDialog(
         title = {
             Text(
                 text = "Califica tu atención",
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.titleMedium
             )
         },
         text = {
@@ -55,7 +57,7 @@ fun RatingDialog(
                     .fillMaxWidth()
                     .padding(vertical = 12.dp),
                 horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 // Iteramos del 1 al 5 para generar cada estrella del rating
                 for (i in 1..5) {
@@ -64,22 +66,23 @@ fun RatingDialog(
                         // Muestra la estrella rellena si está seleccionada, o en contorno si no lo está
                         imageVector = if (seleccionada) Icons.Filled.Star else Icons.Outlined.StarBorder,
                         contentDescription = "Estrella $i",
-                        // Aplica el color morado del tema a las estrellas seleccionadas
-                        tint = if (seleccionada) MaterialTheme.colorScheme.primary else Color.Gray,
+                        // Usa PurpleMid para las estrellas seleccionadas para coincidir exactamente con el resto de la app
+                        tint = if (seleccionada) PurpleMid else Color.Gray,
                         modifier = Modifier
                             .size(36.dp)
                             .padding(4.dp)
                             // Al hacer clic, actualiza el estado con el número de estrella tocada
-                            .clickable { estrellasSeleccionadas = i },
+                            .clickable { estrellasSeleccionadas = i }
                     )
                 }
             }
         },
         confirmButton = {
-            // Botón habilitado solo cuando el usuario haya elegido al menos 1 estrella (> 0)
+            // Botón principal "Calificar" configurado en PurpleMid y habilitado solo con calificación > 0
             Button(
                 onClick = { onConfirm(estrellasSeleccionadas) },
                 enabled = estrellasSeleccionadas > 0,
+                colors = ButtonDefaults.buttonColors(containerColor = PurpleMid)
             ) {
                 Text("Calificar")
             }
@@ -89,6 +92,6 @@ fun RatingDialog(
             TextButton(onClick = onDismiss) {
                 Text("Cancelar")
             }
-        },
+        }
     )
 }

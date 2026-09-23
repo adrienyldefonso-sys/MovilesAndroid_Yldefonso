@@ -91,7 +91,7 @@ fun BookAppointmentScreen(
             Button(
                 onClick = {
                     val nuevaCita = Cita(
-                        id = citas.size + 1,
+                        id = (citas.maxOfOrNull { it.id } ?: 0) + 1,
                         medicoId = medico.id,
                         medicoNombre = medico.nombre,
                         especialidad = medico.especialidad,
