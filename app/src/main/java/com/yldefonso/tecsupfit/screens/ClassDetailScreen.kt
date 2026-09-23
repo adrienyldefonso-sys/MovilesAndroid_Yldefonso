@@ -21,7 +21,7 @@ import com.yldefonso.tecsupfit.navigation.Screen
 fun ClassDetailScreen(
     navController: NavController,
     clase: Clase,
-    reservas: MutableList<Reserva>   //estado global recibido por parámetro
+    reservas: MutableList<Reserva>   // estado global recibido por parámetro
 ) {
     Scaffold(
         topBar = {

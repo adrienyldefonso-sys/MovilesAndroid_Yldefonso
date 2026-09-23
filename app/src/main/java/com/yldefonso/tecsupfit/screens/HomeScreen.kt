@@ -1,4 +1,5 @@
 package com.yldefonso.tecsupfit.screens
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -21,7 +22,6 @@ import com.example.tecsupfit.ui.theme.TealPrimary
 import com.yldefonso.tecsupfit.components.AppBottomBar
 import com.yldefonso.tecsupfit.data.ClasesRepository
 import com.yldefonso.tecsupfit.navigation.Screen
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(navController: NavController) {
@@ -44,12 +44,12 @@ fun HomeScreen(navController: NavController) {
                 )
             )
         },
-        //El bottomBar es parte del Scaffold de esta pantalla
+        // El bottomBar es parte del Scaffold de esta pantalla
         bottomBar = { AppBottomBar(navController) }
     ) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding)) {
 
-            //LazyRow de chips de filtro
+            // LazyRow de chips de filtro
             LazyRow(
                 modifier = Modifier.padding(16.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
