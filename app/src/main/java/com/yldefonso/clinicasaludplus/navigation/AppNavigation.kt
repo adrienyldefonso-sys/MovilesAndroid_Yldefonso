@@ -14,8 +14,14 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.yldefonso.clinicasaludplus.data.MedicoRepository
+import com.yldefonso.clinicasaludplus.components.AppDrawer
+import com.yldefonso.clinicasaludplus.data.MedicosRepository
 import com.yldefonso.clinicasaludplus.model.Cita
+import com.yldefonso.clinicasaludplus.screens.BookAppointmentScreen
+import com.yldefonso.clinicasaludplus.screens.ConfirmationScreen
+import com.yldefonso.clinicasaludplus.screens.DoctorProfileScreen
+import com.yldefonso.clinicasaludplus.screens.HomeScreen
+import com.yldefonso.clinicasaludplus.screens.MisCitasScreen
 import kotlinx.coroutines.launch
 
 @Composable
@@ -53,17 +59,17 @@ fun AppNavigation(){
                 arguments = listOf(navArgument("doctorId"){type = NavType.IntType})
             ){backStackEntry->
                 val doctorId= backStackEntry.arguments?.getInt("doctorId")?:0
-                val medico= MedicoRepository.medicos.find { it.id ==doctorId}
-                    ?: MedicoRepository.medicos.first()
-                DoctorProfile(navController,medico)
+                val medico= MedicosRepository.medicos.find { it.id ==doctorId}
+                    ?: MedicosRepository.medicos.first()
+                DoctorProfileScreen(navController,medico)
             }
             composable (
                 route = Screen.BookAppointment.route,
                 arguments = listOf(navArgument("doctorId") {type= NavType.IntType})
             ){backStackEntry->
                 val doctorId = backStackEntry.arguments?.getInt("doctorId")?:0
-                val medico = MedicoRepository.medicos.find { it.id == doctorId }
-                    ?: MedicoRepository.medicos.first()
+                val medico = MedicosRepository.medicos.find { it.id == doctorId }
+                    ?: MedicosRepository.medicos.first()
                 BookAppointmentScreen(navController,medico,citas)
                 }
             composable(
