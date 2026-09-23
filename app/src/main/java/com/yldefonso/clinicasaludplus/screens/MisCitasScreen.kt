@@ -1,4 +1,5 @@
 package com.yldefonso.clinicasaludplus.screens
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -8,6 +9,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -15,6 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.yldefonso.clinicasaludplus.components.RatingDialog
 import com.yldefonso.clinicasaludplus.model.Cita
 import com.yldefonso.clinicasaludplus.ui.theme.*
 import kotlinx.coroutines.CoroutineScope
@@ -26,7 +33,8 @@ fun MisCitasScreen(
     navController: NavController,
     drawerState: DrawerState,
     scope: CoroutineScope,
-    citas: List<Cita>
+    // Recibe SnapshotStateList para que las modificaciones en la lista disparen recomposición
+    citas: SnapshotStateList<Cita>
 ) {
     Scaffold(
         topBar = {
@@ -49,17 +57,26 @@ fun MisCitasScreen(
                 modifier = Modifier.padding(padding).padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(citas) { cita -> CitaCard(cita) }
+                // Iteramos la lista pasando 'citas' a cada Card para permitir actualización
+                items(citas, key = { it.id }) { cita ->
+                    CitaCard(cita = cita, citas = citas)
+                }
             }
         }
     }
 }
 
 // Card tipo "cuadrada" con una franja morada a la izquierda, nombre en
-// negrita, fecha/hora debajo, y el estado como pill de color al final.
+// negrita, fecha/hora debajo, el estado como pill de color y la opción de calificación para completadas.
 @Composable
-private fun CitaCard(cita: Cita) {
+private fun CitaCard(
+    cita: Cita,
+    citas: SnapshotStateList<Cita>
+) {
     val confirmada = cita.estado == "Confirmada"
+
+    // Estado local para controlar la visibilidad del diálogo de calificación
+    var mostrarDialogo by remember { mutableStateOf(false) }
 
     Card(
         shape = RoundedCornerShape(12.dp),
@@ -102,7 +119,48 @@ private fun CitaCard(cita: Cita) {
                         color = if (confirmada) ConfirmadaText else CompletadaText
                     )
                 }
+
+                // Si la cita es Completada, mostramos la sección de calificación
+                if (!confirmada) {
+                    Spacer(Modifier.height(8.dp))
+                    if (cita.calificacion == null) {
+                        // Si aún no se ha calificado, muestra el botón para abrir el diálogo
+                        TextButton(
+                            onClick = { mostrarDialogo = true },
+                            contentPadding = PaddingValues(0.dp)
+                        ) {
+                            Text(
+                                "Calificar atención",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    } else {
+                        // Si ya se calificó, muestra el puntaje asignado y ya no permite volver a calificar
+                        Text(
+                            "★ Calificado (${cita.calificacion}/5)",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
             }
         }
+    }
+
+    // Muestra el diálogo de calificación cuando el usuario hace clic en "Calificar atención"
+    if (mostrarDialogo) {
+        RatingDialog(
+            onDismiss = { mostrarDialogo = false },
+            onConfirm = { estrellas ->
+                // Busca la cita en la SnapshotStateList y la reemplaza por una copia con la calificación
+                val index = citas.indexOfFirst { it.id == cita.id }
+                if (index != -1) {
+                    citas[index] = cita.copy(calificacion = estrellas)
+                }
+                mostrarDialogo = false
+            }
+        )
     }
 }
