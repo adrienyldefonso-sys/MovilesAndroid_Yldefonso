@@ -1,10 +1,11 @@
 package com.yldefonso.clinicasaludplus.navigation
+
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
@@ -17,62 +18,66 @@ import androidx.navigation.navArgument
 import com.yldefonso.clinicasaludplus.components.AppDrawer
 import com.yldefonso.clinicasaludplus.data.MedicosRepository
 import com.yldefonso.clinicasaludplus.model.Cita
-import com.yldefonso.clinicasaludplus.screens.BookAppointmentScreen
-import com.yldefonso.clinicasaludplus.screens.ConfirmationScreen
-import com.yldefonso.clinicasaludplus.screens.DoctorProfileScreen
-import com.yldefonso.clinicasaludplus.screens.HistorialMedicoScreen
-import com.yldefonso.clinicasaludplus.screens.HomeScreen
-import com.yldefonso.clinicasaludplus.screens.MisCitasScreen
-import kotlinx.coroutines.launch
+import com.yldefonso.clinicasaludplus.screens.*
 
 @Composable
-fun AppNavigation(){
+fun AppNavigation() {
     val navController = rememberNavController()
-    //el val citas sirve como el parametro que se pasara a cada pantalla que lo necesite
+
+    // Estado global de la app SIN ViewModel: se crea aquí y se pasa
+    // como parámetro a cada pantalla que lo necesite.
     val citas = remember { mutableStateListOf<Cita>() }
+
+    // Estado y control del drawer (menú lateral)
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-    val scope = rememberCoroutineScope ()
-    //Ruta actual usada por AppDrawer
-    val currentRoute=navController.currentBackStackEntryAsState().value?.destination?.route
-    //Aqui el drawer envualve a todo el navHost para que este disponible en cualquier destino
+    val scope = rememberCoroutineScope()
+
+    // Ruta actual, usada por AppDrawer para resaltar el ítem seleccionado
+    val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
+
+    // El drawer ENVUELVE todo el NavHost: así está disponible en
+    // cualquier destino sin tener que recrearlo en cada pantalla.
     ModalNavigationDrawer(
         modifier = Modifier.fillMaxSize(),
         drawerState = drawerState,
         drawerContent = {
+            // AppDrawer ahora recibe navController + drawerState + scope
+            // directamente (mismo patrón que usamos en el resto de pantallas),
+            // por eso ya NO se pasan onDestinationClick ni onCloseDrawer.
             AppDrawer(
+                navController = navController,
                 currentRoute = currentRoute,
-                onDestinationClick = { route->
-                    navController.navigate(route){
-                        popUpTo(Screen.Home.route)
-                        launchSingleTop = true
-                    }
-                },
-                onCloseDrawer = {scope.launch { drawerState.close() }}
+                drawerState = drawerState,
+                scope = scope
             )
         }
     ) {
         NavHost(navController = navController, startDestination = Screen.Home.route) {
-            composable (Screen.Home.route){
-                HomeScreen(navController,drawerState,scope)
+
+            composable(Screen.Home.route) {
+                HomeScreen(navController, drawerState, scope)
             }
-            composable  (
+
+            composable(
                 route = Screen.DoctorProfile.route,
-                arguments = listOf(navArgument("doctorId"){type = NavType.IntType})
-            ){backStackEntry->
-                val doctorId= backStackEntry.arguments?.getInt("doctorId")?:0
-                val medico= MedicosRepository.medicos.find { it.id ==doctorId}
-                    ?: MedicosRepository.medicos.first()
-                DoctorProfileScreen(navController,medico)
-            }
-            composable (
-                route = Screen.BookAppointment.route,
-                arguments = listOf(navArgument("doctorId") {type= NavType.IntType})
-            ){backStackEntry->
-                val doctorId = backStackEntry.arguments?.getInt("doctorId")?:0
+                arguments = listOf(navArgument("doctorId") { type = NavType.IntType })
+            ) { backStackEntry ->
+                val doctorId = backStackEntry.arguments?.getInt("doctorId") ?: 0
                 val medico = MedicosRepository.medicos.find { it.id == doctorId }
                     ?: MedicosRepository.medicos.first()
-                BookAppointmentScreen(navController,medico,citas)
-                }
+                DoctorProfileScreen(navController, medico)
+            }
+
+            composable(
+                route = Screen.BookAppointment.route,
+                arguments = listOf(navArgument("doctorId") { type = NavType.IntType })
+            ) { backStackEntry ->
+                val doctorId = backStackEntry.arguments?.getInt("doctorId") ?: 0
+                val medico = MedicosRepository.medicos.find { it.id == doctorId }
+                    ?: MedicosRepository.medicos.first()
+                BookAppointmentScreen(navController, medico, citas)
+            }
+
             composable(
                 route = Screen.Confirmation.route,
                 arguments = listOf(navArgument("citaId") { type = NavType.IntType })
@@ -81,14 +86,19 @@ fun AppNavigation(){
                 val cita = citas.find { it.id == citaId }
                 ConfirmationScreen(navController, cita)
             }
-            composable(Screen.MisCitas.route){
-                MisCitasScreen(navController,drawerState,scope,citas)
+
+            composable(Screen.MisCitas.route) {
+                MisCitasScreen(navController, drawerState, scope, citas)
             }
-            composable (Screen.HistorialMedico.route){
-                HistorialMedicoScreen(navController,drawerState,scope,citas)
+
+            composable(Screen.HistorialMedico.route) {
+                HistorialMedicoScreen(navController, drawerState, scope, citas)
+            }
+
+            // Destino agregado en la última corrección (4to ítem del drawer)
+            composable(Screen.Perfil.route) {
+                PerfilScreen(navController, drawerState, scope)
             }
         }
     }
-
 }
-

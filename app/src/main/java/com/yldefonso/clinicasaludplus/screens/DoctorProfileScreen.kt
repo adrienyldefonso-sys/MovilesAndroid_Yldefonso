@@ -1,19 +1,22 @@
 package com.yldefonso.clinicasaludplus.screens
-
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.MedicalServices
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.yldefonso.clinicasaludplus.model.Medico
 import com.yldefonso.clinicasaludplus.navigation.Screen
+import com.yldefonso.clinicasaludplus.ui.theme.PurpleMid
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -34,12 +37,21 @@ fun DoctorProfileScreen(navController: NavController, medico: Medico) {
             modifier = Modifier.padding(padding).fillMaxSize().padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Icon(
-                Icons.Default.MedicalServices,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(64.dp)
-            )
+            // Círculo morado difuminado detrás del ícono de cruz médica
+            Box(
+                modifier = Modifier
+                    .size(96.dp)
+                    .clip(CircleShape)
+                    .background(PurpleMid.copy(alpha = 0.15f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    Icons.Default.Add,
+                    contentDescription = null,
+                    tint = PurpleMid,
+                    modifier = Modifier.size(40.dp)
+                )
+            }
             Spacer(Modifier.height(12.dp))
             Text(medico.nombre, style = MaterialTheme.typography.headlineSmall)
             Text(
@@ -54,11 +66,9 @@ fun DoctorProfileScreen(navController: NavController, medico: Medico) {
             Text(medico.descripcion, style = MaterialTheme.typography.bodyMedium)
             Spacer(Modifier.weight(1f))
             Button(
-                onClick = {
-                    // Sigue pasando solo el doctorId — parte 2 del flujo secuencial
-                    navController.navigate(Screen.BookAppointment.createRoute(medico.id))
-                },
-                modifier = Modifier.fillMaxWidth()
+                onClick = { navController.navigate(Screen.BookAppointment.createRoute(medico.id)) },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(containerColor = PurpleMid)
             ) { Text("Agendar cita") }
         }
     }

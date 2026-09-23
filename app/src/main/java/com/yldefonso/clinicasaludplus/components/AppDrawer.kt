@@ -4,38 +4,34 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Event
+import androidx.compose.material.icons.filled.RadioButtonChecked
+import androidx.compose.material.icons.outlined.RadioButtonUnchecked
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.yldefonso.clinicasaludplus.navigation.Screen
-data class DrawerItem(val label: String, val route: String, val icon: androidx.compose.ui.graphics.vector.ImageVector)
+import com.yldefonso.clinicasaludplus.ui.theme.PurpleLight
+import com.yldefonso.clinicasaludplus.ui.theme.PurpleMid
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
-private val drawerItems = listOf(
-    DrawerItem("Inicio", Screen.Home.route, Icons.Default.Home),
-    DrawerItem("Mis citas", Screen.MisCitas.route, Icons.Default.Event),
-    DrawerItem("Historial médico", Screen.HistorialMedico.route, Icons.Default.History)
-)
-// Contenido del menú lateral. Se declara envolviendo el Scaffold (en
-// AppNavigation) y no como parámetro del Scaffold,ya que este estara permanentemente en la app
 @Composable
 fun AppDrawer(
+    navController: NavController,
     currentRoute: String?,
-    onDestinationClick: (String) -> Unit,
-    onCloseDrawer: () -> Unit
+    drawerState: DrawerState,
+    scope: CoroutineScope
 ) {
     ModalDrawerSheet {
         Column(Modifier.padding(16.dp)) {
-            // Encabezado con el usuario
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
-                    modifier = Modifier.size(40.dp).clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primaryContainer),
+                    modifier = Modifier.size(40.dp).clip(CircleShape).background(PurpleLight),
                     contentAlignment = Alignment.Center
                 ) { Text("JP") }
                 Spacer(Modifier.width(12.dp))
@@ -48,17 +44,57 @@ fun AppDrawer(
             HorizontalDivider()
             Spacer(Modifier.height(8.dp))
 
-            drawerItems.forEach { item ->
-                NavigationDrawerItem(
-                    label = { Text(item.label) },
-                    icon = { Icon(item.icon, contentDescription = item.label) },
-                    selected = currentRoute == item.route,
-                    onClick = {
-                        onDestinationClick(item.route)
-                        onCloseDrawer()
-                    }
-                )
+            fun navegarA(route: String) {
+                navController.navigate(route) {
+                    popUpTo(Screen.Home.route)
+                    launchSingleTop = true
+                }
+                scope.launch { drawerState.close() }
             }
+
+            DrawerRadioItem(
+                label = "Inicio",
+                selected = currentRoute == Screen.Home.route,
+                onClick = { navegarA(Screen.Home.route) }
+            )
+            DrawerRadioItem(
+                label = "Mis citas",
+                selected = currentRoute == Screen.MisCitas.route,
+                onClick = { navegarA(Screen.MisCitas.route) }
+            )
+            DrawerRadioItem(
+                label = "Historial médico",
+                selected = currentRoute == Screen.HistorialMedico.route,
+                onClick = { navegarA(Screen.HistorialMedico.route) }
+            )
+            DrawerRadioItem(
+                label = "Perfil",
+                selected = currentRoute == Screen.Perfil.route,
+                onClick = { navegarA(Screen.Perfil.route) }
+            )
         }
     }
+}
+@Composable
+private fun DrawerRadioItem(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    NavigationDrawerItem(
+        label = { Text(label) },
+        icon = {
+            Icon(
+                imageVector = if (selected) Icons.Filled.RadioButtonChecked
+                else Icons.Outlined.RadioButtonUnchecked,
+                contentDescription = label,
+                tint = if (selected) PurpleMid else Color(0xFF9E9E9E)
+            )
+        },
+        selected = selected,
+        onClick = onClick,
+        colors = NavigationDrawerItemDefaults.colors(
+            selectedContainerColor = PurpleLight
+        )
+    )
 }
