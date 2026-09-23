@@ -64,7 +64,11 @@ fun AppNavigation() {
             )
         }
     ) {
-        NavHost(navController = navController, startDestination = Screen.Home.route) {
+        NavHost(navController = navController, startDestination = Screen.Login.route) {
+
+            composable(Screen.Login.route) {
+                LoginScreen(navController)
+            }
 
             composable(Screen.Home.route) {
                 HomeScreen(navController, drawerState, scope)
@@ -109,7 +113,7 @@ fun AppNavigation() {
 
             // Destino agregado en la última corrección (4to ítem del drawer)
             composable(Screen.Perfil.route) {
-                PerfilScreen(navController, drawerState, scope)
+                PerfilScreen(navController, drawerState, scope, citas)
             }
         }
     }

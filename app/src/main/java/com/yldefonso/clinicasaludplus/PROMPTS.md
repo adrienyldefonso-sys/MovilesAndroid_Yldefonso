@@ -21,3 +21,16 @@ con la paleta morada del proyecto (PurpleMid).
 **Qué tuve que corregir:** [ej. ajustar manualmente el spacing entre el
 pill de estado y el botón / la IA usó un color morado distinto al de
 Colors.kt].
+
+## Prompt 4 — Pantalla de Login
+**Qué le pedí:** crear LoginScreen.kt como nuevo punto de entrada, con
+correo/contraseña y botón habilitado solo con ambos campos llenos.
+**Qué tuve que corregir:** [ej. la IA olvidó actualizar startDestination
+en AppNavigation / el botón quedaba habilitado sin validar campos vacíos].
+
+## Prompt 5 — Estadísticas en Perfil + Cerrar sesión
+**Qué le pedí:** agregar un resumen de citas (totales/confirmadas/
+completadas) y un botón para cerrar sesión y volver al Login.
+**Qué tuve que corregir:** [ej. tuve que pasar 'citas' manualmente desde
+AppNavigation porque la IA no actualizó esa línea / ajustar el color del
+botón para que coincida con el resto de la app].
