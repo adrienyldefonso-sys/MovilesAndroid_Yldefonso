@@ -22,7 +22,6 @@ fun PantallaCarrito() {
     var nombre by remember { mutableStateOf("") }
     var precio by remember { mutableStateOf("") }
     var cantidad by remember { mutableStateOf("") }
-
     val productos = remember { mutableStateListOf<Producto>() }
 
     Scaffold(
@@ -41,6 +40,7 @@ fun PantallaCarrito() {
                 .fillMaxSize()
                 .padding(padding)
         ) {
+            // Formulario para ingresar productos
             Column(modifier = Modifier.padding(16.dp)) {
                 TextField(
                     value = nombre,
@@ -87,6 +87,7 @@ fun PantallaCarrito() {
                 }
             }
 
+            // Lista de productos o mensaje de lista vacía
             if (productos.isEmpty()) {
                 Box(
                     modifier = Modifier
@@ -96,12 +97,15 @@ fun PantallaCarrito() {
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            "Tu carrito está vacío",
+                            text = "Tu carrito está vacío",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = Color.Gray
                         )
-                        Text("Agrega tu primer producto", color = Color.Gray)
+                        Text(
+                            text = "Agrega tu primer producto",
+                            color = Color.Gray
+                        )
                     }
                 }
             } else {
@@ -115,13 +119,19 @@ fun PantallaCarrito() {
                     items(productos) { producto ->
                         TarjetaProducto(
                             producto = producto,
-                            onEliminar = { productos.remove(producto) }
+                            onFavorito = {
+                                val index = productos.indexOf(producto)
+                                if (index != -1) {
+                                    productos[index] = producto.copy(favorito = !producto.favorito)
+                                }
+                            }
                         )
                     }
                 }
             }
 
-            PanelTotales(productos)
+            // Panel con los cálculos de IGV y Totales
+            PanelTotales(productos = productos)
         }
     }
 }

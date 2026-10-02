@@ -2,7 +2,6 @@ package com.yldefonso.lab04_carrito_yldefonso.ui.components
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -16,7 +15,7 @@ import com.yldefonso.lab04_carrito_yldefonso.Producto
 @Composable
 fun TarjetaProducto(
     producto: Producto,
-    onEliminar: () -> Unit
+    onFavorito: () -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
 
@@ -45,8 +44,7 @@ fun TarjetaProducto(
                 color = Color(0xFF6C5CA5)
             )
 
-            //Icono nuevo de los 3 puntos, Se declara dentro de un Box junto al ícono que lo activa, para
-            // ue el futuro DropdownMenu se posicione anclado justo aquí
+            // --- Menú contextual básico ---
             Box {
                 IconButton(onClick = { expanded = true }) {
                     Icon(
@@ -54,13 +52,27 @@ fun TarjetaProducto(
                         contentDescription = "Más opciones"
                     )
                 }
-            }
-            IconButton(onClick = onEliminar) {
-                Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = "Eliminar",
-                    tint = MaterialTheme.colorScheme.error
-                )
+
+                DropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Favoritos") },
+                        onClick = {
+                            onFavorito()
+                            expanded = false
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Compartir") },
+                        onClick = { expanded = false }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Reportar") },
+                        onClick = { expanded = false }
+                    )
+                }
             }
         }
     }
