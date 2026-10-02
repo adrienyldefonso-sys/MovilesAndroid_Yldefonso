@@ -1,11 +1,14 @@
 package com.yldefonso.lab04_carrito_yldefonso.ui.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.ShoppingBag
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -21,81 +24,95 @@ fun TarjetaProducto(
     producto: Producto,
     onFavorito: () -> Unit
 ) {
-    var expanded by remember { mutableStateOf(false) }
+    var menuExpandido by remember { mutableStateOf(false) }
 
-    Card(modifier = Modifier.fillMaxWidth()) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF3EDF7))
+    ) {
         Row(
             modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
+                .fillMaxWidth()
+                .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = producto.nombre,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = "S/ ${"%.2f".format(producto.precio)} x ${producto.cantidad}",
-                    color = Color.Gray
+            // Ícono lateral de producto
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .background(Color(0xFFE8DEF8), RoundedCornerShape(12.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.ShoppingBag,
+                    contentDescription = null,
+                    tint = Color(0xFF6C5CA5)
                 )
             }
 
-            Text(
-                text = "S/ ${"%.2f".format(producto.precio * producto.cantidad)}",
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF6C5CA5)
-            )
+            Spacer(modifier = Modifier.width(16.dp))
 
+            // Datos del producto
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = producto.nombre,
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Text(
+                    text = "S/ ${"%.2f".format(producto.precio)}",
+                    color = Color.Gray,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+
+            // Menú de 3 puntos (⋮) con DropdownMenu
             Box {
-                IconButton(onClick = { expanded = true }) {
+                IconButton(onClick = { menuExpandido = true }) {
                     Icon(
                         imageVector = Icons.Default.MoreVert,
-                        contentDescription = "Más opciones"
+                        contentDescription = "Opciones"
                     )
                 }
 
                 DropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
+                    expanded = menuExpandido,
+                    onDismissRequest = { menuExpandido = false }
                 ) {
                     DropdownMenuItem(
                         text = { Text("Favoritos") },
                         leadingIcon = {
                             Icon(
-                                imageVector = if (producto.favorito) Icons.Default.Favorite
-                                else Icons.Default.FavoriteBorder,
-                                contentDescription = null,
-                                tint = if (producto.favorito) Color(0xFF6C5CA5) else Color.Gray
+                                imageVector = if (producto.favorito) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                                contentDescription = "Favoritos",
+                                tint = if (producto.favorito) Color(0xFF6C5CA5) else Color.Unspecified
                             )
                         },
                         onClick = {
+                            menuExpandido = false
                             onFavorito()
-                            expanded = false
                         }
                     )
-                    HorizontalDivider()
                     DropdownMenuItem(
                         text = { Text("Compartir") },
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Default.Share,
-                                contentDescription = null
+                                contentDescription = "Compartir"
                             )
                         },
-                        onClick = { expanded = false }
+                        onClick = { menuExpandido = false }
                     )
-                    HorizontalDivider()
                     DropdownMenuItem(
                         text = { Text("Reportar") },
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Default.Warning,
-                                contentDescription = null
+                                contentDescription = "Reportar"
                             )
                         },
-                        onClick = { expanded = false }
+                        onClick = { menuExpandido = false }
                     )
                 }
             }

@@ -26,15 +26,22 @@ fun PantallaCarrito() {
     var nombre by remember { mutableStateOf("") }
     var precio by remember { mutableStateOf("") }
     var cantidad by remember { mutableStateOf("") }
-    val productos = remember { mutableStateListOf<Producto>() }
+
+    // Productos iniciales de la maqueta
+    val productos = remember {
+        mutableStateListOf(
+            Producto("Audifonos", 89.00, 1),
+            Producto("Smartwatch", 199.00, 1),
+            Producto("Funda celular", 25.00, 1)
+        )
+    }
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
-    var pantallaActual by remember { mutableStateOf("Inicio") }
+    var pantallaActual by remember { mutableStateOf("Mis pedidos") }
 
     val destinos = listOf("Inicio", "Mis pedidos", "Favoritos", "Perfil", "Cerrar sesion")
-
-    val totalFavoritos = productos.count { it.favorito }
+    val cantidadFavoritos = productos.count { it.favorito }
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -42,7 +49,7 @@ fun PantallaCarrito() {
             DrawerContenido(
                 destinos = destinos,
                 pantallaActual = pantallaActual,
-                cantidadFavoritos = totalFavoritos,
+                cantidadFavoritos = cantidadFavoritos,
                 onDestinoSeleccionado = { destino ->
                     pantallaActual = destino
                     scope.launch { drawerState.close() }
@@ -53,7 +60,16 @@ fun PantallaCarrito() {
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { Text("Mi Carrito TECSUP") },
+                    title = {
+                        Column {
+                            Text("TECSUP Store", fontWeight = FontWeight.Bold)
+                            Text(
+                                "Mas vendidos",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color.LightGray
+                            )
+                        }
+                    },
                     navigationIcon = {
                         IconButton(onClick = { scope.launch { drawerState.open() } }) {
                             Icon(
@@ -70,100 +86,143 @@ fun PantallaCarrito() {
                 )
             }
         ) { padding ->
-            if (pantallaActual != "Inicio") {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(padding),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "Pantalla \"$pantallaActual\" en construcción",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = Color.Gray
-                    )
-                }
-            } else {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(padding)
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        TextField(
-                            value = nombre,
-                            onValueChange = { nombre = it },
-                            label = { Text("Nombre del producto") },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
+            when (pantallaActual) {
+                // 1. VISTA INICIO: Formulario de ingreso + Lista de Productos + Panel Totales
+                "Inicio" -> {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(padding)
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
                             TextField(
-                                value = precio,
-                                onValueChange = { precio = it },
-                                label = { Text("Precio (S/)") },
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                                modifier = Modifier.weight(1f)
+                                value = nombre,
+                                onValueChange = { nombre = it },
+                                label = { Text("Nombre del producto") },
+                                modifier = Modifier.fillMaxWidth()
                             )
-                            TextField(
-                                value = cantidad,
-                                onValueChange = { cantidad = it },
-                                label = { Text("Cantidad") },
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Button(
-                            onClick = {
-                                val precioNum = precio.toDoubleOrNull() ?: 0.0
-                                val cantidadNum = cantidad.toIntOrNull() ?: 0
-                                if (nombre.isNotBlank() && precioNum > 0 && cantidadNum > 0) {
-                                    productos.add(Producto(nombre, precioNum, cantidadNum))
-                                    nombre = ""
-                                    precio = ""
-                                    cantidad = ""
-                                }
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6C5CA5))
-                        ) {
-                            Text("AGREGAR")
-                        }
-                    }
-
-                    if (productos.isEmpty()) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .weight(1f),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(
-                                    text = "Tu carrito está vacío",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.Gray
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                TextField(
+                                    value = precio,
+                                    onValueChange = { precio = it },
+                                    label = { Text("Precio (S/)") },
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                                    modifier = Modifier.weight(1f)
                                 )
-                                Text(
-                                    text = "Agrega tu primer producto",
-                                    color = Color.Gray
+                                TextField(
+                                    value = cantidad,
+                                    onValueChange = { cantidad = it },
+                                    label = { Text("Cantidad") },
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                    modifier = Modifier.weight(1f)
                                 )
                             }
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Button(
+                                onClick = {
+                                    val precioNum = precio.toDoubleOrNull() ?: 0.0
+                                    val cantidadNum = cantidad.toIntOrNull() ?: 0
+                                    if (nombre.isNotBlank() && precioNum > 0 && cantidadNum > 0) {
+                                        productos.add(Producto(nombre, precioNum, cantidadNum))
+                                        nombre = ""
+                                        precio = ""
+                                        cantidad = ""
+                                    }
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6C5CA5))
+                            ) {
+                                Text("AGREGAR")
+                            }
+                        }
+
+                        if (productos.isEmpty()) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .weight(1f),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text("Tu carrito está vacío", color = Color.Gray)
+                            }
+                        } else {
+                            LazyColumn(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .weight(1f)
+                                    .padding(horizontal = 16.dp),
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                items(productos) { producto ->
+                                    TarjetaProducto(
+                                        producto = producto,
+                                        onFavorito = {
+                                            val index = productos.indexOf(producto)
+                                            if (index != -1) {
+                                                productos[index] = producto.copy(favorito = !producto.favorito)
+                                            }
+                                        }
+                                    )
+                                }
+                            }
+                        }
+
+                        PanelTotales(productos = productos)
+                    }
+                }
+
+                // 2. VISTA MIS PEDIDOS: SOLO LAS TARJETAS (Sin formulario)
+                "Mis pedidos" -> {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(padding)
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(productos) { producto ->
+                            TarjetaProducto(
+                                producto = producto,
+                                onFavorito = {
+                                    val index = productos.indexOf(producto)
+                                    if (index != -1) {
+                                        productos[index] = producto.copy(favorito = !producto.favorito)
+                                    }
+                                }
+                            )
+                        }
+                    }
+                }
+
+                // 3. VISTA FAVORITOS: SOLO CARDS DE PRODUCTOS FAVORITOS
+                "Favoritos" -> {
+                    val listaFavoritos = productos.filter { it.favorito }
+                    if (listaFavoritos.isEmpty()) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(padding),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "No tienes productos en favoritos",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = Color.Gray
+                            )
                         }
                     } else {
                         LazyColumn(
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .weight(1f)
-                                .padding(horizontal = 16.dp),
+                                .fillMaxSize()
+                                .padding(padding)
+                                .padding(16.dp),
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            items(productos) { producto ->
+                            items(listaFavoritos) { producto ->
                                 TarjetaProducto(
                                     producto = producto,
                                     onFavorito = {
@@ -176,8 +235,21 @@ fun PantallaCarrito() {
                             }
                         }
                     }
+                }
 
-                    PanelTotales(productos = productos)
+                // 4. OTRAS SECCIONES
+                else -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(padding),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Pantalla \"$pantallaActual\" en construcción",
+                            color = Color.Gray
+                        )
+                    }
                 }
             }
         }
