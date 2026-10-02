@@ -2,7 +2,11 @@ package com.yldefonso.lab04_carrito_yldefonso.ui.components
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -44,7 +48,6 @@ fun TarjetaProducto(
                 color = Color(0xFF6C5CA5)
             )
 
-            // --- Menú contextual básico ---
             Box {
                 IconButton(onClick = { expanded = true }) {
                     Icon(
@@ -59,17 +62,39 @@ fun TarjetaProducto(
                 ) {
                     DropdownMenuItem(
                         text = { Text("Favoritos") },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = if (producto.favorito) Icons.Default.Favorite
+                                else Icons.Default.FavoriteBorder,
+                                contentDescription = null,
+                                tint = if (producto.favorito) Color(0xFF6C5CA5) else Color.Gray
+                            )
+                        },
                         onClick = {
                             onFavorito()
                             expanded = false
                         }
                     )
+                    HorizontalDivider()
                     DropdownMenuItem(
                         text = { Text("Compartir") },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Share,
+                                contentDescription = null
+                            )
+                        },
                         onClick = { expanded = false }
                     )
+                    HorizontalDivider()
                     DropdownMenuItem(
                         text = { Text("Reportar") },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Warning,
+                                contentDescription = null
+                            )
+                        },
                         onClick = { expanded = false }
                     )
                 }
