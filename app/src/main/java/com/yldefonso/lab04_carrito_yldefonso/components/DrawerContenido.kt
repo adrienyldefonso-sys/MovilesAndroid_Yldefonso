@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 fun DrawerContenido(
     destinos: List<String>,
     pantallaActual: String,
+    cantidadFavoritos: Int = 0,
     onDestinoSeleccionado: (String) -> Unit
 ) {
     ModalDrawerSheet {
@@ -55,7 +56,7 @@ fun DrawerContenido(
         HorizontalDivider()
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Lista de opciones con RadioButton de selección
+        // Lista de opciones
         destinos.forEach { destino ->
             val esSeleccionado = pantallaActual == destino
 
@@ -64,11 +65,22 @@ fun DrawerContenido(
                 icon = {
                     RadioButton(
                         selected = esSeleccionado,
-                        onClick = null, // El click se maneja en la tarjeta completa
+                        onClick = null,
                         colors = RadioButtonDefaults.colors(
                             selectedColor = Color(0xFF6C5CA5)
                         )
                     )
+                },
+                // Parámetro nativo de Material3 para colocar el badge a la derecha
+                badge = {
+                    if (destino == "Favoritos" && cantidadFavoritos > 0) {
+                        Badge(
+                            containerColor = Color(0xFF6C5CA5),
+                            contentColor = Color.White
+                        ) {
+                            Text(text = "$cantidadFavoritos")
+                        }
+                    }
                 },
                 selected = esSeleccionado,
                 onClick = { onDestinoSeleccionado(destino) },

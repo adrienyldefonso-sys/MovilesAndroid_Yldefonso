@@ -1,0 +1,3 @@
+## Prompt 1: Implementación del Badge contador en "Favoritos"
+* **Resumen de lo solicitado:** Integrar un `Badge` en la opción "Favoritos" del `NavigationDrawer` para reflejar en tiempo real la cantidad de productos marcados como favoritos en la aplicación.
+* **Resultado y correcciones:** Se actualizó `DrawerContenido.kt` agregando el componente `Badge` condicionado a `cantidadFavoritos > 0`, y se conectó en `PantallaCarrito.kt` pasando el conteo dinámico de la lista mutable (`productos.count { it.favorito }`).

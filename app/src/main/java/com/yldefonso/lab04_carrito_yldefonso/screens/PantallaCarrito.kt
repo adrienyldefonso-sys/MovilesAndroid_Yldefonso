@@ -34,12 +34,15 @@ fun PantallaCarrito() {
 
     val destinos = listOf("Inicio", "Mis pedidos", "Favoritos", "Perfil", "Cerrar sesion")
 
+    val totalFavoritos = productos.count { it.favorito }
+
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
             DrawerContenido(
                 destinos = destinos,
                 pantallaActual = pantallaActual,
+                cantidadFavoritos = totalFavoritos,
                 onDestinoSeleccionado = { destino ->
                     pantallaActual = destino
                     scope.launch { drawerState.close() }
