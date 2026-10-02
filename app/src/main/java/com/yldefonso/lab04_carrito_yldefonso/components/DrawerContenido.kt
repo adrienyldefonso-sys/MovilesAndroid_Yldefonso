@@ -46,7 +46,7 @@ fun DrawerContenido(
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = "adrien.yldefonso@tecsup.edu.pe",
+                    text = "becker@tecsup.edu.pe",
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.Gray
                 )
@@ -55,11 +55,22 @@ fun DrawerContenido(
         HorizontalDivider()
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Lista de opciones con indicación de la pestaña activa
+        // Lista de opciones con RadioButton de selección
         destinos.forEach { destino ->
+            val esSeleccionado = pantallaActual == destino
+
             NavigationDrawerItem(
                 label = { Text(destino) },
-                selected = pantallaActual == destino,
+                icon = {
+                    RadioButton(
+                        selected = esSeleccionado,
+                        onClick = null, // El click se maneja en la tarjeta completa
+                        colors = RadioButtonDefaults.colors(
+                            selectedColor = Color(0xFF6C5CA5)
+                        )
+                    )
+                },
+                selected = esSeleccionado,
                 onClick = { onDestinoSeleccionado(destino) },
                 colors = NavigationDrawerItemDefaults.colors(
                     selectedContainerColor = Color(0xFFEDE9F5),
