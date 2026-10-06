@@ -17,7 +17,7 @@ object Repositorio {
     var usuarioActual: Usuario? = usuarios.firstOrNull()
 
     fun registrarUsuario(usuario: Usuario): Boolean {
-        val existeCorreo = usuarios.any { it.correo.equals(usuario.correo.trim(), ignoreCase = true) }
+        val existeCorreo = usuarios.any { it.correo.equals(usuario.correo, ignoreCase = true) }
         if (existeCorreo) {
             return false
         }
