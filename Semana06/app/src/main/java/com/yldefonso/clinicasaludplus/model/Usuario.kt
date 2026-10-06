@@ -1,4 +1,5 @@
 package com.yldefonso.clinicasaludplus.model
+
 data class Usuario(
     val id: Int,
     val nombre: String,

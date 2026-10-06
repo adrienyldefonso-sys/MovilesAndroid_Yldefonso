@@ -1,64 +1,49 @@
-package com.yldefonso.clinicasaludplus.ui.components.auth
+package com.yldefonso.clinicasaludplus.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import com.yldefonso.clinicasaludplus.navigation.Rutas
+import kotlinx.coroutines.delay
 
 @Composable
-fun SplashScreen(
-    onComenzar: () -> Unit,
-    onTengoCuenta: () -> Unit
-) {
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+fun SplashScreen(navController: NavController) {
+    LaunchedEffect(key1 = true) {
+        delay(2000) // Temporizador de 2 segundos
+        navController.navigate(Rutas.Login.ruta) {
+            popUpTo(Rutas.Splash.ruta) { inclusive = true }
+        }
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.primary),
+        contentAlignment = Alignment.Center
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
-                text = "SaludPlus",
-                fontSize = 36.sp,
+                text = "Clínica Salud Plus",
+                fontSize = 32.sp,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
+                color = Color.White
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Tu salud en buenas manos",
+                text = "Cuidando tu salud siempre",
                 fontSize = 16.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = Color.White.copy(alpha = 0.8f)
             )
-
-            Spacer(modifier = Modifier.height(48.dp))
-
-            Button(
-                onClick = onComenzar,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp)
-            ) {
-                Text("Comenzar", fontSize = 16.sp)
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            OutlinedButton(
-                onClick = onTengoCuenta,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp)
-            ) {
-                Text("Ya tengo una cuenta", fontSize = 16.sp)
-            }
         }
     }
 }

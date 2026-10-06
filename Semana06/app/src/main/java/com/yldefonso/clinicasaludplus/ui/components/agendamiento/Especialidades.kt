@@ -16,29 +16,22 @@ import com.yldefonso.clinicasaludplus.repository.Repositorio
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MedicosScreen(navController: NavController, especialidadId: Int) {
+fun EspecialidadesScreen(navController: NavController) {
     var query by remember { mutableStateOf("") }
-    val medicosFiltrados = Repositorio.buscarMedicos(especialidadId, query)
-    val especialidadActual = Repositorio.especialidades.find { it.id == especialidadId }
+    val especialidadesFiltradas = Repositorio.buscarEspecialidades(query)
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        Text(
-            text = "Médicos: ${especialidadActual?.nombre ?: ""}",
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary
-        )
-
+        Text("Seleccionar Especialidad", fontSize = 20.sp, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(12.dp))
 
         OutlinedTextField(
             value = query,
             onValueChange = { query = it },
-            label = { Text("Buscar médico por nombre...") },
+            label = { Text("Buscar especialidad...") },
             singleLine = true,
             modifier = Modifier.fillMaxWidth()
         )
@@ -46,19 +39,20 @@ fun MedicosScreen(navController: NavController, especialidadId: Int) {
         Spacer(modifier = Modifier.height(16.dp))
 
         LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            items(medicosFiltrados) { medico ->
+            items(especialidadesFiltradas) { item ->
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable {
-                            Repositorio.medicoSeleccionado = medico
-                            navController.navigate(Rutas.FechaHora.ruta)
+                            Repositorio.especialidadSeleccionada = item
+                            navController.navigate(Rutas.Medicos.crearRuta(item.id))
                         },
                     elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text(text = medico.nombre, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                        Text(text = medico.cmp, fontSize = 13.sp, color = MaterialTheme.colorScheme.outline)
+                        Text(text = item.nombre, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(text = item.descripcion, fontSize = 14.sp, color = MaterialTheme.colorScheme.outline)
                     }
                 }
             }

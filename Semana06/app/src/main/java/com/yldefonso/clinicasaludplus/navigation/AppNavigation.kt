@@ -1,15 +1,14 @@
 package com.yldefonso.clinicasaludplus.navigation
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.yldefonso.clinicasaludplus.ui.components.auth.*
+import androidx.navigation.navArgument
+import com.yldefonso.clinicasaludplus.ui.*
+import com.yldefonso.clinicasaludplus.ui.components.agendamiento.*
+import com.yldefonso.clinicasaludplus.ui.components.home.HomeScreen
 
 @Composable
 fun AppNavigation() {
@@ -19,45 +18,26 @@ fun AppNavigation() {
         navController = navController,
         startDestination = Rutas.Splash.ruta
     ) {
-        composable(Rutas.Splash.ruta) {
-            SplashScreen(
-                onComenzar = { navController.navigate(Rutas.Registro.ruta) },
-                onTengoCuenta = { navController.navigate(Rutas.Login.ruta) }
-            )
+        composable(Rutas.Splash.ruta) { SplashScreen(navController) }
+        composable(Rutas.Login.ruta) { LoginScreen(navController) }
+        composable(Rutas.Registro.ruta) { RegistroScreen(navController) }
+        composable(Rutas.Terminos.ruta) { TerminosScreen(navController) }
+
+        // Hito B
+        composable(Rutas.Home.ruta) { HomeScreen(navController) }
+
+        // Hito A & D
+        composable(Rutas.Especialidades.ruta) { EspecialidadesScreen(navController) }
+        composable(
+            route = Rutas.Medicos.ruta,
+            arguments = listOf(navArgument("especialidadId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val id = backStackEntry.arguments?.getInt("especialidadId") ?: 1
+            MedicosScreen(navController = navController, especialidadId = id)
         }
-        composable(Rutas.Registro.ruta) {
-            RegistroScreen(
-                onRegistroExitoso = {
-                    navController.navigate(Rutas.Home.ruta) {
-                        popUpTo(Rutas.Splash.ruta) { inclusive = true }
-                    }
-                },
-                onIrALogin = { navController.navigate(Rutas.Login.ruta) },
-                onVerTerminos = { navController.navigate(Rutas.Terminos.ruta) }
-            )
-        }
-        composable(Rutas.Login.ruta) {
-            LoginScreen(
-                onLoginExitoso = {
-                    navController.navigate(Rutas.Home.ruta) {
-                        popUpTo(Rutas.Splash.ruta) { inclusive = true }
-                    }
-                },
-                onIrARegistro = { navController.navigate(Rutas.Registro.ruta) }
-            )
-        }
-        composable(Rutas.Terminos.ruta) {
-            TerminosScreen(
-                onVolver = { navController.popBackStack() }
-            )
-        }
-        composable(Rutas.Home.ruta) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Text("HomeScreen (Se implementará en los siguientes commits)")
-            }
-        }
+
+        composable(Rutas.FechaHora.ruta) { FechaHoraScreen(navController) }
+        composable(Rutas.ConfirmarCita.ruta) { ConfirmarCitaScreen(navController) }
+        composable(Rutas.CitaExitosa.ruta) { CitaExitosaScreen(navController) }
     }
 }
