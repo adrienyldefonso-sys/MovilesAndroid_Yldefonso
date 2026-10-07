@@ -14,12 +14,11 @@ import androidx.navigation.NavController
 import com.yldefonso.clinicasaludplus.navigation.Rutas
 import com.yldefonso.clinicasaludplus.repository.Repositorio
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MedicosScreen(navController: NavController, especialidadId: Int) {
     var query by remember { mutableStateOf("") }
+    val especialidad = Repositorio.especialidades.find { it.id == especialidadId }
     val medicosFiltrados = Repositorio.buscarMedicos(especialidadId, query)
-    val especialidadActual = Repositorio.especialidades.find { it.id == especialidadId }
 
     Column(
         modifier = Modifier
@@ -27,7 +26,7 @@ fun MedicosScreen(navController: NavController, especialidadId: Int) {
             .padding(16.dp)
     ) {
         Text(
-            text = "Médicos: ${especialidadActual?.nombre ?: ""}",
+            text = "Médicos: ${especialidad?.nombre ?: "Seleccionada"}",
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.primary
@@ -39,26 +38,39 @@ fun MedicosScreen(navController: NavController, especialidadId: Int) {
             value = query,
             onValueChange = { query = it },
             label = { Text("Buscar médico por nombre...") },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            items(medicosFiltrados) { medico ->
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable {
-                            Repositorio.medicoSeleccionado = medico
-                            navController.navigate(Rutas.FechaHora.ruta)
-                        },
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text(text = medico.nombre, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                        Text(text = medico.cmp, fontSize = 13.sp, color = MaterialTheme.colorScheme.outline)
+        if (medicosFiltrados.isEmpty()) {
+            Text("No se encontraron médicos disponibles.", fontSize = 14.sp)
+        } else {
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                items(medicosFiltrados) { med ->
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                Repositorio.medicoSeleccionado = med
+                                navController.navigate(Rutas.FechaHora.ruta)
+                            },
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(
+                                text = med.nombre,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = med.cmp,
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.outline
+                            )
+                        }
                     }
                 }
             }

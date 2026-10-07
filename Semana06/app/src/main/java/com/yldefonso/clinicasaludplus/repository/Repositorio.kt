@@ -6,8 +6,8 @@ object Repositorio {
 
     // === AUTENTICACIÓN ===
     val usuarios = mutableListOf(
-        Usuario(1, "Juan Pérez", "987654321",
-            "juan@correo.com", "123456")
+        Usuario(1, "Becker Yldefonso", "987654321",
+            "becker@correo.com", "123456")
     )
     var usuarioActual: Usuario? = usuarios.firstOrNull()
 

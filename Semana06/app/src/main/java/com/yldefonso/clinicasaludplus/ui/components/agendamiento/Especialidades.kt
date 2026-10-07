@@ -14,7 +14,6 @@ import androidx.navigation.NavController
 import com.yldefonso.clinicasaludplus.navigation.Rutas
 import com.yldefonso.clinicasaludplus.repository.Repositorio
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EspecialidadesScreen(navController: NavController) {
     var query by remember { mutableStateOf("") }
@@ -25,34 +24,51 @@ fun EspecialidadesScreen(navController: NavController) {
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        Text("Seleccionar Especialidad", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+        Text(
+            text = "Especialidades Médicas",
+            fontSize = 22.sp,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary
+        )
+
         Spacer(modifier = Modifier.height(12.dp))
 
         OutlinedTextField(
             value = query,
             onValueChange = { query = it },
             label = { Text("Buscar especialidad...") },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            items(especialidadesFiltradas) { item ->
+        LazyColumn(
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            items(especialidadesFiltradas) { esp ->
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable {
-                            Repositorio.especialidadSeleccionada = item
-                            navController.navigate(Rutas.Medicos.crearRuta(item.id))
+                            Repositorio.especialidadSeleccionada = esp
+                            navController.navigate(Rutas.Medicos.crearRuta(esp.id))
                         },
                     elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text(text = item.nombre, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                        Text(
+                            text = esp.nombre,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp,
+                            color = MaterialTheme.colorScheme.primary
+                        )
                         Spacer(modifier = Modifier.height(4.dp))
-                        Text(text = item.descripcion, fontSize = 14.sp, color = MaterialTheme.colorScheme.outline)
+                        Text(
+                            text = esp.descripcion,
+                            fontSize = 13.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
             }
