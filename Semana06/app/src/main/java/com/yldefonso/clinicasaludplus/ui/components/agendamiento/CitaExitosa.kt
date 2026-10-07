@@ -6,6 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -25,44 +26,28 @@ fun CitaExitosaScreen(navController: NavController) {
     ) {
         Text(
             text = "¡Cita Reservada con Éxito!",
-            fontSize = 24.sp,
+            fontSize = 22.sp,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary
+            color = MaterialTheme.colorScheme.primary,
+            textAlign = TextAlign.Center
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        if (ultimaCita != null) {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant
-                )
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = "Código de Reserva",
-                        fontSize = 14.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = ultimaCita.codigoReserva,
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(text = "Especialidad: ${ultimaCita.especialidad.nombre}")
-                    Text(text = "Médico: ${ultimaCita.medico.nombre}")
-                    Text(text = "Fecha y Hora: ${ultimaCita.fecha} - ${ultimaCita.hora}")
-                }
-            }
-        }
+        Text(
+            text = "Código de Reserva: ${ultimaCita?.codigoReserva ?: "N/A"}",
+            fontSize = 16.sp,
+            fontWeight = FontWeight.SemiBold
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = "Hemos registrado tu cita correctamente. Puedes ver el detalle en la sección 'Mis Citas'.",
+            fontSize = 14.sp,
+            textAlign = TextAlign.Center,
+            color = MaterialTheme.colorScheme.outline
+        )
 
         Spacer(modifier = Modifier.height(32.dp))
 

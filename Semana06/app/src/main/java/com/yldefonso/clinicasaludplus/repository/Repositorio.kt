@@ -1,5 +1,6 @@
 package com.yldefonso.clinicasaludplus.repository
 
+import androidx.compose.runtime.mutableStateListOf
 import com.yldefonso.clinicasaludplus.model.*
 
 object Repositorio {
@@ -56,7 +57,8 @@ object Repositorio {
     var fechaSeleccionada: String = ""
     var horaSeleccionada: String = ""
 
-    val citasReservadas = mutableListOf<Cita>()
+    // Uso de mutableStateListOf para reactividad en Jetpack Compose
+    val citasReservadas = mutableStateListOf<Cita>()
 
     // Búsquedas y Filtros
     fun buscarEspecialidades(query: String): List<Especialidad> {
@@ -80,9 +82,9 @@ object Repositorio {
         val nuevaCita = Cita(
             id = nuevoId,
             codigoReserva = "CIT-${1000 + nuevoId}",
-            usuarioId = user.id,
-            medico = med,
+            usuario = user, // Corregido a 'usuario'
             especialidad = esp,
+            medico = med,
             fecha = fechaSeleccionada,
             hora = horaSeleccionada
         )
