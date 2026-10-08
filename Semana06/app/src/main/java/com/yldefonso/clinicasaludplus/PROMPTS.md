@@ -83,3 +83,49 @@ Durante las pruebas en el emulador se identificaron y resolvieron dos inconvenie
 4. **Pantalla Principal (`HomeScreen.kt`):**
     - Corregir la alineación horizontal de las tarjetas destacadas fijando los íconos en la parte superior (`Arrangement.Top`) y colocando el texto dentro de un contenedor flexible (`weight(1f)`), evitando saltos de línea que desplacen los íconos.
     - Sincronizar el ícono de Ginecología para utilizar el vector personalizado de trompas de falopio.
+
+## HITO 6: Estandarización Visual UI/UX, Autenticación y Gestión de Citas, Perfil y Resultados
+
+### 1. Lo que se solicitó a la IA
+- **Estandarización del Login**: Adaptar `LoginScreen` para que mantenga una secuencia lógica y visual idéntica a `RegistroScreen` (paleta azul/pastel, tipografía, estilo de componentes `CampoFormulario`, botón principal y footer de navegación).
+- **Rediseño del BottomBar**: Mejorar la barra de navegación en `AppNavigation` aplicando un fondo blanco puro, cápsula/píldora de selección en azul pastel (`#EAF1FF`), íconos/texto en azul primario (`#2F6BEA`), borde superior sutil y altura de `72dp`.
+- **Rediseño de Mis Citas**: Transformar `MisCitasScreen` para mostrar tarjetas independientes con insignias de estado "Confirmada", ícono representativo, bloque destacado para fecha y hora, y un estado vacío (*empty state*) interactivo.
+- **Rediseño de Detalle de Cita**: Crear una vista tipo ticket para `DetalleCitaScreen` con la información del médico (avatar, especialidad, CMP), datos del paciente y atención, botón de cancelación de cita destacado y un `AlertDialog` estilizado para la confirmación.
+- **Rediseño de Perfil de Usuario**: Modernizar `PerfilScreen` implementando un avatar circular dinámico con las iniciales del nombre y apellido, badge "Paciente verificado", tarjetas organizadas con íconos temáticos y botón de cierre de sesión en rojo sólido.
+- **Rediseño de Resultados Médicos**: Adaptar `ResultadosScreen` con tarjetas de análisis clínicos y radiológicos, badges de estado pastel ("Completado" / "Entregado") y un indicador de descarga en formato PDF.
+
+---
+
+### 2. Archivos Modificados y Correcciones Realizadas
+
+#### `LoginScreen.kt`
+- **Solución al layout**: Se eliminó la distribución desproporcionada generada por `Arrangement.SpaceEvenly` y se agrupó el formulario dentro de un `Box` centrado verticalmente (`Alignment.Center`) con espaciados definidos (`32dp`, `16dp`, `28dp`).
+- **Corrección de package**: Se ajustó la primera línea del paquete a `package com.yldefonso.clinicasaludplus.ui.components.auth`.
+
+#### `AppNavigation.kt`
+- **Navegación estilizada**: Se configuró `NavigationBar` con `containerColor = Color.White`, `indicatorColor = Color(0xFFEAF1FF)` y colores activos/inactivos para los íconos y textos.
+- **Borde superior tenue**: Se implementó una línea divisoria sutil de `1dp` usando `drawWithContent` (`#EEF2F6`).
+
+#### `Repositorio.kt`
+- **Estado de navegación profunda**: Se añadió la variable de estado `var citaSeleccionada: Cita? by mutableStateOf(null)` para permitir el paso seguro de la cita activa hacia la pantalla de detalle.
+
+#### `MisCitasScreen.kt`
+- **Cards unificadas**: Rediseño con tarjetas blancas redondeadas (`20dp`), badge verde pastel (`#F0FDF4`) para la confirmación, avatar circular médico y bloque de fecha/hora en pastilla clara (`#F1F5F9`).
+- **Estado vacío**: Se incluyó un diseño amigable cuando la lista de citas reservadas está vacía, con acceso directo a la pantalla de especialidades.
+
+#### `DetalleCitaScreen.kt`
+- **Ajuste en botón de cancelación**: A solicitud explícita, se removió el ícono "X" redundante, cambiando el botón a un rojo sólido (`#DC2626`) con tipografía `17.sp ExtraBold` en color blanco.
+- **Diálogo de confirmación**: Se adaptó el `AlertDialog` manteniendo la invocación de `Repositorio.cancelarCita(cita.id)` requerida por la rúbrica del proyecto.
+
+#### `PerfilScreen.kt`
+- **Generación de iniciales**: Implementación de la función `obtenerIniciales(nombre)` para calcular dinámicamente las iniciales en mayúscula (ej. *"BY"* para Becker Yldefonso) dentro del avatar de `96dp`.
+- **Botón Cierre de Sesión**: Rediseño en rojo sólido (`#DC2626`), `54dp` de altura y esquinas redondeadas de `16dp`.
+
+#### `ResultadosScreen.kt`
+- **Píldoras y Badges**: Estandarización de tarjetas blancas sobre fondo `#F8FAFC`, badges pastel para los estados ("Completado" en verde menta y "Entregado" en azul claro) y chip de fecha con acción visual de descarga PDF.
+
+---
+
+### 3. Ajustes de Estabilidad y Entorno (Emulador)
+- **Diagnóstico de colapso**: Se identificó que la versión experimental API 37.1 (*CinnamonBun*) generaba bloqueos en ADB y tiempos de espera superiores a 5 minutos.
+- **Resolución**: Se recomendó aplicar `Wipe Data` / `Cold Boot Now` y migrar la ejecución del proyecto a imágenes estables AVD en **API 34 (Android 14)** o **API 33 (Android 13)**.

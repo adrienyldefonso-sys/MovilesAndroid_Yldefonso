@@ -46,7 +46,7 @@ object Repositorio {
         usuarioActual = null
     }
 
-    // === CATÁLOGOS (Actualizado con todas las especialidades de la maqueta) ===
+    // === CATÁLOGOS ===
     val especialidades = listOf(
         Especialidad(1, "Medicina General", "Atención primaria e integral para toda la familia."),
         Especialidad(2, "Pediatría", "Cuidado médico especializado para niños y adolescentes."),
@@ -103,6 +103,7 @@ object Repositorio {
     // === ESTADO Y AGENDAMIENTO ===
     var especialidadSeleccionada: Especialidad? by mutableStateOf(null)
     var medicoSeleccionado: Medico? by mutableStateOf(null)
+    var citaSeleccionada: Cita? by mutableStateOf(null) // Cita seleccionada para ver detalles
     var fechaSeleccionada: String by mutableStateOf("")
     var fechaSeleccionadaIso: String by mutableStateOf("")
     var fechaSeleccionadaTexto: String by mutableStateOf("")
@@ -152,7 +153,6 @@ object Repositorio {
         return medico.disponibilidad.filter { it !in horasOcupadas }
     }
 
-    // Al agendar una cita, genera automáticamente la notificación e incrementa el contador de no leídas
     fun agendarCitaActual(): Cita? {
         val user = usuarioActual ?: return null
         val esp = especialidadSeleccionada ?: especialidades.find { it.id == medicoSeleccionado?.especialidadId } ?: return null
@@ -176,7 +176,6 @@ object Repositorio {
         )
         citasReservadas.add(nuevaCita)
 
-        // GENERAR NOTIFICACIÓN AUTOMÁTICA DE CITA PENDIENTE
         val nuevaNotificacion = NotificacionItem(
             id = notificaciones.size + 1,
             titulo = "Cita Asignada - ${esp.nombre}",
@@ -184,8 +183,8 @@ object Repositorio {
             fecha = "Hace un momento",
             estado = "Pendiente"
         )
-        notificaciones.add(0, nuevaNotificacion) // Se agrega al inicio de la lista
-        notificacionesNoLeidas++                  // Se incrementa la campana en +1
+        notificaciones.add(0, nuevaNotificacion)
+        notificacionesNoLeidas++
 
         return nuevaCita
     }
@@ -201,6 +200,7 @@ object Repositorio {
     fun limpiarProcesoAgendamiento() {
         especialidadSeleccionada = null
         medicoSeleccionado = null
+        citaSeleccionada = null
         fechaSeleccionada = ""
         fechaSeleccionadaIso = ""
         fechaSeleccionadaTexto = ""
