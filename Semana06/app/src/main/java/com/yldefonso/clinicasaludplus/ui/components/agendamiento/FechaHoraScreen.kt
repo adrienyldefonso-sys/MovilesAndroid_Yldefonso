@@ -1,10 +1,8 @@
 package com.yldefonso.clinicasaludplus.ui.components.agendamiento
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -17,9 +15,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -32,6 +32,15 @@ import java.time.format.DateTimeFormatter
 import java.time.temporal.TemporalAdjusters
 import java.util.Locale
 
+// Paleta de colores (Pantalla 6 de la maqueta)
+private val AzulPrimario = Color(0xFF2F6BEA)
+private val AzulDeshabilitado = Color(0xFFBFD0F7)
+private val TextoOscuro = Color(0xFF1B2540)
+private val TextoGris = Color(0xFF6B7690)
+private val FondoChip = Color(0xFFF1F4FA)
+private val FondoBloque = Color(0xFFF3F6FC)
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FechaHoraScreen(navController: NavController) {
     val medico = Repositorio.medicoSeleccionado
@@ -49,7 +58,7 @@ fun FechaHoraScreen(navController: NavController) {
         (0L..4L).map { lunesSemana.plusDays(it) }
     }
 
-    // Día seleccionado por defecto: primer día no pasado de la semana visible, o el lunes
+    // Día seleccionado por defecto
     var diaSeleccionado by remember(lunesSemana) {
         mutableStateOf(diasHabiles.firstOrNull { !it.isBefore(hoy) } ?: diasHabiles.first())
     }
@@ -69,50 +78,91 @@ fun FechaHoraScreen(navController: NavController) {
         Repositorio.fechaSeleccionada = textoLimpio
     }
 
-    // Obtener horarios disponibles de manera reactiva para la fecha elegida
+    // Horarios disponibles
     val horarios = remember(medico?.id, fechaIsoActual, Repositorio.citasReservadas.size) {
         if (medico != null) {
             Repositorio.horariosDisponibles(medico.id, fechaIsoActual)
         } else emptyList()
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        // Cabecera con botón de retroceso
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            IconButton(onClick = { navController.popBackStack() }) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Volver"
-                )
-            }
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(
-                text = "Seleccionar Fecha y Hora",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
+    val mesAnoTexto = remember(lunesSemana) {
+        lunesSemana.format(DateTimeFormatter.ofPattern("MMMM yyyy", localeEs)).replaceFirstChar { it.uppercase() }
+    }
+
+    Scaffold(
+        containerColor = Color.White,
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = {
+                    Text(
+                        text = "Seleccionar fecha y hora",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 19.sp,
+                        color = TextoOscuro
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Volver",
+                            tint = TextoOscuro
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.White)
             )
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // Tarjeta del médico seleccionado
-        medico?.let { med ->
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        },
+        bottomBar = {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color.White)
+                    .navigationBarsPadding()
+                    .padding(horizontal = 20.dp, vertical = 16.dp)
             ) {
+                Button(
+                    onClick = {
+                        if (horaSeleccionadaLocal.isNotBlank()) {
+                            navController.navigate(Rutas.ConfirmarCita.ruta)
+                        }
+                    },
+                    enabled = horaSeleccionadaLocal.isNotBlank(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = AzulPrimario,
+                        contentColor = Color.White,
+                        disabledContainerColor = AzulDeshabilitado,
+                        disabledContentColor = Color.White
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(54.dp)
+                ) {
+                    Text(
+                        text = "Continuar",
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 0.3.sp
+                    )
+                }
+            }
+        }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(horizontal = 20.dp, vertical = 4.dp)
+        ) {
+            // 1. CARD DEL MÉDICO
+            medico?.let { med ->
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(12.dp),
+                        .clip(RoundedCornerShape(22.dp))
+                        .background(FondoBloque)
+                        .padding(20.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     AsyncImage(
@@ -122,208 +172,180 @@ fun FechaHoraScreen(navController: NavController) {
                         error = rememberVectorPainter(Icons.Default.Person),
                         contentScale = ContentScale.Crop,
                         modifier = Modifier
-                            .size(52.dp)
+                            .size(84.dp)
                             .clip(CircleShape)
+                            .background(Color(0xFFEAF1FF))
                     )
-                    Spacer(modifier = Modifier.width(12.dp))
+                    Spacer(modifier = Modifier.width(18.dp))
                     Column {
                         Text(
                             text = med.nombre,
                             fontWeight = FontWeight.Bold,
-                            fontSize = 15.sp
+                            fontSize = 20.sp,
+                            color = TextoOscuro
                         )
-                        val especialidadNombre = Repositorio.especialidades.find { it.id == med.especialidadId }?.nombre ?: ""
+                        val especialidadNombre =
+                            Repositorio.especialidades.find { it.id == med.especialidadId }?.nombre ?: ""
                         if (especialidadNombre.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(4.dp))
                             Text(
                                 text = especialidadNombre,
-                                fontSize = 13.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                fontSize = 16.sp,
+                                color = TextoGris
                             )
                         }
-                        Text(
-                            text = med.cmp,
-                            fontSize = 12.sp,
-                            color = MaterialTheme.colorScheme.outline
-                        )
                     }
                 }
             }
-        }
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(22.dp))
 
-        // Navegación por semanas (Mes y Año en español)
-        val mesAnoTexto = remember(lunesSemana) {
-            lunesSemana.format(DateTimeFormatter.ofPattern("MMMM yyyy", localeEs)).replaceFirstChar { it.uppercase() }
-        }
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = mesAnoTexto,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
-            )
-            Row {
+            // 2. BLOQUE DE CALENDARIO (MES + DÍAS)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 IconButton(
                     onClick = { if (semanaOffset > 0) semanaOffset-- },
                     enabled = semanaOffset > 0
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                        contentDescription = "Semana anterior"
+                        contentDescription = "Semana anterior",
+                        tint = if (semanaOffset > 0) TextoOscuro else TextoGris.copy(alpha = 0.4f)
                     )
                 }
-                IconButton(
-                    onClick = { semanaOffset++ }
-                ) {
+                Text(
+                    text = mesAnoTexto,
+                    modifier = Modifier.weight(1f),
+                    textAlign = TextAlign.Center,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = TextoOscuro
+                )
+                IconButton(onClick = { semanaOffset++ }) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                        contentDescription = "Siguiente semana"
+                        contentDescription = "Siguiente semana",
+                        tint = TextoOscuro
                     )
                 }
             }
-        }
 
-        Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
-        // Días hábiles de la semana (Lunes a Viernes)
-        LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            items(diasHabiles.size) { index ->
-                val dia = diasHabiles[index]
-                val esPasado = dia.isBefore(hoy)
-                val esSeleccionado = dia == diaSeleccionado
+            // CHIPS DE DÍAS HÁBILES
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                diasHabiles.forEach { dia ->
+                    val esPasado = dia.isBefore(hoy)
+                    val esSeleccionado = dia == diaSeleccionado
 
-                val nombreDiaCorto = dia.format(DateTimeFormatter.ofPattern("EEE", localeEs))
-                    .take(3)
-                    .replaceFirstChar { it.uppercase() }
+                    val nombreDiaCorto = dia.format(DateTimeFormatter.ofPattern("EEE", localeEs))
+                        .take(3)
+                        .replaceFirstChar { it.uppercase() }
 
-                Card(
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = when {
-                            esSeleccionado -> MaterialTheme.colorScheme.primary
-                            esPasado -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
-                            else -> MaterialTheme.colorScheme.surfaceVariant
-                        },
-                        contentColor = when {
-                            esSeleccionado -> MaterialTheme.colorScheme.onPrimary
-                            esPasado -> MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
-                            else -> MaterialTheme.colorScheme.onSurfaceVariant
-                        }
-                    ),
-                    modifier = Modifier
-                        .width(64.dp)
-                        .height(72.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .clickable(enabled = !esPasado) {
-                            diaSeleccionado = dia
-                            horaSeleccionadaLocal = ""
-                            Repositorio.horaSeleccionada = ""
-                        }
-                ) {
+                    val fondo = when {
+                        esSeleccionado -> AzulPrimario
+                        esPasado -> FondoChip.copy(alpha = 0.5f)
+                        else -> FondoChip
+                    }
+                    val colorTexto = when {
+                        esSeleccionado -> Color.White
+                        esPasado -> TextoGris.copy(alpha = 0.45f)
+                        else -> TextoOscuro
+                    }
+
                     Column(
                         modifier = Modifier
-                            .fillMaxSize()
-                            .padding(vertical = 8.dp, horizontal = 4.dp),
+                            .weight(1f)
+                            .height(86.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(fondo)
+                            .clickable(enabled = !esPasado) {
+                                diaSeleccionado = dia
+                                horaSeleccionadaLocal = ""
+                                Repositorio.horaSeleccionada = ""
+                            },
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
                         Text(
                             text = nombreDiaCorto,
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.SemiBold
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = colorTexto
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = dia.dayOfMonth.toString(),
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = colorTexto
                         )
                     }
                 }
             }
-        }
 
-        Spacer(modifier = Modifier.height(20.dp))
+            // SPACER MAS NOTORIO ENTRE DÍAS Y HORARIOS (32.dp)
+            Spacer(modifier = Modifier.height(32.dp))
 
-        Text(
-            text = "Horarios Disponibles",
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        if (horarios.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "No hay horarios disponibles para la fecha seleccionada.",
-                    fontSize = 14.sp,
-                    color = MaterialTheme.colorScheme.outline
-                )
-            }
-        } else {
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(3),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.weight(1f)
-            ) {
-                items(horarios.size) { index ->
-                    val hora = horarios[index]
-                    val esSeleccionado = hora == horaSeleccionadaLocal
-                    Button(
-                        onClick = {
-                            horaSeleccionadaLocal = hora
-                            Repositorio.horaSeleccionada = hora
-                        },
-                        shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (esSeleccionado) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
-                            contentColor = if (esSeleccionado) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
-                        ),
-                        contentPadding = PaddingValues(vertical = 10.dp, horizontal = 4.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(
-                            text = hora,
-                            fontSize = 13.sp,
-                            fontWeight = if (esSeleccionado) FontWeight.Bold else FontWeight.Medium
-                        )
+            // 3. BLOQUE DE HORARIOS
+            if (horarios.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "No hay horarios disponibles para esta fecha.",
+                        fontSize = 15.sp,
+                        color = TextoGris,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            } else {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    horarios.chunked(3).forEach { filaHoras ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            filaHoras.forEach { hora ->
+                                val esSeleccionado = hora == horaSeleccionadaLocal
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(62.dp)
+                                        .clip(RoundedCornerShape(16.dp))
+                                        .background(if (esSeleccionado) AzulPrimario else FondoChip)
+                                        .clickable {
+                                            horaSeleccionadaLocal = hora
+                                            Repositorio.horaSeleccionada = hora
+                                        },
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = hora,
+                                        fontSize = 16.sp,
+                                        fontWeight = if (esSeleccionado) FontWeight.Bold else FontWeight.Medium,
+                                        color = if (esSeleccionado) Color.White else TextoOscuro
+                                    )
+                                }
+                            }
+                            repeat(3 - filaHoras.size) {
+                                Spacer(modifier = Modifier.weight(1f))
+                            }
+                        }
                     }
                 }
             }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Button(
-            onClick = {
-                if (horaSeleccionadaLocal.isNotBlank()) {
-                    navController.navigate(Rutas.ConfirmarCita.ruta)
-                }
-            },
-            enabled = horaSeleccionadaLocal.isNotBlank(),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(
-                text = "Continuar a Confirmación",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold
-            )
         }
     }
 }

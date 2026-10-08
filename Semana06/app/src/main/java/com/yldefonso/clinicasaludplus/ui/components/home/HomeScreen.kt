@@ -15,11 +15,9 @@ import androidx.compose.material.icons.filled.Assignment
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.ChildCare
 import androidx.compose.material.icons.filled.EventNote
-import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
@@ -33,7 +31,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathFillType
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -221,7 +222,7 @@ fun HomeScreen(navController: NavController) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // CARDS DE ESPECIALIDADES DESTACADAS
+        // CARDS DE ESPECIALIDADES DESTACADAS (CORREGIDA ALINEACIÓN DE ÍCONOS)
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -248,10 +249,13 @@ fun HomeScreen(navController: NavController) {
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(horizontal = 10.dp, vertical = 16.dp),
-                        verticalArrangement = Arrangement.Center,
+                            .padding(horizontal = 8.dp, vertical = 14.dp),
+                        verticalArrangement = Arrangement.Top,
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        // ÍCONO FIJO EN LA PARTE SUPERIOR DE LA TARJETA
                         Box(
                             modifier = Modifier
                                 .size(60.dp)
@@ -263,20 +267,28 @@ fun HomeScreen(navController: NavController) {
                                 imageVector = estilo.icono,
                                 contentDescription = esp.nombre,
                                 tint = estilo.colorIcono,
-                                modifier = Modifier.size(36.dp)
+                                modifier = Modifier.size(32.dp)
                             )
                         }
 
-                        Spacer(modifier = Modifier.height(14.dp))
+                        Spacer(modifier = Modifier.height(12.dp))
 
-                        Text(
-                            text = esp.nombre,
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = TextoOscuro,
-                            textAlign = TextAlign.Center,
-                            lineHeight = 19.sp
-                        )
+                        // CONTENEDOR FLEXIBLE PARA EL TEXTO CENTRADO
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1f),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = esp.nombre,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = TextoOscuro,
+                                textAlign = TextAlign.Center,
+                                lineHeight = 18.sp
+                            )
+                        }
                     }
                 }
             }
@@ -346,6 +358,11 @@ private data class EstiloEspecialidad(
 
 private fun obtenerEstiloEspecialidad(nombre: String): EstiloEspecialidad {
     return when {
+        nombre.contains("medicina", ignoreCase = true) -> EstiloEspecialidad(
+            icono = Icons.Default.Person,
+            colorIcono = Color(0xFF2F6BEA),
+            colorFondo = Color(0xFFEAF1FF)
+        )
         nombre.contains("pedi", ignoreCase = true) -> EstiloEspecialidad(
             icono = Icons.Default.ChildCare,
             colorIcono = Color(0xFFFF8A00),
@@ -357,7 +374,7 @@ private fun obtenerEstiloEspecialidad(nombre: String): EstiloEspecialidad {
             colorFondo = Color(0xFFFFEBEE)
         )
         nombre.contains("gine", ignoreCase = true) -> EstiloEspecialidad(
-            icono = Icons.Default.Face,
+            icono = IconoTrompasDeFalopio,
             colorIcono = Color(0xFFD81B60),
             colorFondo = Color(0xFFFCE4EC)
         )
@@ -373,3 +390,55 @@ private fun obtenerEstiloEspecialidad(nombre: String): EstiloEspecialidad {
         )
     }
 }
+
+// VECTOR PERSONALIZADO: TROMPAS DE FALOPIO / ÚTERO (GINECOLOGÍA)
+private var _iconoTrompasDeFalopio: ImageVector? = null
+private val IconoTrompasDeFalopio: ImageVector
+    get() {
+        if (_iconoTrompasDeFalopio != null) {
+            return _iconoTrompasDeFalopio!!
+        }
+        _iconoTrompasDeFalopio = ImageVector.Builder(
+            name = "IconoTrompasDeFalopio",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f
+        ).path(
+            fill = SolidColor(Color.Black),
+            pathFillType = PathFillType.NonZero
+        ) {
+            // Ovario Izquierdo
+            moveTo(3.5f, 10.5f)
+            curveTo(2.67f, 10.5f, 2f, 9.83f, 2f, 9f)
+            curveTo(2f, 8.17f, 2.67f, 7.5f, 3.5f, 7.5f)
+            curveTo(4.33f, 7.5f, 5f, 8.17f, 5f, 9f)
+            curveTo(5f, 9.83f, 4.33f, 10.5f, 3.5f, 10.5f)
+            close()
+
+            // Ovario Derecho
+            moveTo(20.5f, 10.5f)
+            curveTo(19.67f, 10.5f, 19f, 9.83f, 19f, 9f)
+            curveTo(19f, 8.17f, 19.67f, 7.5f, 20.5f, 7.5f)
+            curveTo(21.33f, 7.5f, 22f, 8.17f, 22f, 9f)
+            curveTo(22f, 9.83f, 21.33f, 10.5f, 20.5f, 10.5f)
+            close()
+
+            // Cuerpo del Útero y Trompas de Falopio
+            moveTo(12f, 19.5f)
+            curveTo(10.5f, 19.5f, 9f, 16.5f, 8.2f, 13f)
+            curveTo(7f, 13.5f, 5.5f, 13.8f, 4.5f, 13.2f)
+            curveTo(3.7f, 12.7f, 3.5f, 11.7f, 4f, 11f)
+            curveTo(4.5f, 10.3f, 5.5f, 10.1f, 6.2f, 10.5f)
+            curveTo(7f, 10.9f, 8f, 10.6f, 9f, 10.1f)
+            curveTo(9.5f, 8.9f, 10.3f, 8f, 12f, 8f)
+            curveTo(13.7f, 8f, 14.5f, 8.9f, 15f, 10.1f)
+            curveTo(16f, 10.6f, 17f, 10.9f, 17.8f, 10.5f)
+            curveTo(18.5f, 10.1f, 19.5f, 10.3f, 20f, 11f)
+            curveTo(20.5f, 11.7f, 20.3f, 12.7f, 19.5f, 13.2f)
+            curveTo(18.5f, 13.8f, 17f, 13.5f, 15.8f, 13f)
+            curveTo(15f, 16.5f, 13.5f, 19.5f, 12f, 19.5f)
+            close()
+        }.build()
+        return _iconoTrompasDeFalopio!!
+    }

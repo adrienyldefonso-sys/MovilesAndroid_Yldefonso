@@ -46,12 +46,15 @@ object Repositorio {
         usuarioActual = null
     }
 
-    // === CATÁLOGOS ===
+    // === CATÁLOGOS (Actualizado con todas las especialidades de la maqueta) ===
     val especialidades = listOf(
         Especialidad(1, "Medicina General", "Atención primaria e integral para toda la familia."),
-        Especialidad(2, "Cardiología", "Diagnóstico y tratamiento de enfermedades del corazón."),
-        Especialidad(3, "Pediatría", "Cuidado médico especializado para niños y adolescentes."),
-        Especialidad(4, "Dermatología", "Tratamiento de afecciones en la piel, cabello y uñas.")
+        Especialidad(2, "Pediatría", "Cuidado médico especializado para niños y adolescentes."),
+        Especialidad(3, "Ginecología", "Atención médica integral para la salud de la mujer."),
+        Especialidad(4, "Cardiología", "Diagnóstico y tratamiento de enfermedades del corazón."),
+        Especialidad(5, "Odontología", "Salud bucal, prevención y tratamiento dental."),
+        Especialidad(6, "Traumatología", "Evaluación y cuidado del sistema osteomuscular."),
+        Especialidad(7, "Oftalmología", "Cuidado integral y tratamiento de la visión.")
     )
 
     val medicos = listOf(
