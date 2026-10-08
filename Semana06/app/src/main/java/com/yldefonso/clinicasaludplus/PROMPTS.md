@@ -37,3 +37,21 @@ Durante las pruebas en el emulador se identificaron y resolvieron dos inconvenie
 ### 3. Correcciones y Ajustes Realizados (Iteración Humana)
 * Se amplió la lista de disponibilidades iniciales en `Repositorio.kt` para simular una agenda médica realista de consulta externa (mañana y tarde).
 * Se sustituyó el contenedor horizontal estirado por una `LazyVerticalGrid` de 3 columnas con bordes redondeados y alineación centrada para dar un acabado profesional alineado a la maqueta de la rúbrica.
+
+## Hito 3: Resumen Visual, Motivo Opcional y Persistencia de Reserva
+
+### 1. Lo que se solicitó a la IA
+* **Objetivo:** Refactorizar `ConfirmarCitaScreen.kt` para alinearlo visualmente con la Pantalla 7 de la maqueta de referencia, incluyendo fecha larga en español con año ("Jueves, 8 de octubre 2026"), resumen estilizado con íconos M3, campo de texto libre para el motivo de la consulta y persistencia en `Repositorio.kt`.
+* **Prompt enviado:**
+  > "Diseña ConfirmarCitaScreen.kt con una tarjeta de datos del médico, un bloque de resumen con íconos M3 en contenedores circulares azul celeste pastel, un campo de texto vacio 'Motivo de consulta (Opcional)' y un botón 'Agendar cita' que registre la reserva en Repositorio.citasReservadas y navegue a CitaExitosa."
+
+### 2. Resultado Esperado
+* Tarjeta del médico con avatar cargado vía Coil (`AsyncImage`), nombre, especialidad y CMP.
+* Bloque de resumen con íconos circulares en tono celeste pastel (`0xFFC8D7FF`) con íconos azul marino (`0xFF2A4292`).
+* Campo de entrada editable inicializado en blanco para que el usuario escriba su motivo libremente.
+* Registro reactivo de la cita en `citasReservadas` dentro de `Repositorio.kt` para bloquear la disponibilidad en consultas posteriores.
+
+### 3. Correcciones y Ajustes Realizados (Iteración Humana)
+* Se eliminó el texto predeterminado del motivo de consulta para dejarlo en estado libre (`""`), permitiendo la entrada de texto por parte del usuario mediante un `OutlinedTextField` estilizado.
+* Se ajustaron los colores exactos de los contenedores de íconos y tarjetas (`Color(0xFFF8F9FE)` y `Color(0xFFC8D7FF)`) para asegurar paridad gráfica con el prototipo de la rúbrica.
+* Se garantizó que el campo de fecha mantenga el año ("2026") de forma explícita en la cadena formateada.
