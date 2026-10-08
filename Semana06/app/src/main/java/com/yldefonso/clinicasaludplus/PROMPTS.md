@@ -21,3 +21,19 @@ Durante las pruebas en el emulador se identificaron y resolvieron dos inconvenie
 2. **Imágenes Bloqueadas / Iconos Desalineados del Rubro:**
     * **Causa:** Varios servicios de imágenes (como Flaticon o Freepik) bloqueaban las peticiones directas desde el emulador (*hotlinking*), mostrando imágenes de relleno (vegetales/íconos abstractos) o fallando la carga.
     * **Solución:** Se sustituyeron las URLs iniciales en `Repositorio.kt` por enlaces directos, públicos y estables de Unsplash, asegurando fotografías de profesionales de la salud con bata médica y estetoscopio alineadas con la rúbrica del proyecto.
+
+## Hito 2: Calendario Dinámico con java.time.LocalDate y Reorganización de Horarios
+
+### 1. Lo que se solicitó a la IA
+* **Objetivo:** Implementar la lógica del calendario dinámico de 5 días hábiles con `java.time.LocalDate`, habilitar navegación entre semanas con `<` y `>`, ampliar el catálogo de turnos médicos en `Repositorio.kt` y reorganizar los botones de hora en una cuadrícula centrada de 3 columnas en `FechaHoraScreen.kt`.
+* **Prompt enviado:**
+  > "Implementa la lógica de LocalDate para días hábiles en FechaHoraScreen.kt. Amplía la disponibilidad a 8 turnos en Repositorio.kt y distribuye los botones en una LazyVerticalGrid de 3 columnas centradas."
+
+### 2. Resultado Esperado
+* Calendario interactivo con el mes/año dinámico ("Octubre 2026").
+* Tarjetas de días (Lunes a Viernes) con nombre y número perfectamente centrados.
+* Múltiples turnos disponibles en mañana y tarde, organizados de forma uniforme en 3 columnas.
+
+### 3. Correcciones y Ajustes Realizados (Iteración Humana)
+* Se amplió la lista de disponibilidades iniciales en `Repositorio.kt` para simular una agenda médica realista de consulta externa (mañana y tarde).
+* Se sustituyó el contenedor horizontal estirado por una `LazyVerticalGrid` de 3 columnas con bordes redondeados y alineación centrada para dar un acabado profesional alineado a la maqueta de la rúbrica.
