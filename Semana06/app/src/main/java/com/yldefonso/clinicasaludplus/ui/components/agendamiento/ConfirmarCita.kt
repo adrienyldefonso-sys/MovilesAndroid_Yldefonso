@@ -35,7 +35,6 @@ import coil.compose.AsyncImage
 import com.yldefonso.clinicasaludplus.navigation.Rutas
 import com.yldefonso.clinicasaludplus.repository.Repositorio
 
-// Paleta de esta pantalla (privada para no chocar con otros archivos del paquete)
 private val CitaAzul = Color(0xFF2F6BEA)
 private val CitaAzulClaro = Color(0xFFEAF1FF)
 private val CitaFondoBloque = Color(0xFFF3F6FC)
@@ -60,19 +59,57 @@ fun ConfirmarCitaScreen(navController: NavController) {
     }
 
     val horaTexto = Repositorio.horaSeleccionada
-    // Estado inicial VACÍO para que el usuario escriba lo que desee
     var motivoConsulta by remember { mutableStateOf("") }
+    var mostrarDialogo by remember { mutableStateOf(false) }
+
+    // ALERT DIALOG DE CONFIRMACIÓN AL AGENDAR CITA
+    if (mostrarDialogo) {
+        AlertDialog(
+            onDismissRequest = { },
+            title = {
+                Text(
+                    text = "¡Cita asignada con éxito!",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                    color = CitaTexto
+                )
+            },
+            text = {
+                Text(
+                    text = "Se ha reservado tu cita para el $fechaTexto a las $horaTexto. Se ha generado una nueva notificación con el estado 'Pendiente'.",
+                    fontSize = 14.sp,
+                    color = CitaGris
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        mostrarDialogo = false
+                        navController.navigate(Rutas.CitaExitosa.ruta)
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = CitaAzul)
+                ) {
+                    Text(
+                        text = "Entendido",
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
+            },
+            shape = RoundedCornerShape(16.dp),
+            containerColor = Color.White
+        )
+    }
 
     Scaffold(
         containerColor = Color.White,
         topBar = {
-            // DESPUÉS (Corregido):
             CenterAlignedTopAppBar(
                 title = {
                     Text(
                         text = "Confirmar cita",
-                        fontWeight = FontWeight.Bold, // <--- Ahora es negrita pura
-                        fontSize = 22.sp,             // <--- Leve aumento para mayor presencia
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 22.sp,
                         color = CitaTexto
                     )
                 },
@@ -102,7 +139,7 @@ fun ConfirmarCitaScreen(navController: NavController) {
                     onClick = {
                         val nuevaCita = Repositorio.agendarCitaActual()
                         if (nuevaCita != null) {
-                            navController.navigate(Rutas.CitaExitosa.ruta)
+                            mostrarDialogo = true
                         } else {
                             Toast.makeText(context, "Error al procesar la reserva", Toast.LENGTH_SHORT).show()
                         }
@@ -133,7 +170,6 @@ fun ConfirmarCitaScreen(navController: NavController) {
                 .padding(horizontal = 20.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            // Bloque del médico (fondo suave redondeado, sin sombra)
             medico?.let { med ->
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -186,7 +222,6 @@ fun ConfirmarCitaScreen(navController: NavController) {
                 }
             }
 
-            // Detalles: filas directas sobre fondo blanco, separadas por líneas finas
             Column(modifier = Modifier.fillMaxWidth()) {
                 FilaDetalleAnimada(
                     icono = Icons.Default.CalendarToday,
@@ -218,7 +253,6 @@ fun ConfirmarCitaScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Motivo de consulta (opcional) - campo editable y vacío
             Text(
                 text = buildAnnotatedString {
                     withStyle(SpanStyle(fontWeight = FontWeight.SemiBold, color = CitaTexto, fontSize = 14.sp)) {
@@ -265,7 +299,6 @@ private fun FilaDetalleAnimada(
             .fillMaxWidth()
             .padding(vertical = 12.dp)
     ) {
-        // Ícono en cuadrado redondeado azul claro (como en la maqueta)
         Box(
             modifier = Modifier
                 .size(44.dp)

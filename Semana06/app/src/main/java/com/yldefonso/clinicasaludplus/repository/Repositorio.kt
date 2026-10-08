@@ -6,6 +6,15 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.yldefonso.clinicasaludplus.model.*
 
+// Modelo de Notificación
+data class NotificacionItem(
+    val id: Int,
+    val titulo: String,
+    val mensaje: String,
+    val fecha: String,
+    val estado: String = "Pendiente"
+)
+
 object Repositorio {
 
     // === AUTENTICACIÓN ===
@@ -98,6 +107,23 @@ object Repositorio {
 
     val citasReservadas = mutableStateListOf<Cita>()
 
+    // === CONTADOR DE NOTIFICACIONES NO LEÍDAS ===
+    var notificacionesNoLeidas by mutableStateOf(0)
+
+    val notificaciones = mutableStateListOf(
+        NotificacionItem(
+            id = 1,
+            titulo = "Bienvenido a Salud Plus",
+            mensaje = "Gracias por registrarte. Aquí podrás gestionar todas tus citas médicas.",
+            fecha = "Hace 2 días",
+            estado = "Informativo"
+        )
+    )
+
+    fun limpiarNotificacionesNoLeidas() {
+        notificacionesNoLeidas = 0
+    }
+
     // === OPERACIONES DE COLECCIONES ===
     fun especialidadesDestacadas(): List<Especialidad> {
         return especialidades.take(3)
@@ -114,7 +140,6 @@ object Repositorio {
         return filtrados.sortedByDescending { it.nombre }
     }
 
-    // Filtra horarios ya reservados para ese médico y fecha exacta
     fun horariosDisponibles(medicoId: Int, fechaIso: String): List<String> {
         val medico = medicos.find { it.id == medicoId } ?: return emptyList()
         val horasOcupadas = citasReservadas
@@ -124,6 +149,7 @@ object Repositorio {
         return medico.disponibilidad.filter { it !in horasOcupadas }
     }
 
+    // Al agendar una cita, genera automáticamente la notificación e incrementa el contador de no leídas
     fun agendarCitaActual(): Cita? {
         val user = usuarioActual ?: return null
         val esp = especialidadSeleccionada ?: especialidades.find { it.id == medicoSeleccionado?.especialidadId } ?: return null
@@ -146,6 +172,18 @@ object Repositorio {
             hora = horaSeleccionada
         )
         citasReservadas.add(nuevaCita)
+
+        // GENERAR NOTIFICACIÓN AUTOMÁTICA DE CITA PENDIENTE
+        val nuevaNotificacion = NotificacionItem(
+            id = notificaciones.size + 1,
+            titulo = "Cita Asignada - ${esp.nombre}",
+            mensaje = "Tu cita con ${med.nombre} ha sido asignada para el $fechaFinal a las $horaSeleccionada. Estado: Pendiente.",
+            fecha = "Hace un momento",
+            estado = "Pendiente"
+        )
+        notificaciones.add(0, nuevaNotificacion) // Se agrega al inicio de la lista
+        notificacionesNoLeidas++                  // Se incrementa la campana en +1
+
         return nuevaCita
     }
 
