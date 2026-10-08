@@ -9,14 +9,16 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
 import androidx.navigation.compose.*
 import androidx.navigation.navArgument
-import com.yldefonso.clinicasaludplus.ui.*
+import com.yldefonso.clinicasaludplus.ui.LoginScreen
+import com.yldefonso.clinicasaludplus.ui.RegistroScreen
+import com.yldefonso.clinicasaludplus.ui.SplashScreen
+import com.yldefonso.clinicasaludplus.ui.TerminosScreen
 import com.yldefonso.clinicasaludplus.ui.components.agendamiento.*
-import com.yldefonso.clinicasaludplus.ui.components.citas.DetalleCitaScreen
-import com.yldefonso.clinicasaludplus.ui.components.citas.MisCitasScreen
+import com.yldefonso.clinicasaludplus.ui.components.citas.*
 import com.yldefonso.clinicasaludplus.ui.components.home.HomeScreen
 import com.yldefonso.clinicasaludplus.ui.components.notificaciones.NotificacionesScreen
-import com.yldefonso.clinicasaludplus.ui.components.perfil.*
-import com.yldefonso.clinicasaludplus.ui.components.resultados.*
+import com.yldefonso.clinicasaludplus.ui.components.perfil.PerfilScreen
+import com.yldefonso.clinicasaludplus.ui.components.resultados.ResultadosScreen
 
 @Composable
 fun AppNavigation() {
@@ -24,11 +26,10 @@ fun AppNavigation() {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    // Pestañas principales con BottomBar
     val bottomBarItems = listOf(
         Rutas.Home,
-        Rutas.Especialidades,
         Rutas.MisCitas,
+        Rutas.Resultados,
         Rutas.Perfil
     )
 
@@ -66,19 +67,18 @@ fun AppNavigation() {
             startDestination = Rutas.Splash.ruta,
             modifier = Modifier.padding(innerPadding)
         ) {
-            // Rutas de inicio y autenticación
             composable(Rutas.Splash.ruta) { SplashScreen(navController) }
             composable(Rutas.Login.ruta) { LoginScreen(navController) }
             composable(Rutas.Registro.ruta) { RegistroScreen(navController) }
             composable(Rutas.Terminos.ruta) { TerminosScreen(navController) }
 
-            // Pestañas de NavigationBar
             composable(Rutas.Home.ruta) { HomeScreen(navController) }
             composable(Rutas.Especialidades.ruta) { EspecialidadesScreen(navController) }
             composable(Rutas.MisCitas.ruta) { MisCitasScreen(navController) }
             composable(Rutas.Perfil.ruta) { PerfilScreen(navController) }
+            composable(Rutas.Resultados.ruta) { ResultadosScreen(navController) }
+            composable(Rutas.Notificaciones.ruta) { NotificacionesScreen(navController) }
 
-            // Flujo de Reserva
             composable(
                 route = Rutas.Medicos.ruta,
                 arguments = listOf(navArgument("especialidadId") { type = NavType.IntType })
@@ -90,10 +90,6 @@ fun AppNavigation() {
             composable(Rutas.ConfirmarCita.ruta) { ConfirmarCitaScreen(navController) }
             composable(Rutas.CitaExitosa.ruta) { CitaExitosaScreen(navController) }
             composable(Rutas.DetalleCita.ruta) { DetalleCitaScreen(navController) }
-
-            // Módulos complementarios del usuario
-            composable(Rutas.Notificaciones.ruta) { NotificacionesScreen(navController) }
-            composable(Rutas.Resultados.ruta) { ResultadosScreen(navController) }
         }
     }
 }

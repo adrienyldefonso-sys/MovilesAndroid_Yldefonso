@@ -7,8 +7,7 @@ object Repositorio {
 
     // === AUTENTICACIÓN ===
     val usuarios = mutableListOf(
-        Usuario(1, "Becker Yldefonso", "987654321",
-            "becker@correo.com", "123456")
+        Usuario(1, "Becker Yldefonso", "987654321", "becker@correo.com", "123456")
     )
     var usuarioActual: Usuario? = usuarios.firstOrNull()
 
@@ -57,10 +56,13 @@ object Repositorio {
     var fechaSeleccionada: String = ""
     var horaSeleccionada: String = ""
 
-    // Uso de mutableStateListOf para reactividad en Jetpack Compose
     val citasReservadas = mutableStateListOf<Cita>()
 
-    // Búsquedas y Filtros
+    // === OPERACIONES DE COLECCIONES (RÚBRICA) ===
+    fun especialidadesDestacadas(): List<Especialidad> {
+        return especialidades.take(3)
+    }
+
     fun buscarEspecialidades(query: String): List<Especialidad> {
         if (query.isBlank()) return especialidades
         return especialidades.filter { it.nombre.contains(query, ignoreCase = true) }
@@ -68,8 +70,18 @@ object Repositorio {
 
     fun buscarMedicos(especialidadId: Int, query: String = ""): List<Medico> {
         val porEsp = medicos.filter { it.especialidadId == especialidadId }
-        if (query.isBlank()) return porEsp
-        return porEsp.filter { it.nombre.contains(query, ignoreCase = true) }
+        val filtrados = if (query.isBlank()) porEsp else porEsp.filter { it.nombre.contains(query, ignoreCase = true) }
+        return filtrados.sortedByDescending { it.nombre }
+    }
+
+    // Filtra horarios ya reservados para ese médico y fecha exacta
+    fun horariosDisponibles(medicoId: Int, fecha: String): List<String> {
+        val medico = medicos.find { it.id == medicoId } ?: return emptyList()
+        val horasOcupadas = citasReservadas
+            .filter { it.medico.id == medicoId && it.fecha == fecha }
+            .map { it.hora }
+
+        return medico.disponibilidad.filter { it !in horasOcupadas }
     }
 
     fun agendarCitaActual(): Cita? {
@@ -82,7 +94,7 @@ object Repositorio {
         val nuevaCita = Cita(
             id = nuevoId,
             codigoReserva = "CIT-${1000 + nuevoId}",
-            usuario = user, // Corregido a 'usuario'
+            usuario = user,
             especialidad = esp,
             medico = med,
             fecha = fechaSeleccionada,
@@ -90,6 +102,14 @@ object Repositorio {
         )
         citasReservadas.add(nuevaCita)
         return nuevaCita
+    }
+
+    fun citasDelUsuario(): List<Cita> {
+        return citasReservadas.filter { it.usuario.id == usuarioActual?.id }
+    }
+
+    fun cancelarCita(citaId: Int): Boolean {
+        return citasReservadas.removeIf { it.id == citaId }
     }
 
     fun limpiarProcesoAgendamiento() {
