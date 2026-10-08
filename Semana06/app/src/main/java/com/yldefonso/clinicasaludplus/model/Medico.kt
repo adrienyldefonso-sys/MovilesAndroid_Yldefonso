@@ -5,5 +5,6 @@ data class Medico(
     val nombre: String,
     val especialidadId: Int,
     val cmp: String,
+    val fotoUrl: String = "",
     val disponibilidad: List<String> = emptyList()
 )

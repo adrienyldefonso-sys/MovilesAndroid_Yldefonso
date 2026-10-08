@@ -43,11 +43,11 @@ object Repositorio {
     )
 
     val medicos = listOf(
-        Medico(1, "Dr. Carlos Mendoza", 1, "CMP 45892", listOf("09:00 AM", "10:30 AM", "03:00 PM")),
-        Medico(2, "Dra. Ana Torres", 1, "CMP 38210", listOf("08:00 AM", "11:00 AM", "04:00 PM")),
-        Medico(3, "Dr. Roberto Gómez", 2, "CMP 51204", listOf("10:00 AM", "02:30 PM", "05:00 PM")),
-        Medico(4, "Dra. Elena Ramos", 3, "CMP 29481", listOf("09:30 AM", "11:30 AM", "03:30 PM")),
-        Medico(5, "Dr. Luis Paredes", 4, "CMP 60312", listOf("08:30 AM", "01:00 PM", "04:30 PM"))
+        Medico(1, "Dr. Carlos Mendoza", 1, "CMP 45892", "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=300&auto=format&fit=crop&q=80", listOf("09:00 AM", "10:30 AM", "03:00 PM")),
+        Medico(2, "Dra. Ana Torres", 1, "CMP 38210", "https://images.unsplash.com/photo-1614608682850-e0d6ed316d47?w=300&auto=format&fit=crop&q=80", listOf("08:00 AM", "11:00 AM", "04:00 PM")),
+        Medico(3, "Dr. Roberto Gómez", 2, "CMP 51204", "https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=300&auto=format&fit=crop&q=80", listOf("10:00 AM", "02:30 PM", "05:00 PM")),
+        Medico(4, "Dra. Elena Ramos", 3, "CMP 29481", "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=300&auto=format&fit=crop&q=80", listOf("09:30 AM", "11:30 AM", "03:30 PM")),
+        Medico(5, "Dr. Luis Paredes", 4, "CMP 60312", "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=300&auto=format&fit=crop&q=80", listOf("08:30 AM", "01:00 PM", "04:30 PM"))
     )
 
     // === ESTADO Y AGENDAMIENTO ===
