@@ -64,7 +64,7 @@ object Repositorio {
             1,
             "CMP 45892",
             "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=300&auto=format&fit=crop&q=80",
-            listOf("08:00 AM", "09:00 AM", "10:30 AM", "11:30 AM", "02:00 PM", "03:00 PM", "04:30 PM", "05:30 PM")
+            listOf("08:00", "09:00", "10:30", "11:30", "14:00", "15:00", "16:30", "17:30")
         ),
         Medico(
             2,
@@ -72,7 +72,7 @@ object Repositorio {
             1,
             "CMP 38210",
             "https://images.unsplash.com/photo-1614608682850-e0d6ed316d47?w=300&auto=format&fit=crop&q=80",
-            listOf("08:30 AM", "09:30 AM", "11:00 AM", "01:00 PM", "02:30 PM", "03:30 PM", "05:00 PM", "06:00 PM")
+            listOf("08:30", "09:30", "11:00", "13:00", "14:30", "15:30", "17:00", "18:00")
         ),
         Medico(
             3,
@@ -80,7 +80,7 @@ object Repositorio {
             2,
             "CMP 51204",
             "https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=300&auto=format&fit=crop&q=80",
-            listOf("09:00 AM", "10:00 AM", "11:30 AM", "02:00 PM", "03:30 PM", "04:30 PM", "05:30 PM")
+            listOf("09:00", "10:00", "11:30", "14:00", "15:30", "16:30", "17:30")
         ),
         Medico(
             4,
@@ -88,7 +88,7 @@ object Repositorio {
             3,
             "CMP 29481",
             "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=300&auto=format&fit=crop&q=80",
-            listOf("08:00 AM", "09:30 AM", "11:00 AM", "02:00 PM", "03:00 PM", "04:30 PM", "06:00 PM")
+            listOf("08:00", "09:30", "11:00", "14:00", "15:00", "16:30", "18:00")
         ),
         Medico(
             5,
@@ -96,14 +96,14 @@ object Repositorio {
             4,
             "CMP 60312",
             "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=300&auto=format&fit=crop&q=80",
-            listOf("08:30 AM", "10:00 AM", "11:30 AM", "01:00 PM", "03:00 PM", "04:00 PM", "05:30 PM")
+            listOf("08:30", "10:00", "11:30", "13:00", "15:00", "16:00", "17:30")
         )
     )
 
     // === ESTADO Y AGENDAMIENTO ===
     var especialidadSeleccionada: Especialidad? by mutableStateOf(null)
     var medicoSeleccionado: Medico? by mutableStateOf(null)
-    var citaSeleccionada: Cita? by mutableStateOf(null) // Cita seleccionada para ver detalles
+    var citaSeleccionada: Cita? by mutableStateOf(null)
     var fechaSeleccionada: String by mutableStateOf("")
     var fechaSeleccionadaIso: String by mutableStateOf("")
     var fechaSeleccionadaTexto: String by mutableStateOf("")

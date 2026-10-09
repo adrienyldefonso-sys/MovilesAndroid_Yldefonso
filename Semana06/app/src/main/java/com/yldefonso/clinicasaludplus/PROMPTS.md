@@ -129,3 +129,29 @@ Durante las pruebas en el emulador se identificaron y resolvieron dos inconvenie
 ### 3. Ajustes de Estabilidad y Entorno (Emulador)
 - **Diagnóstico de colapso**: Se identificó que la versión experimental API 37.1 (*CinnamonBun*) generaba bloqueos en ADB y tiempos de espera superiores a 5 minutos.
 - **Resolución**: Se recomendó aplicar `Wipe Data` / `Cold Boot Now` y migrar la ejecución del proyecto a imágenes estables AVD en **API 34 (Android 14)** o **API 33 (Android 13)**.
+
+### Actualización HITO 7: Refinamiento de TerminosScreen, SplashScreen, FechaHoraScreen y Repositorio
+
+#### 1. Lo que se solicitó a la IA
+- **Rediseño de Términos y Condiciones (`TerminosScreen.kt`)**: Estandarizar la interfaz utilizando la paleta azul/pastel, tarjetas blancas estructuradas (`22.dp`), encabezado temático con ícono legal, numeración clara por secciones y botón de retorno en la parte inferior.
+- **Ajuste del Splash Screen (`SplashScreen.kt`)**: Reestructurar la pantalla inicial para igualar la maqueta oficial (Pantalla 1 Splash). Aumentar el tamaño del logo (`92.dp`), jerarquía de títulos (`Clínica` a `26.sp`, `SaludPlus` a `50.sp` con degradado), optimizar la integración de la imagen del médico desde `res/drawable/doctor_splash`, agrandar el botón "Comenzar" (`58.dp` de altura con texto `19.sp ExtraBold`) y reposicionar el enlace "Ya tengo una cuenta".
+- **Estandarización de Fecha y Hora (`FechaHoraScreen.kt` y `Repositorio.kt`)**: Eliminar los sufijos "AM" y "PM" de la lista de disponibilidad horaria para emplear un formato limpio en 24 horas (`08:30`, `09:30`, `11:00`), centrar verticalmente la información de la tarjeta del médico y asegurar que las horas queden perfectamente alineadas dentro de los chips de selección.
+
+---
+
+#### 2. Archivos Modificados y Correcciones Realizadas
+
+##### `TerminosScreen.kt`
+- **Estructura visual**: Se implementó `Card` contenedor con bordes redondeados (`22.dp`), fondo blanco e ícono legal (`Icons.Default.Gavel`) alojado dentro de una cápsula azul pastel (`#EAF1FF`).
+- **Navegación y legibilidad**: Se organizaron los cuatro términos en bloques numerados con divisores finos (`HorizontalDivider`), mejorando el `lineHeight` (`19.sp`) y colocando el botón de salida en el `bottomBar` para fácil alcance.
+
+##### `SplashScreen.kt`
+- **Limpieza de código**: Se removió el exceso de dibujo vectorial manual en `Canvas` a favor de la renderización directa de la ilustración desde `res/drawable/doctor_splash` (con fallback dinámico).
+- **Proporción y Jerarquía**: Se ampliaron los tamaños tipográficos del título a `50.sp`, el logo a `92.dp`, el botón "Comenzar" a `58.dp` de altura, y se redujo el margen inferior para aproximar el texto a la ilustración del médico.
+
+##### `FechaHoraScreen.kt`
+- **Centrado de tarjeta**: Alineación de avatar circular del médico (`84.dp`) y bloques de texto en el centro vertical usando `verticalAlignment = Alignment.CenterVertically`.
+- **Alineación de chips**: Reestructuración de la cuadrícula de 3 columnas para horarios en chips de `62.dp` de altura con `contentAlignment = Alignment.Center`.
+
+##### `Repositorio.kt`
+- **Normalización de horarios**: Modificación de las listas de disponibilidad de los médicos en `medicos` para retornar horas en formato compacto de 24 horas (ej. `"08:30"`, `"09:30"`, `"13:00"`).

@@ -37,7 +37,7 @@ import com.yldefonso.clinicasaludplus.model.Usuario
 import com.yldefonso.clinicasaludplus.navigation.Rutas
 import com.yldefonso.clinicasaludplus.repository.Repositorio
 
-// Paleta (Pantalla 2 de la maqueta)
+// Paleta de colores unificada
 private val AzulPrimario = Color(0xFF2F6BEA)
 private val TextoOscuro = Color(0xFF1B2540)
 private val TextoGris = Color(0xFF6B7690)
@@ -54,8 +54,19 @@ fun RegistroScreen(navController: NavController) {
     var contrasena by remember { mutableStateOf("") }
     var errorMensaje by remember { mutableStateOf("") }
 
+    // FUNCIONES DE VALIDACIÓN
+    fun esNombreValido(texto: String): Boolean {
+        // Solo permite letras (incluyendo acentos y 'ñ') y espacios
+        return texto.isNotBlank() && texto.all { it.isLetter() || it.isWhitespace() }
+    }
+
+    fun esTelefonoValido(celular: String): Boolean {
+        // Debe tener exactamente 9 dígitos numéricos
+        return celular.length == 9 && celular.all { it.isDigit() }
+    }
+
     fun esCorreoValido(email: String): Boolean {
-        return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+        return android.util.Patterns.EMAIL_ADDRESS.matcher(email.trim()).matches()
     }
 
     Scaffold(containerColor = Color.White) { innerPadding ->
@@ -65,20 +76,23 @@ fun RegistroScreen(navController: NavController) {
                 .padding(innerPadding)
                 .imePadding()
         ) {
-            // Contenido con scroll y distribución vertical proporcionada
-            Column(
+            Box(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 24.dp, vertical = 20.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.SpaceEvenly
+                    .padding(horizontal = 24.dp),
+                contentAlignment = Alignment.Center
             ) {
-                // Encabezado
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState()),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    // ENCABEZADO
                     Text(
-                        text = "Crear cuenta",
+                        text = "Crear Cuenta",
                         style = TextStyle(
                             fontSize = 28.sp,
                             fontWeight = FontWeight.ExtraBold,
@@ -86,98 +100,109 @@ fun RegistroScreen(navController: NavController) {
                             color = TextoOscuro
                         )
                     )
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(6.dp))
                     Text(
-                        text = "Regístrate para agendar tus citas",
+                        text = "Regístrate para agendar tus citas médicas",
                         fontSize = 14.sp,
                         letterSpacing = 0.2.sp,
                         color = TextoGris
                     )
-                }
 
-                Spacer(modifier = Modifier.height(20.dp))
+                    Spacer(modifier = Modifier.height(28.dp))
 
-                // Campos de entrada
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(14.dp)
-                ) {
-                    CampoFormulario(
-                        valor = nombre,
-                        alCambiar = { nombre = it; errorMensaje = "" },
-                        etiqueta = "Nombres y apellidos",
-                        placeholder = "Juan Pérez",
-                        icono = Icons.Default.Person,
-                        tipoTeclado = KeyboardType.Text
-                    )
+                    // FORMULARIO DE REGISTRO
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(14.dp)
+                    ) {
+                        CampoFormularioRegistro(
+                            valor = nombre,
+                            alCambiar = { nombre = it; errorMensaje = "" },
+                            etiqueta = "Nombres y Apellidos",
+                            placeholder = "Juan Pérez",
+                            icono = Icons.Default.Person,
+                            tipoTeclado = KeyboardType.Text
+                        )
 
-                    CampoFormulario(
-                        valor = telefono,
-                        alCambiar = { telefono = it; errorMensaje = "" },
-                        etiqueta = "Teléfono",
-                        placeholder = "987 654 321",
-                        icono = Icons.Default.Phone,
-                        tipoTeclado = KeyboardType.Phone
-                    )
+                        CampoFormularioRegistro(
+                            valor = telefono,
+                            alCambiar = {
+                                // Limitar entrada a máximo 9 caracteres
+                                if (it.length <= 9) {
+                                    telefono = it
+                                    errorMensaje = ""
+                                }
+                            },
+                            etiqueta = "Número de celular",
+                            placeholder = "987654321",
+                            icono = Icons.Default.Phone,
+                            tipoTeclado = KeyboardType.Number
+                        )
 
-                    CampoFormulario(
-                        valor = correo,
-                        alCambiar = { correo = it; errorMensaje = "" },
-                        etiqueta = "Correo electrónico",
-                        placeholder = "juan@correo.com",
-                        icono = Icons.Default.Email,
-                        tipoTeclado = KeyboardType.Email
-                    )
+                        CampoFormularioRegistro(
+                            valor = correo,
+                            alCambiar = { correo = it; errorMensaje = "" },
+                            etiqueta = "Correo electrónico",
+                            placeholder = "juan@correo.com",
+                            icono = Icons.Default.Email,
+                            tipoTeclado = KeyboardType.Email
+                        )
 
-                    CampoFormulario(
-                        valor = contrasena,
-                        alCambiar = { contrasena = it; errorMensaje = "" },
-                        etiqueta = "Contraseña",
-                        placeholder = "••••••••",
-                        icono = Icons.Default.Lock,
-                        tipoTeclado = KeyboardType.Password,
-                        esPassword = true
-                    )
-                }
+                        CampoFormularioRegistro(
+                            valor = contrasena,
+                            alCambiar = { contrasena = it; errorMensaje = "" },
+                            etiqueta = "Contraseña",
+                            placeholder = "••••••••",
+                            icono = Icons.Default.Lock,
+                            tipoTeclado = KeyboardType.Password,
+                            esPassword = true
+                        )
+                    }
 
-                if (errorMensaje.isNotEmpty()) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = errorMensaje,
-                        color = MaterialTheme.colorScheme.error,
-                        fontSize = 13.sp,
-                        textAlign = TextAlign.Center
-                    )
-                }
+                    if (errorMensaje.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = errorMensaje,
+                            color = MaterialTheme.colorScheme.error,
+                            fontSize = 13.sp,
+                            textAlign = TextAlign.Center
+                        )
+                    }
 
-                Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(24.dp))
 
-                // Botón "Registrarme" de mayor presencia y Términos destacados
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
+                    // BOTÓN "REGISTRARSE" CON VALIDACIONES ESTRICTAS
                     Button(
                         onClick = {
                             when {
-                                nombre.isBlank() || correo.isBlank() || contrasena.isBlank() -> {
+                                nombre.isBlank() || telefono.isBlank() || correo.isBlank() || contrasena.isBlank() -> {
                                     errorMensaje = "Todos los campos son obligatorios"
+                                }
+                                !esNombreValido(nombre) -> {
+                                    errorMensaje = "El nombre solo debe contener letras, no números"
+                                }
+                                !esTelefonoValido(telefono) -> {
+                                    errorMensaje = "El celular debe contener exactamente 9 dígitos numéricos"
                                 }
                                 !esCorreoValido(correo) -> {
                                     errorMensaje = "Formato de correo electrónico inválido"
                                 }
+                                contrasena.length < 6 -> {
+                                    errorMensaje = "La contraseña debe tener al menos 6 caracteres"
+                                }
                                 else -> {
                                     val nuevoUsuario = Usuario(
                                         id = 0,
-                                        nombre = nombre,
-                                        telefono = telefono,
-                                        correo = correo,
+                                        nombre = nombre.trim(),
+                                        telefono = telefono.trim(),
+                                        correo = correo.trim(),
                                         contrasena = contrasena
                                     )
-                                    if (Repositorio.registrarUsuario(nuevoUsuario)) {
-                                        Toast.makeText(context, "Registro exitoso", Toast.LENGTH_SHORT).show()
+                                    val exito = Repositorio.registrarUsuario(nuevoUsuario)
+                                    if (exito) {
+                                        Toast.makeText(context, "¡Registro exitoso!", Toast.LENGTH_SHORT).show()
                                         navController.navigate(Rutas.Home.ruta) {
-                                            popUpTo(Rutas.Registro.ruta) { inclusive = true }
+                                            popUpTo(Rutas.Login.ruta) { inclusive = true }
                                         }
                                     } else {
                                         errorMensaje = "El correo ya se encuentra registrado"
@@ -187,7 +212,7 @@ fun RegistroScreen(navController: NavController) {
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(54.dp),
+                            .height(52.dp),
                         shape = RoundedCornerShape(14.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = AzulPrimario,
@@ -195,37 +220,16 @@ fun RegistroScreen(navController: NavController) {
                         )
                     ) {
                         Text(
-                            text = "Registrarme",
+                            text = "Registrarse",
                             fontSize = 17.sp,
                             fontWeight = FontWeight.ExtraBold,
                             letterSpacing = 0.3.sp
                         )
                     }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Text(
-                        text = "Al registrarte aceptas nuestros",
-                        fontSize = 13.sp,
-                        color = TextoGris,
-                        textAlign = TextAlign.Center
-                    )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = "Términos y Condiciones",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = AzulPrimario,
-                        modifier = Modifier
-                            .clickable { navController.navigate(Rutas.Terminos.ruta) }
-                            .padding(horizontal = 8.dp, vertical = 2.dp)
-                    )
                 }
-
-                Spacer(modifier = Modifier.height(12.dp))
             }
 
-            // Pie de página fijo inferior
+            // FOOTER A CERRAR SESIÓN / INICIAR SESIÓN
             HorizontalDivider(thickness = 1.dp, color = CampoBorde)
             Row(
                 modifier = Modifier
@@ -240,7 +244,7 @@ fun RegistroScreen(navController: NavController) {
                     color = TextoGris
                 )
                 Text(
-                    text = "Iniciar sesión",
+                    text = "Inicia sesión aquí",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
                     color = AzulPrimario,
@@ -253,12 +257,8 @@ fun RegistroScreen(navController: NavController) {
     }
 }
 
-/**
- * Campo estilo maqueta: a la izquierda el ícono en un cuadrado suave,
- * a la derecha la etiqueta pegada justo arriba de la caja de entrada de texto.
- */
 @Composable
-private fun CampoFormulario(
+private fun CampoFormularioRegistro(
     valor: String,
     alCambiar: (String) -> Unit,
     etiqueta: String,
@@ -273,7 +273,6 @@ private fun CampoFormulario(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.Bottom
     ) {
-        // Cuadrado del ícono
         Box(
             modifier = Modifier
                 .size(50.dp)
@@ -292,7 +291,6 @@ private fun CampoFormulario(
         Spacer(modifier = Modifier.width(12.dp))
 
         Column(modifier = Modifier.weight(1f)) {
-            // Etiqueta pegada al cuadro de texto
             Text(
                 text = etiqueta,
                 fontSize = 12.sp,
@@ -301,7 +299,6 @@ private fun CampoFormulario(
                 modifier = Modifier.padding(start = 2.dp, bottom = 2.dp)
             )
 
-            // Caja de entrada
             Box(
                 modifier = Modifier
                     .fillMaxWidth()

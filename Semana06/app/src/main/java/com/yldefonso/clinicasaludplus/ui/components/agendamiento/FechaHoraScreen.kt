@@ -32,7 +32,7 @@ import java.time.format.DateTimeFormatter
 import java.time.temporal.TemporalAdjusters
 import java.util.Locale
 
-// Paleta de colores (Pantalla 6 de la maqueta)
+// Paleta de colores unificada
 private val AzulPrimario = Color(0xFF2F6BEA)
 private val AzulDeshabilitado = Color(0xFFBFD0F7)
 private val TextoOscuro = Color(0xFF1B2540)
@@ -78,7 +78,7 @@ fun FechaHoraScreen(navController: NavController) {
         Repositorio.fechaSeleccionada = textoLimpio
     }
 
-    // Horarios disponibles
+    // Horarios disponibles desde el repositorio
     val horarios = remember(medico?.id, fechaIsoActual, Repositorio.citasReservadas.size) {
         if (medico != null) {
             Repositorio.horariosDisponibles(medico.id, fechaIsoActual)
@@ -155,7 +155,7 @@ fun FechaHoraScreen(navController: NavController) {
                 .padding(innerPadding)
                 .padding(horizontal = 20.dp, vertical = 4.dp)
         ) {
-            // 1. CARD DEL MÉDICO
+            // 1. CARD DEL MÉDICO (CENTRADOS FOTO Y TEXTO)
             medico?.let { med ->
                 Row(
                     modifier = Modifier
@@ -200,7 +200,7 @@ fun FechaHoraScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(22.dp))
 
-            // 2. BLOQUE DE CALENDARIO (MES + DÍAS)
+            // 2. BLOQUE DE CALENDARIO (NAVEGACIÓN POR MES Y DÍAS HÁBILES)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -234,7 +234,7 @@ fun FechaHoraScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // CHIPS DE DÍAS HÁBILES
+            // CHIPS DE DÍAS (LUNES A VIERNES)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -289,10 +289,9 @@ fun FechaHoraScreen(navController: NavController) {
                 }
             }
 
-            // SPACER MAS NOTORIO ENTRE DÍAS Y HORARIOS (32.dp)
             Spacer(modifier = Modifier.height(32.dp))
 
-            // 3. BLOQUE DE HORARIOS
+            // 3. BLOQUE DE HORARIOS (3 COLUMNAS CENTRADAS SINO TIENE AM/PM)
             if (horarios.isEmpty()) {
                 Box(
                     modifier = Modifier
