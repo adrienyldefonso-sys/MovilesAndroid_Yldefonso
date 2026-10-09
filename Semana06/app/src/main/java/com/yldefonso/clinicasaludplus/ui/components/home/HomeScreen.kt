@@ -12,10 +12,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Assignment
-import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.ChildCare
 import androidx.compose.material.icons.filled.EventNote
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.MedicalServices
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Visibility
@@ -52,17 +53,20 @@ private val TextoOscuro = Color(0xFF18284A)
 private val TextoGris = Color(0xFF6F7B91)
 private val BordeCardBlanco = Color(0xFFEBF0F9)
 
-private val FondoAgendar = Color(0xFFE4EEFF)
-private val IconoAgendar = Color(0xFF2F6BEA)
+private val FondoSedes = Color(0xFFEAF1FF)
+private val IconoSedes = Color(0xFF2F6BEA)
+
+private val FondoDoctores = Color(0xFFF3E8FF)
+private val IconoDoctores = Color(0xFF7C3AED)
 
 private val FondoCitas = Color(0xFFE4F5EC)
 private val IconoCitas = Color(0xFF20A66A)
 
-private val FondoPerfil = Color(0xFFF0E5FF)
-private val IconoPerfil = Color(0xFF8B50D9)
-
 private val FondoResultados = Color(0xFFFFEDE0)
 private val IconoResultados = Color(0xFFF18432)
+
+private val FondoPerfil = Color(0xFFF0E5FF)
+private val IconoPerfil = Color(0xFF8B50D9)
 
 // ============================================================
 // HOME SCREEN
@@ -144,20 +148,37 @@ fun HomeScreen(navController: NavController) {
 
         Spacer(modifier = Modifier.height(22.dp))
 
-        // PRIMERA FILA DE ACCESOS RÁPIDOS
+        // PRIMERA FILA DE ACCESOS RÁPIDOS: SEDES Y DOCTORES
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             TarjetaAccesoRapido(
                 modifier = Modifier.weight(1f),
-                titulo = "Agendar cita",
-                icono = Icons.Default.CalendarMonth,
-                fondoColor = FondoAgendar,
-                iconoColor = IconoAgendar,
-                onClick = { navController.navigate(Rutas.Especialidades.ruta) }
+                titulo = "Sedes",
+                icono = Icons.Default.LocationOn,
+                fondoColor = FondoSedes,
+                iconoColor = IconoSedes,
+                onClick = { navController.navigate(Rutas.Sedes.ruta) }
             )
 
+            TarjetaAccesoRapido(
+                modifier = Modifier.weight(1f),
+                titulo = "Doctores",
+                icono = Icons.Default.MedicalServices,
+                fondoColor = FondoDoctores,
+                iconoColor = IconoDoctores,
+                onClick = { navController.navigate(Rutas.MisDoctores.ruta) }
+            )
+        }
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        // SEGUNDA FILA DE ACCESOS RÁPIDOS: MIS CITAS Y RESULTADOS
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
             TarjetaAccesoRapido(
                 modifier = Modifier.weight(1f),
                 titulo = "Mis citas",
@@ -165,23 +186,6 @@ fun HomeScreen(navController: NavController) {
                 fondoColor = FondoCitas,
                 iconoColor = IconoCitas,
                 onClick = { navController.navigate(Rutas.MisCitas.ruta) }
-            )
-        }
-
-        Spacer(modifier = Modifier.height(14.dp))
-
-        // SEGUNDA FILA DE ACCESOS RÁPIDOS
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(14.dp)
-        ) {
-            TarjetaAccesoRapido(
-                modifier = Modifier.weight(1f),
-                titulo = "Mi perfil",
-                icono = Icons.Default.Person,
-                fondoColor = FondoPerfil,
-                iconoColor = IconoPerfil,
-                onClick = { navController.navigate(Rutas.Perfil.ruta) }
             )
 
             TarjetaAccesoRapido(
@@ -194,7 +198,27 @@ fun HomeScreen(navController: NavController) {
             )
         }
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(14.dp))
+
+        // TERCERA FILA DE ACCESOS RÁPIDOS: MIS DATOS
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            TarjetaAccesoRapido(
+                modifier = Modifier.weight(1f),
+                titulo = "Mis datos",
+                icono = Icons.Default.Person,
+                fondoColor = FondoPerfil,
+                iconoColor = IconoPerfil,
+                onClick = { navController.navigate(Rutas.Perfil.ruta) }
+            )
+
+            // Espaciador para mantener simetría perfecta en la cuadrícula de 2 columnas
+            Spacer(modifier = Modifier.weight(1f))
+        }
+
+        Spacer(modifier = Modifier.height(28.dp))
 
         // SECCIÓN ESPECIALIDADES DESTACADAS
         Row(
@@ -222,7 +246,7 @@ fun HomeScreen(navController: NavController) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // CARDS DE ESPECIALIDADES DESTACADAS (CORREGIDA ALINEACIÓN DE ÍCONOS)
+        // CARDS DE ESPECIALIDADES DESTACADAS
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -235,7 +259,11 @@ fun HomeScreen(navController: NavController) {
                         .height(165.dp)
                         .clickable {
                             Repositorio.especialidadSeleccionada = esp
-                            navController.navigate(Rutas.Medicos.crearRuta(esp.id))
+                            if (Repositorio.sedeSeleccionada == null) {
+                                navController.navigate(Rutas.Sedes.ruta)
+                            } else {
+                                navController.navigate(Rutas.Medicos.crearRuta(esp.id))
+                            }
                         },
                     shape = RoundedCornerShape(22.dp),
                     colors = CardDefaults.cardColors(
@@ -313,7 +341,7 @@ private fun TarjetaAccesoRapido(
 ) {
     Card(
         modifier = modifier
-            .height(160.dp)
+            .height(130.dp)
             .clickable { onClick() },
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = fondoColor),
@@ -322,7 +350,7 @@ private fun TarjetaAccesoRapido(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
+                .padding(14.dp),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -330,14 +358,14 @@ private fun TarjetaAccesoRapido(
                 imageVector = icono,
                 contentDescription = titulo,
                 tint = iconoColor,
-                modifier = Modifier.size(48.dp)
+                modifier = Modifier.size(42.dp)
             )
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             Text(
                 text = titulo,
-                fontSize = 18.sp,
+                fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
                 color = TextoOscuro,
                 textAlign = TextAlign.Center

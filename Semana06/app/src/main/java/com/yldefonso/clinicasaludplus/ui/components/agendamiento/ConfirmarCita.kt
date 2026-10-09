@@ -244,10 +244,13 @@ fun ConfirmarCitaScreen(navController: NavController) {
                 )
                 HorizontalDivider(thickness = 1.dp, color = CitaBorde)
 
+                val sede = Repositorio.sedeSeleccionada
+                val direccionTexto = if (sede != null) "${sede.nombre}\n${sede.direccion}, ${sede.distrito}" else "Av. Los Olivos 123 - Piso 4"
+
                 FilaDetalleAnimada(
                     icono = Icons.Default.LocationOn,
-                    etiqueta = "Dirección",
-                    valor = "Av. Los Olivos 123 - Piso 4"
+                    etiqueta = "Sede / Dirección",
+                    valor = direccionTexto
                 )
             }
 

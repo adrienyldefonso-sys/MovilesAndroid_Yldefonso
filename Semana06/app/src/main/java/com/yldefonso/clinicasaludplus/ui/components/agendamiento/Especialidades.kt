@@ -14,6 +14,7 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Accessibility
 import androidx.compose.material.icons.filled.ChildCare
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SentimentSatisfied
@@ -41,12 +42,15 @@ private val TextoOscuro = Color(0xFF1B2540)
 private val TextoGris = Color(0xFF6B7690)
 private val FondoPantalla = Color(0xFFF8FAFC)
 private val BordeCard = Color(0xFFE2E8F0)
+private val AzulPrimario = Color(0xFF2F6BEA)
+private val AzulPastel = Color(0xFFEAF1FF)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EspecialidadesScreen(navController: NavController) {
     var searchQuery by remember { mutableStateOf("") }
-    val especialidadesFiltradas = Repositorio.buscarEspecialidades(searchQuery)
+    val sedeActiva = Repositorio.sedeSeleccionada
+    val especialidadesFiltradas = Repositorio.especialidadesDisponiblesPorSede(sedeActiva?.id, searchQuery)
 
     Scaffold(
         containerColor = FondoPantalla,
@@ -81,6 +85,36 @@ fun EspecialidadesScreen(navController: NavController) {
                 .padding(innerPadding)
                 .padding(horizontal = 20.dp)
         ) {
+            // ENCABEZADO INFORMATIVO DE SEDE ACTIVA
+            if (sedeActiva != null) {
+                Surface(
+                    color = AzulPastel,
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 12.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 9.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.LocationOn,
+                            contentDescription = "Sede activa",
+                            tint = AzulPrimario,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "Mostrando especialidades disponibles en: ${sedeActiva.nombre}",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = TextoOscuro
+                        )
+                    }
+                }
+            }
+
             // BUSCADOR EN CARD BLANCA REDONDEADA
             OutlinedTextField(
                 value = searchQuery,
@@ -108,27 +142,42 @@ fun EspecialidadesScreen(navController: NavController) {
                     unfocusedContainerColor = Color.White,
                     focusedContainerColor = Color.White,
                     unfocusedBorderColor = BordeCard,
-                    focusedBorderColor = Color(0xFF2F6BEA),
-                    cursorColor = Color(0xFF2F6BEA)
+                    focusedBorderColor = AzulPrimario,
+                    cursorColor = AzulPrimario
                 )
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
             // LISTA DE CARDS BLANCAS INDEPENDIENTES
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                contentPadding = PaddingValues(bottom = 20.dp)
-            ) {
-                items(especialidadesFiltradas) { especialidad ->
-                    CardEspecialidad(
-                        especialidad = especialidad,
-                        onClick = {
-                            Repositorio.especialidadSeleccionada = especialidad
-                            navController.navigate(Rutas.Medicos.crearRuta(especialidad.id))
-                        }
+            if (especialidadesFiltradas.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "No hay especialidades disponibles para esta búsqueda.",
+                        fontSize = 14.sp,
+                        color = TextoGris
                     )
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    contentPadding = PaddingValues(bottom = 20.dp)
+                ) {
+                    items(especialidadesFiltradas) { especialidad ->
+                        CardEspecialidad(
+                            especialidad = especialidad,
+                            onClick = {
+                                Repositorio.especialidadSeleccionada = especialidad
+                                navController.navigate(Rutas.Medicos.crearRuta(especialidad.id))
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -217,7 +266,7 @@ private data class ConfigEstilo(
 private fun obtenerEstiloEspecialidad(nombre: String): ConfigEstilo {
     return when {
         nombre.contains("medicina", ignoreCase = true) -> ConfigEstilo(
-            icono = Icons.Default.Person, // Silueta de persona en azul
+            icono = Icons.Default.Person,
             colorIcono = Color(0xFF2F6BEA),
             colorFondo = Color(0xFFEAF1FF)
         )
@@ -227,7 +276,7 @@ private fun obtenerEstiloEspecialidad(nombre: String): ConfigEstilo {
             colorFondo = Color(0xFFFFF3E0)
         )
         nombre.contains("gineco", ignoreCase = true) -> ConfigEstilo(
-            icono = IconoTrompasDeFalopio, // Vector de trompas de falopio
+            icono = IconoTrompasDeFalopio,
             colorIcono = Color(0xFFD81B60),
             colorFondo = Color(0xFFFCE4EC)
         )

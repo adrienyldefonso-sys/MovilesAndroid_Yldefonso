@@ -23,10 +23,12 @@ import com.yldefonso.clinicasaludplus.ui.TerminosScreen
 import com.yldefonso.clinicasaludplus.ui.components.agendamiento.*
 import com.yldefonso.clinicasaludplus.ui.components.auth.LoginScreen
 import com.yldefonso.clinicasaludplus.ui.components.citas.*
+import com.yldefonso.clinicasaludplus.ui.components.doctores.MisDoctoresScreen
 import com.yldefonso.clinicasaludplus.ui.components.home.HomeScreen
 import com.yldefonso.clinicasaludplus.ui.components.notificaciones.NotificacionesScreen
 import com.yldefonso.clinicasaludplus.ui.components.perfil.PerfilScreen
 import com.yldefonso.clinicasaludplus.ui.components.resultados.ResultadosScreen
+import com.yldefonso.clinicasaludplus.ui.components.sedes.SedesScreen
 
 // Paleta de colores para la barra inferior
 private val AzulPrimario = Color(0xFF2F6BEA)
@@ -123,6 +125,8 @@ fun AppNavigation() {
             composable(Rutas.Terminos.ruta) { TerminosScreen(navController) }
 
             composable(Rutas.Home.ruta) { HomeScreen(navController) }
+            composable(Rutas.Sedes.ruta) { SedesScreen(navController) }
+            composable(Rutas.MisDoctores.ruta) { MisDoctoresScreen(navController) }
             composable(Rutas.Especialidades.ruta) { EspecialidadesScreen(navController) }
             composable(Rutas.MisCitas.ruta) { MisCitasScreen(navController) }
             composable(Rutas.Perfil.ruta) { PerfilScreen(navController) }

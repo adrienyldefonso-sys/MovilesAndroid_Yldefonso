@@ -110,7 +110,7 @@ fun MisCitasScreen(navController: NavController) {
                         )
                         Spacer(modifier = Modifier.height(20.dp))
                         Button(
-                            onClick = { navController.navigate(Rutas.Especialidades.ruta) },
+                            onClick = { navController.navigate(Rutas.Sedes.ruta) },
                             shape = RoundedCornerShape(14.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = AzulPrimario,

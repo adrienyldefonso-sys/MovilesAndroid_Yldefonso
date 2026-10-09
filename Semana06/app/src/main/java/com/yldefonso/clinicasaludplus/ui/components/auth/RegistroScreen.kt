@@ -242,9 +242,9 @@ fun RegistroScreen(navController: NavController) {
                                     )
                                     val exito = Repositorio.registrarUsuario(nuevoUsuario)
                                     if (exito) {
-                                        Toast.makeText(context, "¡Registro exitoso!", Toast.LENGTH_SHORT).show()
-                                        navController.navigate(Rutas.Home.ruta) {
-                                            popUpTo(Rutas.Login.ruta) { inclusive = true }
+                                        Toast.makeText(context, "Cuenta creada exitosamente. Inicia sesión", Toast.LENGTH_LONG).show()
+                                        navController.navigate(Rutas.Login.ruta) {
+                                            popUpTo(Rutas.Registro.ruta) { inclusive = true }
                                         }
                                     } else {
                                         errorMensaje = "El correo ya se encuentra registrado"

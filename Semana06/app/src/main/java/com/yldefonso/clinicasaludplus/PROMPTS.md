@@ -155,3 +155,40 @@ Durante las pruebas en el emulador se identificaron y resolvieron dos inconvenie
 
 ##### `Repositorio.kt`
 - **Normalización de horarios**: Modificación de las listas de disponibilidad de los médicos en `medicos` para retornar horas en formato compacto de 24 horas (ej. `"08:30"`, `"09:30"`, `"13:00"`).
+
+
+### Actualización HITO 6 (Parte 2): Reestructuración de Home, Flujo de Registro, Módulo de Sedes y Directorio de Doctores
+
+#### 1. Lo que se solicitó a la IA
+- **Modificación del flujo de Registro (`RegistroScreen.kt`)**: Cambiar la navegación post-registro para exigir al usuario iniciar sesión manualmente. Se eliminó el auto-login para validar la persistencia del nuevo registro en la pantalla de Login.
+- **Rediseño y simplificación del Home (`HomeScreen.kt` / `PrincipalScreen.kt`)**:
+   - Eliminar el Box de "Agendar cita" para canalizar todo el flujo de agendamiento desde la selección de local en "Sedes".
+   - Eliminar todos los subtítulos secundarios ("Nuestros locales", "Directorio médico", etc.) dejando únicamente el título principal.
+   - Retirar los círculos de fondo blanco detrás de los íconos de las tarjetas, haciendo que descansen directamente sobre los fondos pastel.
+   - Renombrar "Mis Doctores" a **"Doctores"** y "Mi perfil" a **"Mis datos"**.
+- **Implementación del Módulo de Sedes (`SedesScreen.kt`)**: Crear una pantalla previa al agendamiento donde el usuario elige el local/clínica (ej. San Juan de Lurigancho, Independencia) antes de seleccionar la especialidad o médico.
+- **Módulo Directorio Médico (`MisDoctoresScreen.kt`)**: Módulo para explorar el catálogo completo de médicos organizados por su respectiva especialidad.
+- **Integración de Notificaciones**: Asegurar que la campana de notificaciones en el encabezado del Home muestre un `BadgedBox` rojo en tiempo real, enlazado directamente con el estado `notificacionesNoLeidas` de `Repositorio.kt`.
+
+---
+
+#### 2. Archivos Modificados y Correcciones Realizadas
+
+##### `RegistroScreen.kt`
+- **Flujo de sesión**: Al completar un registro válido (`Repositorio.registrarUsuario == true`), se muestra un mensaje de confirmación y se redirige a `Rutas.Login.ruta` usando `popUpTo` para limpiar la pila de navegación.
+
+##### `HomeScreen.kt` / `PrincipalScreen.kt`
+- **Ajuste del Grid**: Reorganización de la cuadrícula a 2 columnas simétricas con 5 tarjetas principales (*Sedes, Doctores, Mis citas, Resultados, Mis datos*).
+- **Estilo visual**: Eliminación del contenedor blanco en íconos (`Surface`/`Box` circular) e incremento de jerarquía visual en los nombres.
+- **Badge de Notificaciones**: Implementación de `BadgedBox` con contador reactivo proveniente de `Repositorio.notificacionesNoLeidas`, el cual se reinicia a 0 con `Repositorio.limpiarNotificacionesNoLeidas()` al hacer clic.
+
+##### `SedesScreen.kt` *(Nuevo)*
+- Vista de selección de sedes clínicas con dirección, horario de atención e ícono de ubicación. Guarda la sede seleccionada en `Repositorio.sedeSeleccionada` y continúa el flujo de agendamiento.
+
+##### `MisDoctoresScreen.kt` *(Nuevo)*
+- Pantalla de directorio médico organizado por especialidades con avatares circulares (`AsyncImage`), CMP y acción directa de reserva.
+
+##### `Repositorio.kt`
+- **Gestión de Sedes**: Incorporación del modelo `Sede` y lista estática de locales.
+- **Formato 24h**: Limpieza de los horarios de disponibilidad médica eliminando sufijos "AM" y "PM" (`"08:30"`, `"09:30"`, `"14:00"`).
+- **Notificaciones**: Control centralizado del contador `notificacionesNoLeidas` que se incrementa en `agendarCitaActual()`.

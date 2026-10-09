@@ -1,6 +1,7 @@
 package com.yldefonso.clinicasaludplus.ui.components.agendamiento
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -39,6 +40,8 @@ private val TextoOscuro = Color(0xFF1B2540)
 private val TextoGris = Color(0xFF6B7690)
 private val FondoChip = Color(0xFFF1F4FA)
 private val FondoBloque = Color(0xFFF3F6FC)
+private val AzulPastelFondo = Color(0xFFEAF1FF)
+private val GrisDeshabilitado = Color(0xFFCBD5E1)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -58,9 +61,12 @@ fun FechaHoraScreen(navController: NavController) {
         (0L..4L).map { lunesSemana.plusDays(it) }
     }
 
-    // Día seleccionado por defecto
-    var diaSeleccionado by remember(lunesSemana) {
-        mutableStateOf(diasHabiles.firstOrNull { !it.isBefore(hoy) } ?: diasHabiles.first())
+    // Seleccionar por defecto el primer día disponible de la semana (o el primero si ninguno está disponible)
+    var diaSeleccionado by remember(lunesSemana, medico) {
+        val primerDisponible = diasHabiles.firstOrNull { d ->
+            medico != null && Repositorio.esDiaDisponible(medico.id, d)
+        }
+        mutableStateOf(primerDisponible ?: diasHabiles.first())
     }
 
     var horaSeleccionadaLocal by remember { mutableStateOf(Repositorio.horaSeleccionada) }
@@ -68,6 +74,10 @@ fun FechaHoraScreen(navController: NavController) {
     val localeEs = remember { Locale.Builder().setLanguage("es").setRegion("ES").build() }
     val formatoIso = remember { DateTimeFormatter.ISO_LOCAL_DATE }
     val formatoTexto = remember { DateTimeFormatter.ofPattern("EEEE, d 'de' MMMM", localeEs) }
+
+    val esDiaValido = remember(medico?.id, diaSeleccionado) {
+        medico != null && Repositorio.esDiaDisponible(medico.id, diaSeleccionado)
+    }
 
     val fechaIsoActual = diaSeleccionado.format(formatoIso)
 
@@ -79,8 +89,8 @@ fun FechaHoraScreen(navController: NavController) {
     }
 
     // Horarios disponibles desde el repositorio
-    val horarios = remember(medico?.id, fechaIsoActual, Repositorio.citasReservadas.size) {
-        if (medico != null) {
+    val horarios = remember(medico?.id, fechaIsoActual, esDiaValido, Repositorio.citasReservadas.size) {
+        if (medico != null && esDiaValido) {
             Repositorio.horariosDisponibles(medico.id, fechaIsoActual)
         } else emptyList()
     }
@@ -123,11 +133,11 @@ fun FechaHoraScreen(navController: NavController) {
             ) {
                 Button(
                     onClick = {
-                        if (horaSeleccionadaLocal.isNotBlank()) {
+                        if (esDiaValido && horaSeleccionadaLocal.isNotBlank()) {
                             navController.navigate(Rutas.ConfirmarCita.ruta)
                         }
                     },
-                    enabled = horaSeleccionadaLocal.isNotBlank(),
+                    enabled = esDiaValido && horaSeleccionadaLocal.isNotBlank(),
                     shape = RoundedCornerShape(16.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = AzulPrimario,
@@ -174,7 +184,7 @@ fun FechaHoraScreen(navController: NavController) {
                         modifier = Modifier
                             .size(84.dp)
                             .clip(CircleShape)
-                            .background(Color(0xFFEAF1FF))
+                            .background(AzulPastelFondo)
                     )
                     Spacer(modifier = Modifier.width(18.dp))
                     Column {
@@ -198,7 +208,7 @@ fun FechaHoraScreen(navController: NavController) {
                 }
             }
 
-            Spacer(modifier = Modifier.height(22.dp))
+            Spacer(modifier = Modifier.height(18.dp))
 
             // 2. BLOQUE DE CALENDARIO (NAVEGACIÓN POR MES Y DÍAS HÁBILES)
             Row(
@@ -232,7 +242,55 @@ fun FechaHoraScreen(navController: NavController) {
                 }
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // LEYENDA VISUAL DE COLORES
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 12.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(10.dp)
+                            .clip(CircleShape)
+                            .background(AzulPastelFondo)
+                            .border(1.5.dp, AzulPrimario, CircleShape)
+                    )
+                    Text(
+                        text = "Disponible",
+                        fontSize = 13.sp,
+                        color = TextoGris,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(24.dp))
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(10.dp)
+                            .clip(CircleShape)
+                            .background(GrisDeshabilitado)
+                    )
+                    Text(
+                        text = "No disponible",
+                        fontSize = 13.sp,
+                        color = TextoGris,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
 
             // CHIPS DE DÍAS (LUNES A VIERNES)
             Row(
@@ -240,8 +298,8 @@ fun FechaHoraScreen(navController: NavController) {
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 diasHabiles.forEach { dia ->
-                    val esPasado = dia.isBefore(hoy)
-                    val esSeleccionado = dia == diaSeleccionado
+                    val esDisponible = medico != null && Repositorio.esDiaDisponible(medico.id, dia)
+                    val esSeleccionado = dia == diaSeleccionado && esDisponible
 
                     val nombreDiaCorto = dia.format(DateTimeFormatter.ofPattern("EEE", localeEs))
                         .take(3)
@@ -249,13 +307,13 @@ fun FechaHoraScreen(navController: NavController) {
 
                     val fondo = when {
                         esSeleccionado -> AzulPrimario
-                        esPasado -> FondoChip.copy(alpha = 0.5f)
-                        else -> FondoChip
+                        esDisponible -> AzulPastelFondo
+                        else -> FondoChip.copy(alpha = 0.5f)
                     }
                     val colorTexto = when {
                         esSeleccionado -> Color.White
-                        esPasado -> TextoGris.copy(alpha = 0.45f)
-                        else -> TextoOscuro
+                        esDisponible -> TextoOscuro
+                        else -> TextoGris.copy(alpha = 0.45f)
                     }
 
                     Column(
@@ -264,7 +322,12 @@ fun FechaHoraScreen(navController: NavController) {
                             .height(86.dp)
                             .clip(RoundedCornerShape(16.dp))
                             .background(fondo)
-                            .clickable(enabled = !esPasado) {
+                            .then(
+                                if (!esSeleccionado && esDisponible) {
+                                    Modifier.border(1.dp, AzulPrimario, RoundedCornerShape(16.dp))
+                                } else Modifier
+                            )
+                            .clickable(enabled = esDisponible) {
                                 diaSeleccionado = dia
                                 horaSeleccionadaLocal = ""
                                 Repositorio.horaSeleccionada = ""
@@ -275,7 +338,7 @@ fun FechaHoraScreen(navController: NavController) {
                         Text(
                             text = nombreDiaCorto,
                             fontSize = 14.sp,
-                            fontWeight = FontWeight.Medium,
+                            fontWeight = if (esSeleccionado) FontWeight.Bold else FontWeight.Medium,
                             color = colorTexto
                         )
                         Spacer(modifier = Modifier.height(4.dp))
@@ -289,10 +352,24 @@ fun FechaHoraScreen(navController: NavController) {
                 }
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(28.dp))
 
-            // 3. BLOQUE DE HORARIOS (3 COLUMNAS CENTRADAS SINO TIENE AM/PM)
-            if (horarios.isEmpty()) {
+            // 3. BLOQUE DE HORARIOS (3 COLUMNAS CENTRADAS EN FORMATO 24H)
+            if (!esDiaValido) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "El médico no atiende en esta fecha. Selecciona un día disponible.",
+                        fontSize = 15.sp,
+                        color = TextoGris,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            } else if (horarios.isEmpty()) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()

@@ -4,6 +4,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.MedicalServices
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.ui.graphics.vector.ImageVector
 
@@ -20,6 +22,8 @@ sealed class Rutas(val ruta: String, val titulo: String = "", val icono: ImageVe
     object Perfil : Rutas("perfil_screen", "Perfil", Icons.Default.Person)
 
     // Agendamiento y vistas secundarias
+    object Sedes : Rutas("sedes", "Sedes", Icons.Default.LocationOn)
+    object MisDoctores : Rutas("mis_doctores", "Doctores", Icons.Default.MedicalServices)
     object Especialidades : Rutas("especialidades_screen")
     object Medicos : Rutas("medicos_screen/{especialidadId}") {
         fun crearRuta(especialidadId: Int) = "medicos_screen/$especialidadId"
