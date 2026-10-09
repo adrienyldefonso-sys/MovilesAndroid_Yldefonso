@@ -97,7 +97,7 @@ fun FechaHoraScreen(navController: NavController) {
                     Text(
                         text = "Seleccionar fecha y hora",
                         fontWeight = FontWeight.Bold,
-                        fontSize = 19.sp,
+                        fontSize = 20.sp,
                         color = TextoOscuro
                     )
                 },

@@ -52,6 +52,7 @@ fun RegistroScreen(navController: NavController) {
     var telefono by remember { mutableStateOf("") }
     var correo by remember { mutableStateOf("") }
     var contrasena by remember { mutableStateOf("") }
+    var aceptoTerminos by remember { mutableStateOf(false) }
     var errorMensaje by remember { mutableStateOf("") }
 
     // FUNCIONES DE VALIDACIÓN
@@ -127,7 +128,6 @@ fun RegistroScreen(navController: NavController) {
                         CampoFormularioRegistro(
                             valor = telefono,
                             alCambiar = {
-                                // Limitar entrada a máximo 9 caracteres
                                 if (it.length <= 9) {
                                     telefono = it
                                     errorMensaje = ""
@@ -159,8 +159,47 @@ fun RegistroScreen(navController: NavController) {
                         )
                     }
 
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // CHECKBOX Y ENLACE A TÉRMINOS Y CONDICIONES
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Checkbox(
+                            checked = aceptoTerminos,
+                            onCheckedChange = {
+                                aceptoTerminos = it
+                                errorMensaje = ""
+                            },
+                            colors = CheckboxDefaults.colors(
+                                checkedColor = AzulPrimario,
+                                uncheckedColor = CampoBorde
+                            )
+                        )
+                        Row(
+                            modifier = Modifier.weight(1f),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Acepto los ",
+                                fontSize = 13.sp,
+                                color = TextoGris
+                            )
+                            Text(
+                                text = "Términos y Condiciones",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = AzulPrimario,
+                                modifier = Modifier.clickable {
+                                    navController.navigate(Rutas.Terminos.ruta)
+                                }
+                            )
+                        }
+                    }
+
                     if (errorMensaje.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             text = errorMensaje,
                             color = MaterialTheme.colorScheme.error,
@@ -169,7 +208,7 @@ fun RegistroScreen(navController: NavController) {
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
                     // BOTÓN "REGISTRARSE" CON VALIDACIONES ESTRICTAS
                     Button(
@@ -189,6 +228,9 @@ fun RegistroScreen(navController: NavController) {
                                 }
                                 contrasena.length < 6 -> {
                                     errorMensaje = "La contraseña debe tener al menos 6 caracteres"
+                                }
+                                !aceptoTerminos -> {
+                                    errorMensaje = "Debes aceptar los Términos y Condiciones"
                                 }
                                 else -> {
                                     val nuevoUsuario = Usuario(
@@ -229,7 +271,7 @@ fun RegistroScreen(navController: NavController) {
                 }
             }
 
-            // FOOTER A CERRAR SESIÓN / INICIAR SESIÓN
+            // FOOTER A INICIAR SESIÓN
             HorizontalDivider(thickness = 1.dp, color = CampoBorde)
             Row(
                 modifier = Modifier
