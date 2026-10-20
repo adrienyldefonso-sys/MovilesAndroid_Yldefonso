@@ -9,6 +9,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -20,9 +22,13 @@ import androidx.navigation.compose.rememberNavController
 import com.yldefonso.lavacampus.model.Rol
 import com.yldefonso.lavacampus.ui.administrador.ServiciosScreen
 import com.yldefonso.lavacampus.ui.components.AppTopBar
+import com.yldefonso.lavacampus.ui.estudiante.InicioScreen
 import com.yldefonso.lavacampus.ui.estudiante.LoginScreen
+import com.yldefonso.lavacampus.ui.estudiante.NuevoPedidoScreen
 import com.yldefonso.lavacampus.ui.estudiante.SplashScreen
+import com.yldefonso.lavacampus.viewmodel.InicioViewModel
 import com.yldefonso.lavacampus.viewmodel.LavaViewModelFactory
+import com.yldefonso.lavacampus.viewmodel.NuevoPedidoViewModel
 import com.yldefonso.lavacampus.viewmodel.ServiciosViewModel
 import com.yldefonso.lavacampus.viewmodel.SesionViewModel
 import kotlinx.coroutines.launch
@@ -37,7 +43,6 @@ fun NavLava(sesionVm: SesionViewModel, factory: LavaViewModelFactory) {
         composable(Rutas.SPLASH) {
             SplashScreen(onTerminar = {
                 scope.launch {
-                    // Si hay perfil guardado salta el login y va a su pantalla principal
                     val destino = when (sesionVm.restaurarSesion()) {
                         Rol.CLIENTE -> Rutas.INICIO
                         Rol.ADMIN -> Rutas.PANEL
@@ -55,13 +60,46 @@ fun NavLava(sesionVm: SesionViewModel, factory: LavaViewModelFactory) {
             })
         }
 
-        // Marcadores temporales hasta los Pasos 8 y 12
+        // ---- Estudiante ----
         composable(Rutas.INICIO) {
-            Marcador("Inicio del estudiante (Paso 8)") {
-                sesionVm.cerrarSesion()
-                nav.navigate(Rutas.LOGIN) { popUpTo(0) }
+            val usuario by sesionVm.usuarioActual.collectAsState()
+            usuario?.let { u ->
+                val vm: InicioViewModel = viewModel(
+                    key = "inicio-${u.id}",
+                    factory = factory.paraUsuario(u.id, ::InicioViewModel)
+                )
+                InicioScreen(
+                    vm = vm,
+                    usuario = u,
+                    onNuevoPedido = { nav.navigate(Rutas.NUEVO_PEDIDO) },
+                    onMisPedidos = { /* Paso 11: Mis pedidos */ },
+                    onTarifas = { /* Paso 11: Tarifas */ },
+                    onPedido = { /* Paso 10: Detalle del pedido */ },
+                    onCerrarSesion = {
+                        sesionVm.cerrarSesion()
+                        nav.navigate(Rutas.LOGIN) { popUpTo(0) }
+                    }
+                )
             }
         }
+
+        composable(Rutas.NUEVO_PEDIDO) {
+            val usuario by sesionVm.usuarioActual.collectAsState()
+            usuario?.let { u ->
+                val vm: NuevoPedidoViewModel = viewModel(
+                    key = "nuevo-${u.id}",
+                    factory = factory.paraUsuario(u.id, ::NuevoPedidoViewModel)
+                )
+                NuevoPedidoScreen(
+                    vm = vm,
+                    onAtras = { nav.popBackStack() },
+                    // Paso 11: aquí irá a Mis pedidos; por ahora vuelve a Inicio
+                    onPedidoCreado = { nav.popBackStack() }
+                )
+            }
+        }
+
+        // ---- Administrador (marcador temporal hasta el Paso 12) ----
         composable(Rutas.PANEL) {
             Marcador("Panel del administrador (Paso 12)") {
                 sesionVm.cerrarSesion()
@@ -70,14 +108,13 @@ fun NavLava(sesionVm: SesionViewModel, factory: LavaViewModelFactory) {
         }
 
         composable(Rutas.SERVICIOS) {
-            val vm: ServiciosViewModel = androidx.lifecycle.viewmodel.compose.viewModel(factory = factory)
+            val vm: ServiciosViewModel = viewModel(factory = factory)
             Scaffold(topBar = { AppTopBar("Servicios") }) { padding ->
                 Box(Modifier.padding(padding)) {
-                    ServiciosScreen(vm = vm, onEditar = { /* Paso 13 */ })
+                    ServiciosScreen(vm = vm, onEditar = { /* Paso 14 */ })
                 }
             }
         }
-        // TODO (Pasos 8 al 13): resto de destinos y grafos por perfil
     }
 }
 

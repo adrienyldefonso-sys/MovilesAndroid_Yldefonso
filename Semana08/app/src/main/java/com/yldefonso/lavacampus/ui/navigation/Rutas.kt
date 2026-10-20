@@ -5,6 +5,7 @@ object Rutas {
     const val LOGIN = "login"
     const val INICIO = "inicio"
     const val PANEL = "panel"
+    const val NUEVO_PEDIDO = "nuevo_pedido"
     const val SERVICIOS = "servicios"
     // TODO (Pasos 8 al 13): NUEVO_PEDIDO, DETALLE, MIS_PEDIDOS, TARIFAS, PERFIL,
     //                       BANDEJA, GESTION, FORMULARIO_SERVICIO, CLIENTES, AJUSTES
