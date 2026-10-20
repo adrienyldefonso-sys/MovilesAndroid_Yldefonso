@@ -28,6 +28,8 @@ class LavaRepositoryRoom(private val db: LavaDatabase) : LavaRepository {
     override fun observarClientes(): Flow<List<ClienteResumen>> =
         usuarioDao.observarClientes()
 
+    override suspend fun obtenerUsuario(id: Int): Usuario? = usuarioDao.obtener(id)
+
     // ---- Servicios (ejemplo resuelto) ----
     override fun observarServicios(): Flow<List<Servicio>> = servicioDao.observarTodos()
     override fun observarServiciosActivos(): Flow<List<Servicio>> = servicioDao.observarActivos()

@@ -19,6 +19,9 @@ interface UsuarioDao {
     @Query("SELECT COUNT(*) FROM usuarios")
     suspend fun contar(): Int
 
+    @Query("SELECT * FROM usuarios WHERE id = :id")
+    suspend fun obtener(id: Int): Usuario?
+
     @Query(
         """
         SELECT u.id AS id,
@@ -34,4 +37,5 @@ interface UsuarioDao {
         """
     )
     fun observarClientes(): Flow<List<ClienteResumen>>
+
 }
