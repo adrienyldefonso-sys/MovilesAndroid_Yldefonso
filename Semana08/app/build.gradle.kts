@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -11,7 +12,7 @@ android {
 
     defaultConfig {
         applicationId = "com.yldefonso.lavacampus"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 37
         versionCode = 1
         versionName = "1.0"
@@ -44,8 +45,21 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation(libs.androidx.room3.common)
-    implementation(libs.androidx.room3.runtime)
+
+    // Navegación, iconos y ViewModel con Compose
+    implementation("androidx.compose.material:material-icons-extended:1.7.5")
+    implementation("androidx.navigation:navigation-compose:2.8.5")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.6")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.6")
+
+    // Room 3 + driver de SQLite + KSP
+    implementation("androidx.room3:room3-runtime:3.0.1")
+    ksp("androidx.room3:room3-compiler:3.0.1")
+    implementation("androidx.sqlite:sqlite-bundled:2.7.0")
+
+    // DataStore (Paso 5)
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
+
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
@@ -53,6 +67,4 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
-    implementation("androidx.compose.material:material-icons-extended:1.7.5")
-    implementation("androidx.navigation:navigation-compose:2.8.5")
 }

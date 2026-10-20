@@ -5,18 +5,6 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import com.tecsup.lavacampus.ui.theme.FondoOscuro
-import com.tecsup.lavacampus.ui.theme.SuperficieOscura
-import com.tecsup.lavacampus.ui.theme.TurquesaClaro
-import com.tecsup.lavacampus.ui.theme.TurquesaContenedor
-import com.tecsup.lavacampus.ui.theme.TurquesaContenedorOscuro
-import com.tecsup.lavacampus.ui.theme.TurquesaFondo
-import com.tecsup.lavacampus.ui.theme.TurquesaPrimario
-import com.tecsup.lavacampus.ui.theme.VioletaClaro
-import com.tecsup.lavacampus.ui.theme.VioletaContenedor
-import com.tecsup.lavacampus.ui.theme.VioletaContenedorOscuro
-import com.tecsup.lavacampus.ui.theme.VioletaFondo
-import com.tecsup.lavacampus.ui.theme.VioletaPrimario
 import com.yldefonso.lavacampus.model.Rol
 
 @Composable
