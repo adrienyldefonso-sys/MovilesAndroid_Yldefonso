@@ -56,4 +56,11 @@ interface PedidoDao {
 
     @Query("SELECT COALESCE(SUM(total), 0.0) FROM pedidos WHERE pagado = 1 AND fechaRegistro >= :fechaInicio")
     fun ingresosDesde(fechaInicio: String): Flow<Double>
+
+    // ---- Pedidos Atrasados ----
+    @Query("SELECT id FROM pedidos WHERE fechaEntrega < :hoy AND estado NOT IN ('ENTREGADO', 'CANCELADO')")
+    fun observarIdsAtrasados(hoy: String): Flow<List<Int>>
+
+    @Query("SELECT COUNT(*) FROM pedidos WHERE fechaEntrega < :hoy AND estado NOT IN ('ENTREGADO', 'CANCELADO')")
+    fun observarCantidadAtrasados(hoy: String): Flow<Int>
 }

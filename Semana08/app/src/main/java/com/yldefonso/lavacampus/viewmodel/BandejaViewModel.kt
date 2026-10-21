@@ -10,8 +10,10 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 
 enum class FiltroBandeja(val etiqueta: String, val estado: EstadoPedido?) {
     TODOS("Todos", null),
@@ -27,6 +29,12 @@ class BandejaViewModel(private val repo: LavaRepository) : ViewModel() {
 
     private val _busqueda = MutableStateFlow("")
     val busqueda: StateFlow<String> = _busqueda.asStateFlow()
+
+    /** IDs de pedidos atrasados (fechaEntrega menor a hoy y estado activo). */
+    val atrasados: StateFlow<Set<Int>> =
+        repo.observarIdsAtrasados(LocalDate.now().toString())
+            .map { it.toSet() }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptySet())
 
     /** Filtrado por el chip elegido y por el buscador (nombre del estudiante o número). */
     val pedidos: StateFlow<List<PedidoConDetalle>> =
