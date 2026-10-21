@@ -9,7 +9,7 @@ import java.util.Locale
 
 private val localeEs: Locale = Locale.forLanguageTag("es-PE")
 
-fun soles(monto: Double): String = "S/ " + String.format(Locale.US, "%.2f", monto)
+fun soles(monto: Double): String = "S/ " + String.format(Locale.US, "%,.2f", monto)
 
 fun formatoCantidad(cantidad: Double, unidad: String): String {
     val n = if (cantidad % 1.0 == 0.0) String.format(Locale.US, "%.0f", cantidad)
@@ -52,3 +52,9 @@ fun diaCorto(iso: String): String =
         .format(DateTimeFormatter.ofPattern("EEE d", localeEs))
         .lowercase()
         .replace(".", "")
+
+/** "Mié 21 oct" */
+fun fechaPanel(fecha: LocalDate = LocalDate.now()): String =
+    fecha.format(DateTimeFormatter.ofPattern("EEE d MMM", localeEs))
+        .replace(".", "")
+        .replaceFirstChar { it.uppercase() }

@@ -14,6 +14,10 @@ object Rutas {
     const val PERFIL = "perfil"
 
     const val MIS_PEDIDOS = "mis_pedidos"
+
+    const val BANDEJA = "bandeja"
+    const val CLIENTES = "clientes"
+    const val AJUSTES = "ajustes"
     const val TARIFAS = "tarifas"
     // TODO (Pasos 8 al 13): NUEVO_PEDIDO, DETALLE, MIS_PEDIDOS, TARIFAS, PERFIL,
     //                       BANDEJA, GESTION, FORMULARIO_SERVICIO, CLIENTES, AJUSTES

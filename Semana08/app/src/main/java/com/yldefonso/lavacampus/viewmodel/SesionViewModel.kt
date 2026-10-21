@@ -67,10 +67,9 @@ class SesionViewModel(
     }
 
     fun cerrarSesion() {
-        viewModelScope.launch {
-            prefs.cerrarSesion()
-            _usuarioActual.value = null
-            _error.value = null
-        }
+        // Primero el estado (síncrono): así el login no ve un usuario viejo y no rebota al Inicio
+        _usuarioActual.value = null
+        _error.value = null
+        viewModelScope.launch { prefs.cerrarSesion() }
     }
 }
