@@ -1,20 +1,9 @@
 package com.yldefonso.lavacampus.ui.navigation
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -23,11 +12,13 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.yldefonso.lavacampus.model.Rol
+import com.yldefonso.lavacampus.ui.administrador.AjustesScreen
 import com.yldefonso.lavacampus.ui.administrador.BandejaScreen
+import com.yldefonso.lavacampus.ui.administrador.ClientesScreen
+import com.yldefonso.lavacampus.ui.administrador.FormularioServicioScreen
 import com.yldefonso.lavacampus.ui.administrador.GestionPedidoScreen
 import com.yldefonso.lavacampus.ui.administrador.PanelScreen
 import com.yldefonso.lavacampus.ui.administrador.ServiciosScreen
-import com.yldefonso.lavacampus.ui.components.AppTopBar
 import com.yldefonso.lavacampus.ui.components.BarraNavAdmin
 import com.yldefonso.lavacampus.ui.components.BarraNavEstudiante
 import com.yldefonso.lavacampus.ui.estudiante.DetallePedidoScreen
@@ -35,9 +26,11 @@ import com.yldefonso.lavacampus.ui.estudiante.InicioScreen
 import com.yldefonso.lavacampus.ui.estudiante.LoginScreen
 import com.yldefonso.lavacampus.ui.estudiante.MisPedidosScreen
 import com.yldefonso.lavacampus.ui.estudiante.NuevoPedidoScreen
+import com.yldefonso.lavacampus.ui.estudiante.PerfilScreen
 import com.yldefonso.lavacampus.ui.estudiante.SplashScreen
 import com.yldefonso.lavacampus.ui.estudiante.TarifasScreen
 import com.yldefonso.lavacampus.viewmodel.BandejaViewModel
+import com.yldefonso.lavacampus.viewmodel.ClientesViewModel
 import com.yldefonso.lavacampus.viewmodel.DetallePedidoViewModel
 import com.yldefonso.lavacampus.viewmodel.GestionPedidoViewModel
 import com.yldefonso.lavacampus.viewmodel.InicioViewModel
@@ -45,6 +38,7 @@ import com.yldefonso.lavacampus.viewmodel.LavaViewModelFactory
 import com.yldefonso.lavacampus.viewmodel.MisPedidosViewModel
 import com.yldefonso.lavacampus.viewmodel.NuevoPedidoViewModel
 import com.yldefonso.lavacampus.viewmodel.PanelViewModel
+import com.yldefonso.lavacampus.viewmodel.PerfilViewModel
 import com.yldefonso.lavacampus.viewmodel.ServiciosViewModel
 import com.yldefonso.lavacampus.viewmodel.SesionViewModel
 import kotlinx.coroutines.launch
@@ -54,11 +48,7 @@ fun NavLava(sesionVm: SesionViewModel, factory: LavaViewModelFactory) {
     val nav = rememberNavController()
     val scope = rememberCoroutineScope()
 
-    /**
-     * Navegación entre pestañas, igual para botones y barra inferior:
-     * - a la raíz (Inicio o Panel): vuelve atrás hasta ella (siempre funciona);
-     * - a otra pestaña: reemplaza la pantalla actual encima de la raíz.
-     */
+    /** Pestañas: a la raíz se vuelve con popBackStack; a otra pestaña se reemplaza la actual. */
     fun irATab(destino: String, raiz: String) {
         if (destino == raiz) {
             if (!nav.popBackStack(raiz, inclusive = false)) {
@@ -75,6 +65,14 @@ fun NavLava(sesionVm: SesionViewModel, factory: LavaViewModelFactory) {
     fun cerrarSesion() {
         sesionVm.cerrarSesion()
         nav.navigate(Rutas.LOGIN) { popUpTo(0) }
+    }
+
+    /** Guarda el otro perfil y navega a su grafo, limpiando la pila. */
+    fun cambiarPerfil() {
+        sesionVm.cambiarPerfil { rol ->
+            val destino = if (rol == Rol.ADMIN) Rutas.PANEL else Rutas.INICIO
+            nav.navigate(destino) { popUpTo(0) }
+        }
     }
 
     val barraEstudiante: @Composable () -> Unit = {
@@ -123,7 +121,6 @@ fun NavLava(sesionVm: SesionViewModel, factory: LavaViewModelFactory) {
                     onMisPedidos = { irATab(Rutas.MIS_PEDIDOS, Rutas.INICIO) },
                     onTarifas = { irATab(Rutas.TARIFAS, Rutas.INICIO) },
                     onPedido = { id -> nav.navigate(Rutas.detalle(id)) },
-                    onCerrarSesion = { cerrarSesion() },
                     barraInferior = barraEstudiante
                 )
             }
@@ -134,13 +131,12 @@ fun NavLava(sesionVm: SesionViewModel, factory: LavaViewModelFactory) {
             usuario?.let { u ->
                 val vm: NuevoPedidoViewModel = viewModel(
                     key = "nuevo-${u.id}",
-                    factory = factory.paraUsuario(u.id, ::NuevoPedidoViewModel)
+                    factory = factory.paraNuevoPedido(u.id)
                 )
                 NuevoPedidoScreen(
                     vm = vm,
                     onAtras = { nav.popBackStack() },
                     onPedidoCreado = {
-                        // Deja la pila como Inicio -> Mis pedidos (sin duplicados)
                         nav.navigate(Rutas.MIS_PEDIDOS) {
                             popUpTo(Rutas.INICIO)
                             launchSingleTop = true
@@ -189,7 +185,21 @@ fun NavLava(sesionVm: SesionViewModel, factory: LavaViewModelFactory) {
         }
 
         composable(Rutas.PERFIL) {
-            PantallaTemporal("Perfil del estudiante (Paso 13)", barraEstudiante) { cerrarSesion() }
+            val usuario by sesionVm.usuarioActual.collectAsState()
+            usuario?.let { u ->
+                val vm: PerfilViewModel = viewModel(
+                    key = "perfil-${u.id}",
+                    factory = factory.paraUsuario(u.id, ::PerfilViewModel)
+                )
+                PerfilScreen(
+                    vm = vm,
+                    sesion = sesionVm,
+                    usuario = u,
+                    onCambiarPerfil = { cambiarPerfil() },
+                    onCerrarSesion = { cerrarSesion() },
+                    barraInferior = barraEstudiante
+                )
+            }
         }
 
         // ================= ADMINISTRADOR =================
@@ -225,41 +235,39 @@ fun NavLava(sesionVm: SesionViewModel, factory: LavaViewModelFactory) {
 
         composable(Rutas.SERVICIOS) {
             val vm: ServiciosViewModel = viewModel(factory = factory)
-            Scaffold(
-                topBar = { AppTopBar("Servicios") },
-                bottomBar = barraAdmin
-            ) { padding ->
-                Box(Modifier.padding(padding)) {
-                    ServiciosScreen(vm = vm, onEditar = { /* Paso 13 */ })
-                }
-            }
+            ServiciosScreen(
+                vm = vm,
+                onNuevo = { nav.navigate(Rutas.formulario(0)) },
+                onEditar = { id -> nav.navigate(Rutas.formulario(id)) },
+                barraInferior = barraAdmin
+            )
+        }
+
+        composable(
+            route = Rutas.FORMULARIO,
+            arguments = listOf(navArgument("servicioId") { type = NavType.IntType })
+        ) { entrada ->
+            val servicioId = entrada.arguments?.getInt("servicioId") ?: 0
+            val vm: ServiciosViewModel = viewModel(factory = factory)
+            FormularioServicioScreen(vm = vm, servicioId = servicioId, onAtras = { nav.popBackStack() })
         }
 
         composable(Rutas.CLIENTES) {
-            PantallaTemporal("Clientes (Paso 13)", barraAdmin)
+            val vm: ClientesViewModel = viewModel(factory = factory)
+            ClientesScreen(vm = vm, barraInferior = barraAdmin)
         }
 
         composable(Rutas.AJUSTES) {
-            PantallaTemporal("Ajustes del administrador (Paso 13)", barraAdmin) { cerrarSesion() }
-        }
-    }
-}
-
-/** Pantalla provisional con barra inferior; el botón de cerrar sesión es solo para pruebas. */
-@Composable
-private fun PantallaTemporal(
-    texto: String,
-    barra: @Composable () -> Unit,
-    onCerrarSesion: (() -> Unit)? = null
-) {
-    Scaffold(bottomBar = barra) { padding ->
-        Column(
-            Modifier.fillMaxSize().padding(padding),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically)
-        ) {
-            Text(texto)
-            onCerrarSesion?.let { Button(onClick = it) { Text("Cerrar sesión (temporal)") } }
+            val usuario by sesionVm.usuarioActual.collectAsState()
+            usuario?.let { u ->
+                AjustesScreen(
+                    sesion = sesionVm,
+                    usuario = u,
+                    onCambiarPerfil = { cambiarPerfil() },
+                    onCerrarSesion = { cerrarSesion() },
+                    barraInferior = barraAdmin
+                )
+            }
         }
     }
 }

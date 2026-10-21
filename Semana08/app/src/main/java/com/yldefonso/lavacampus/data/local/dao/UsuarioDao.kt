@@ -38,4 +38,7 @@ interface UsuarioDao {
     )
     fun observarClientes(): Flow<List<ClienteResumen>>
 
+    @Query("SELECT * FROM usuarios WHERE rol = :rol ORDER BY id LIMIT 1")
+    suspend fun obtenerPorRol(rol: String): Usuario?
+
 }

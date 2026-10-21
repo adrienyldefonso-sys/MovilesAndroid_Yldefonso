@@ -15,6 +15,8 @@ interface LavaRepository {
     fun observarClientes(): Flow<List<ClienteResumen>>
     suspend fun obtenerUsuario(id: Int): Usuario?
 
+    suspend fun obtenerUsuarioPorRol(rol: String): Usuario?
+
     // Servicios (ejemplo resuelto)
     fun observarServicios(): Flow<List<Servicio>>
     fun observarServiciosActivos(): Flow<List<Servicio>>

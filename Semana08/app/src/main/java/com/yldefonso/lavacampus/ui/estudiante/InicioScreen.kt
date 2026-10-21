@@ -9,13 +9,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -44,20 +40,13 @@ fun InicioScreen(
     onMisPedidos: () -> Unit,
     onTarifas: () -> Unit,
     onPedido: (Int) -> Unit,
-    onCerrarSesion: () -> Unit,   // temporal: se mueve a Perfil en el Paso 13
     barraInferior: @Composable () -> Unit = {}
 ) {
     val activo by vm.pedidoActivo.collectAsState()
     val recientes by vm.recientes.collectAsState()
 
     Scaffold(
-        topBar = {
-            AppTopBar(titulo = "LavaCampus", acciones = {
-                IconButton(onClick = onCerrarSesion) {
-                    Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = "Cerrar sesión")
-                }
-            })
-        },
+        topBar = { AppTopBar(titulo = "LavaCampus") },
         bottomBar = barraInferior
     ) { padding ->
         Column(

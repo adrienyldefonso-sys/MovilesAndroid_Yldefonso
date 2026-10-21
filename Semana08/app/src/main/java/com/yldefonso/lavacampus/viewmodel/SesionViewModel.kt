@@ -28,6 +28,28 @@ class SesionViewModel(
     val modoOscuro: StateFlow<Boolean> = prefs.modoOscuro
         .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
+    val notificaciones: StateFlow<Boolean> = prefs.notificaciones
+        .stateIn(viewModelScope, SharingStarted.Eagerly, true)
+
+    val recibirPedidos: StateFlow<Boolean> = prefs.recibirPedidos
+        .stateIn(viewModelScope, SharingStarted.Eagerly, true)
+
+    fun cambiarModoOscuro(valor: Boolean) { viewModelScope.launch { prefs.guardarModoOscuro(valor) } }
+    fun cambiarNotificaciones(valor: Boolean) { viewModelScope.launch { prefs.guardarNotificaciones(valor) } }
+    fun cambiarRecibirPedidos(valor: Boolean) { viewModelScope.launch { prefs.guardarRecibirPedidos(valor) } }
+
+    /** Guarda el otro perfil y avisa para que la navegación limpie la pila. */
+    fun cambiarPerfil(onListo: (Rol) -> Unit) {
+        val actual = _usuarioActual.value ?: return
+        val otroRol = if (actual.rol == Rol.ADMIN.name) Rol.CLIENTE else Rol.ADMIN
+        viewModelScope.launch {
+            val usuario = repo.obtenerUsuarioPorRol(otroRol.name) ?: return@launch
+            prefs.guardarSesion(otroRol, usuario.id)
+            _usuarioActual.value = usuario
+            onListo(otroRol)
+        }
+    }
+
     fun limpiarError() { _error.value = null }
 
     /** Regla de login: campos, credenciales y coincidencia con la pestaña elegida. */

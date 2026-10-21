@@ -16,7 +16,7 @@ class LavaViewModelFactory(
         modelClass.isAssignableFrom(ServiciosViewModel::class.java) -> ServiciosViewModel(repo) as T
         modelClass.isAssignableFrom(PanelViewModel::class.java) -> PanelViewModel(repo) as T
         modelClass.isAssignableFrom(BandejaViewModel::class.java) -> BandejaViewModel(repo) as T
-        // TODO: agrega aquí los ViewModels que no necesitan parámetros (Paso 13)
+        modelClass.isAssignableFrom(ClientesViewModel::class.java) -> ClientesViewModel(repo) as T
         else -> throw IllegalArgumentException("ViewModel desconocido: ${modelClass.name}")
     }
 
@@ -27,5 +27,12 @@ class LavaViewModelFactory(
     ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T = crear(repo, id) as T
+    }
+
+    /** Nuevo pedido necesita además la preferencia "Recibir pedidos". */
+    fun paraNuevoPedido(usuarioId: Int): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
+        @Suppress("UNCHECKED_CAST")
+        override fun <T : ViewModel> create(modelClass: Class<T>): T =
+            NuevoPedidoViewModel(repo, usuarioId, prefs.recibirPedidos) as T
     }
 }

@@ -23,4 +23,7 @@ object Rutas {
     const val GESTION = "gestion/{pedidoId}"
     fun gestion(pedidoId: Int) = "gestion/$pedidoId"
 
+    const val FORMULARIO = "formulario/{servicioId}"
+    fun formulario(servicioId: Int) = "formulario/$servicioId"
+
 }

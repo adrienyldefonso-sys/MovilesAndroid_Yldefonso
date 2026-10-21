@@ -43,6 +43,7 @@ fun NuevoPedidoScreen(
     onAtras: () -> Unit,
     onPedidoCreado: () -> Unit
 ) {
+    val recibiendo by vm.recibiendo.collectAsState()
     val servicios by vm.servicios.collectAsState()
     val cantidades by vm.cantidades.collectAsState()
     val nota by vm.nota.collectAsState()
@@ -87,6 +88,20 @@ fun NuevoPedidoScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            if (!recibiendo) {
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        "La lavandería no está recibiendo pedidos",
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
+            }
+
             Text("Elige tus servicios", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
 
             servicios.forEach { s ->

@@ -7,6 +7,7 @@ import com.yldefonso.lavacampus.data.repository.LavaRepository
 import com.yldefonso.lavacampus.model.LineaPedido
 import com.yldefonso.lavacampus.model.Unidad
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -39,8 +40,13 @@ private const val MAX_PEDIDOS_ACTIVOS = 3
 
 class NuevoPedidoViewModel(
     private val repo: LavaRepository,
-    private val usuarioId: Int
+    private val usuarioId: Int,
+    recibirPedidos: Flow<Boolean>
 ) : ViewModel() {
+
+    /** Si el administrador apagó "Recibir pedidos", no se pueden crear pedidos. */
+    val recibiendo: StateFlow<Boolean> = recibirPedidos
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
 
     /** Solo servicios ACTIVOS. */
     val servicios: StateFlow<List<Servicio>> = repo.observarServiciosActivos()
@@ -81,10 +87,10 @@ class NuevoPedidoViewModel(
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
-    /** El botón se habilita solo con al menos un servicio con cantidad mayor que 0. */
-    val puedeConfirmar: StateFlow<Boolean> = resumen
-        .map { it.isNotEmpty() }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+    /** El botón se habilita solo si hay productos y la lavandería está recibiendo pedidos. */
+    val puedeConfirmar: StateFlow<Boolean> = combine(resumen, recibiendo) { lineas, abierto ->
+        lineas.isNotEmpty() && abierto
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
     fun cambiarNota(texto: String) { _nota.value = texto }
 
@@ -108,6 +114,10 @@ class NuevoPedidoViewModel(
     }
 
     fun confirmar() {
+        if (!recibiendo.value) {
+            _mensaje.value = "La lavandería no está recibiendo pedidos"
+            return
+        }
         if (_guardando.value) return
         val lineas = resumen.value.map { LineaPedido(it.servicio.id, it.cantidad) }
         val fecha = fechaEntrega.value
