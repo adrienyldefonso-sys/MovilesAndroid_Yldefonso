@@ -15,6 +15,7 @@ class LavaViewModelFactory(
         modelClass.isAssignableFrom(SesionViewModel::class.java) -> SesionViewModel(repo, prefs) as T
         modelClass.isAssignableFrom(ServiciosViewModel::class.java) -> ServiciosViewModel(repo) as T
         modelClass.isAssignableFrom(PanelViewModel::class.java) -> PanelViewModel(repo) as T
+        modelClass.isAssignableFrom(BandejaViewModel::class.java) -> BandejaViewModel(repo) as T
         // TODO: agrega aquí los ViewModels que no necesitan parámetros (Paso 13)
         else -> throw IllegalArgumentException("ViewModel desconocido: ${modelClass.name}")
     }

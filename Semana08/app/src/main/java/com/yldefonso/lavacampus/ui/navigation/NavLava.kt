@@ -1,8 +1,8 @@
 package com.yldefonso.lavacampus.ui.navigation
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
@@ -23,6 +23,8 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.yldefonso.lavacampus.model.Rol
+import com.yldefonso.lavacampus.ui.administrador.BandejaScreen
+import com.yldefonso.lavacampus.ui.administrador.GestionPedidoScreen
 import com.yldefonso.lavacampus.ui.administrador.PanelScreen
 import com.yldefonso.lavacampus.ui.administrador.ServiciosScreen
 import com.yldefonso.lavacampus.ui.components.AppTopBar
@@ -35,7 +37,9 @@ import com.yldefonso.lavacampus.ui.estudiante.MisPedidosScreen
 import com.yldefonso.lavacampus.ui.estudiante.NuevoPedidoScreen
 import com.yldefonso.lavacampus.ui.estudiante.SplashScreen
 import com.yldefonso.lavacampus.ui.estudiante.TarifasScreen
+import com.yldefonso.lavacampus.viewmodel.BandejaViewModel
 import com.yldefonso.lavacampus.viewmodel.DetallePedidoViewModel
+import com.yldefonso.lavacampus.viewmodel.GestionPedidoViewModel
 import com.yldefonso.lavacampus.viewmodel.InicioViewModel
 import com.yldefonso.lavacampus.viewmodel.LavaViewModelFactory
 import com.yldefonso.lavacampus.viewmodel.MisPedidosViewModel
@@ -199,7 +203,24 @@ fun NavLava(sesionVm: SesionViewModel, factory: LavaViewModelFactory) {
         }
 
         composable(Rutas.BANDEJA) {
-            PantallaTemporal("Bandeja de pedidos (Paso 12 del laboratorio)", barraAdmin)
+            val vm: BandejaViewModel = viewModel(factory = factory)
+            BandejaScreen(
+                vm = vm,
+                onPedido = { id -> nav.navigate(Rutas.gestion(id)) },
+                barraInferior = barraAdmin
+            )
+        }
+
+        composable(
+            route = Rutas.GESTION,
+            arguments = listOf(navArgument("pedidoId") { type = NavType.IntType })
+        ) { entrada ->
+            val pedidoId = entrada.arguments?.getInt("pedidoId") ?: return@composable
+            val vm: GestionPedidoViewModel = viewModel(
+                key = "gestion-$pedidoId",
+                factory = factory.paraUsuario(pedidoId, ::GestionPedidoViewModel)
+            )
+            GestionPedidoScreen(vm = vm, onAtras = { nav.popBackStack() })
         }
 
         composable(Rutas.SERVICIOS) {
