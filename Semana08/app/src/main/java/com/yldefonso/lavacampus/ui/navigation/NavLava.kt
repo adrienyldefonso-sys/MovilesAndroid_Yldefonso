@@ -16,16 +16,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.yldefonso.lavacampus.model.Rol
 import com.yldefonso.lavacampus.ui.administrador.ServiciosScreen
 import com.yldefonso.lavacampus.ui.components.AppTopBar
+import com.yldefonso.lavacampus.ui.estudiante.DetallePedidoScreen
 import com.yldefonso.lavacampus.ui.estudiante.InicioScreen
 import com.yldefonso.lavacampus.ui.estudiante.LoginScreen
 import com.yldefonso.lavacampus.ui.estudiante.NuevoPedidoScreen
 import com.yldefonso.lavacampus.ui.estudiante.SplashScreen
+import com.yldefonso.lavacampus.viewmodel.DetallePedidoViewModel
 import com.yldefonso.lavacampus.viewmodel.InicioViewModel
 import com.yldefonso.lavacampus.viewmodel.LavaViewModelFactory
 import com.yldefonso.lavacampus.viewmodel.NuevoPedidoViewModel
@@ -74,7 +78,7 @@ fun NavLava(sesionVm: SesionViewModel, factory: LavaViewModelFactory) {
                     onNuevoPedido = { nav.navigate(Rutas.NUEVO_PEDIDO) },
                     onMisPedidos = { /* Paso 11: Mis pedidos */ },
                     onTarifas = { /* Paso 11: Tarifas */ },
-                    onPedido = { /* Paso 10: Detalle del pedido */ },
+                    onPedido = { id -> nav.navigate(Rutas.detalle(id)) },
                     onCerrarSesion = {
                         sesionVm.cerrarSesion()
                         nav.navigate(Rutas.LOGIN) { popUpTo(0) }
@@ -97,6 +101,18 @@ fun NavLava(sesionVm: SesionViewModel, factory: LavaViewModelFactory) {
                     onPedidoCreado = { nav.popBackStack() }
                 )
             }
+        }
+
+        composable(
+            route = Rutas.DETALLE,
+            arguments = listOf(navArgument("pedidoId") { type = NavType.IntType })
+        ) { entrada ->
+            val pedidoId = entrada.arguments?.getInt("pedidoId") ?: return@composable
+            val vm: DetallePedidoViewModel = viewModel(
+                key = "detalle-$pedidoId",
+                factory = factory.paraUsuario(pedidoId, ::DetallePedidoViewModel)
+            )
+            DetallePedidoScreen(vm = vm, onAtras = { nav.popBackStack() })
         }
 
         // ---- Administrador (marcador temporal hasta el Paso 12) ----
