@@ -18,5 +18,8 @@ class ServiciosViewModel(private val repo: LavaRepository) : ViewModel() {
         viewModelScope.launch { repo.cambiarActivo(s.id, !s.activo) }
     }
 
+    val activos: StateFlow<List<Servicio>> = repo.observarServiciosActivos()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     // TODO (Paso 13): guardar(servicio) y eliminar(servicio)
 }

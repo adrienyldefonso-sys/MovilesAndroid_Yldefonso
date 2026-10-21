@@ -44,7 +44,8 @@ fun InicioScreen(
     onMisPedidos: () -> Unit,
     onTarifas: () -> Unit,
     onPedido: (Int) -> Unit,
-    onCerrarSesion: () -> Unit   // temporal: se mueve a Perfil en el Paso 13
+    onCerrarSesion: () -> Unit,   // temporal: se mueve a Perfil en el Paso 13
+    barraInferior: @Composable () -> Unit = {}
 ) {
     val activo by vm.pedidoActivo.collectAsState()
     val recientes by vm.recientes.collectAsState()
@@ -56,7 +57,8 @@ fun InicioScreen(
                     Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = "Cerrar sesión")
                 }
             })
-        }
+        },
+        bottomBar = barraInferior
     ) { padding ->
         Column(
             Modifier

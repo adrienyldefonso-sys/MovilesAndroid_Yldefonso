@@ -19,19 +19,24 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.yldefonso.lavacampus.model.Rol
 import com.yldefonso.lavacampus.ui.administrador.ServiciosScreen
 import com.yldefonso.lavacampus.ui.components.AppTopBar
+import com.yldefonso.lavacampus.ui.components.BarraNavEstudiante
 import com.yldefonso.lavacampus.ui.estudiante.DetallePedidoScreen
 import com.yldefonso.lavacampus.ui.estudiante.InicioScreen
 import com.yldefonso.lavacampus.ui.estudiante.LoginScreen
+import com.yldefonso.lavacampus.ui.estudiante.MisPedidosScreen
 import com.yldefonso.lavacampus.ui.estudiante.NuevoPedidoScreen
 import com.yldefonso.lavacampus.ui.estudiante.SplashScreen
+import com.yldefonso.lavacampus.ui.estudiante.TarifasScreen
 import com.yldefonso.lavacampus.viewmodel.DetallePedidoViewModel
 import com.yldefonso.lavacampus.viewmodel.InicioViewModel
 import com.yldefonso.lavacampus.viewmodel.LavaViewModelFactory
+import com.yldefonso.lavacampus.viewmodel.MisPedidosViewModel
 import com.yldefonso.lavacampus.viewmodel.NuevoPedidoViewModel
 import com.yldefonso.lavacampus.viewmodel.ServiciosViewModel
 import com.yldefonso.lavacampus.viewmodel.SesionViewModel
@@ -41,6 +46,18 @@ import kotlinx.coroutines.launch
 fun NavLava(sesionVm: SesionViewModel, factory: LavaViewModelFactory) {
     val nav = rememberNavController()
     val scope = rememberCoroutineScope()
+
+    // Barra inferior del estudiante: Inicio, Pedidos, Tarifas y Perfil
+    val barraEstudiante: @Composable () -> Unit = {
+        val ruta = nav.currentBackStackEntryAsState().value?.destination?.route
+        BarraNavEstudiante(rutaActual = ruta, onIr = { destino ->
+            nav.navigate(destino) {
+                popUpTo(Rutas.INICIO) { saveState = true }
+                launchSingleTop = true
+                restoreState = true
+            }
+        })
+    }
 
     NavHost(navController = nav, startDestination = Rutas.SPLASH) {
 
@@ -76,13 +93,14 @@ fun NavLava(sesionVm: SesionViewModel, factory: LavaViewModelFactory) {
                     vm = vm,
                     usuario = u,
                     onNuevoPedido = { nav.navigate(Rutas.NUEVO_PEDIDO) },
-                    onMisPedidos = { /* Paso 11: Mis pedidos */ },
-                    onTarifas = { /* Paso 11: Tarifas */ },
+                    onMisPedidos = { nav.navigate(Rutas.MIS_PEDIDOS) },
+                    onTarifas = { nav.navigate(Rutas.TARIFAS) },
                     onPedido = { id -> nav.navigate(Rutas.detalle(id)) },
                     onCerrarSesion = {
                         sesionVm.cerrarSesion()
                         nav.navigate(Rutas.LOGIN) { popUpTo(0) }
-                    }
+                    },
+                    barraInferior = barraEstudiante
                 )
             }
         }
@@ -97,8 +115,9 @@ fun NavLava(sesionVm: SesionViewModel, factory: LavaViewModelFactory) {
                 NuevoPedidoScreen(
                     vm = vm,
                     onAtras = { nav.popBackStack() },
-                    // Paso 11: aquí irá a Mis pedidos; por ahora vuelve a Inicio
-                    onPedidoCreado = { nav.popBackStack() }
+                    onPedidoCreado = {
+                        nav.navigate(Rutas.MIS_PEDIDOS) { popUpTo(Rutas.NUEVO_PEDIDO) { inclusive = true } }
+                    }
                 )
             }
         }
@@ -115,6 +134,44 @@ fun NavLava(sesionVm: SesionViewModel, factory: LavaViewModelFactory) {
             DetallePedidoScreen(vm = vm, onAtras = { nav.popBackStack() })
         }
 
+        composable(Rutas.MIS_PEDIDOS) {
+            val usuario by sesionVm.usuarioActual.collectAsState()
+            usuario?.let { u ->
+                val vm: MisPedidosViewModel = viewModel(
+                    key = "mis-${u.id}",
+                    factory = factory.paraUsuario(u.id, ::MisPedidosViewModel)
+                )
+                MisPedidosScreen(
+                    vm = vm,
+                    onAtras = { nav.popBackStack() },
+                    onPedido = { id -> nav.navigate(Rutas.detalle(id)) },
+                    onNuevoPedido = { nav.navigate(Rutas.NUEVO_PEDIDO) },
+                    barraInferior = barraEstudiante
+                )
+            }
+        }
+
+        composable(Rutas.TARIFAS) {
+            val vm: ServiciosViewModel = viewModel(factory = factory)
+            TarifasScreen(
+                vm = vm,
+                onAtras = { nav.popBackStack() },
+                barraInferior = barraEstudiante
+            )
+        }
+
+        // Marcador temporal hasta el Paso 13 (PerfilScreen)
+        composable(Rutas.PERFIL) {
+            Scaffold(bottomBar = barraEstudiante) { padding ->
+                Box(Modifier.padding(padding)) {
+                    Marcador("Perfil del estudiante (Paso 13)") {
+                        sesionVm.cerrarSesion()
+                        nav.navigate(Rutas.LOGIN) { popUpTo(0) }
+                    }
+                }
+            }
+        }
+
         // ---- Administrador (marcador temporal hasta el Paso 12) ----
         composable(Rutas.PANEL) {
             Marcador("Panel del administrador (Paso 12)") {
@@ -127,7 +184,7 @@ fun NavLava(sesionVm: SesionViewModel, factory: LavaViewModelFactory) {
             val vm: ServiciosViewModel = viewModel(factory = factory)
             Scaffold(topBar = { AppTopBar("Servicios") }) { padding ->
                 Box(Modifier.padding(padding)) {
-                    ServiciosScreen(vm = vm, onEditar = { /* Paso 14 */ })
+                    ServiciosScreen(vm = vm, onEditar = { /* Paso 13 */ })
                 }
             }
         }

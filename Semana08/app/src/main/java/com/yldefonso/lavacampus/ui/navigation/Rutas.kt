@@ -10,6 +10,11 @@ object Rutas {
 
     const val DETALLE = "detalle/{pedidoId}"
     fun detalle(pedidoId: Int) = "detalle/$pedidoId"
+
+    const val PERFIL = "perfil"
+
+    const val MIS_PEDIDOS = "mis_pedidos"
+    const val TARIFAS = "tarifas"
     // TODO (Pasos 8 al 13): NUEVO_PEDIDO, DETALLE, MIS_PEDIDOS, TARIFAS, PERFIL,
     //                       BANDEJA, GESTION, FORMULARIO_SERVICIO, CLIENTES, AJUSTES
 }
