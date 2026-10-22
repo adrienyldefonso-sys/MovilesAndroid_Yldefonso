@@ -20,17 +20,36 @@ Cambios realizados por capa:
 5. View de Bandeja (BandejaScreen.kt): observa vm.atrasados con collectAsState(), pasa atrasado: Boolean a PedidoBandejaItem y muestra borde rojo (MaterialTheme.colorScheme.error), chip "Atrasado" y fecha de entrega vencida en formato dd/MM/aaaa.
 6. View del Panel (PanelScreen.kt): observa vm.atrasados con collectAsState() y muestra tarjeta roja suave con "N pedidos atrasados" (singular si es 1) cuando atrasados > 0.
 
+**Que tuve que corregir yo:** Revisé el código generado archivo por archivo antes de aceptarlo. No hubo ningun error,unicamente verificaciones de imports.
+- [Si hubo error] Gemini importó androidx.room.* en el DAO; lo cambié a androidx.room3.* porque el proyecto usa Room 3.
+- [Si hubo error] La fecha de hoy se calculaba en la View; la moví a BandejaViewModel con LocalDate.now() para que la View solo muestre.
+- [Si hubo ajuste visual] Ajusté el borde rojo y la etiqueta "Atrasado" para que usen MaterialTheme.colorScheme.error y no un color fijo, y para que la tarjeta se vea igual que el resto cuando no está atrasada.
+- [Si no hubo errores] No encontré errores de arquitectura; solo verifiqué que la consulta usara "<" (el pedido que vence hoy no es atrasado) y que excluyera ENTREGADO y CANCELADO.
+
+**Respeta MVVM?:** Si. La View (BandejaScreen y PanelScreen) solo observa los StateFlow con collectAsState() y no usa el DAO ni el Repository. Las funciones nuevas se declararon primero en la interface LavaRepository y LavaRepositoryRoom solo delega al DAO. La fecha de hoy y los StateFlow están en los ViewModels, y no se modificó ninguna entidad ni la versión de la base.
+
+## Prompt 2
+**Texto enviado a Gemini:**
+Mejora "DESCUENTO POR VOLUMEN". Aplicar 10 % de descuento por cada línea de pedido cuyo servicio se cobra por KG y cuya cantidad es mayor a 5.0 kg.
+Cambios por capa:
+1. Entidad (Pedido.kt): agregar parámetro val descuento: Double = 0.0 al final.
+2. Base de datos (LavaDatabase.kt): subir versión de 1 a 2.
+3. Repositorio (LavaRepository.kt y LavaRepositoryRoom.kt): actualizar firma de crearPedido para incluir descuento: Double. Calcular total = (sumaSubtotales - descuento) y guardar el descuento en el Pedido.
+4. ViewModel (NuevoPedidoViewModel.kt): función pura calcularDescuento(lineas), exponer subtotal y descuento como StateFlow, y calcular total como subtotal - descuento. Pasar descuento a repo.crearPedido(...).
+5. Vista (NuevoPedidoScreen.kt): en la tarjeta "Resumen", mostrar Subtotal, fila "Descuento por volumen (10 %)" en negativo si descuento > 0 con el color primario, y Total.
+6. Vista (DetallePedidoScreen.kt): si pedido.descuento > 0, agregar fila "Descuento por volumen" con monto negativo antes de Total.
+
 **Que genero la IA:**
 Modificó los 7 archivos por capa:
-- PedidoDao.kt: Agregó dos consultas SQL en Room 3 para obtener IDs (Flow<List<Int>>) y cantidad (Flow<Int>) de pedidos atrasados.
-- LavaRepository.kt y LavaRepositoryRoom.kt: Declaró e implementó las funciones observarIdsAtrasados y observarCantidadAtrasados delegando al DAO.
-- BandejaViewModel.kt y PanelViewModel.kt: Expuso el StateFlow de IDs atrasados (Set<Int>) y de cantidad (Int) reactivamente con SharingStarted.WhileSubscribed(5000).
-- BandejaScreen.kt y PanelScreen.kt: Renderizó borde rojo, chip "Atrasado" y fecha vencida en la bandeja, y tarjeta descriptiva en el panel cuando hay pedidos atrasados.
+- Pedido.kt: Agregó el campo descuento con valor por defecto 0.0.
+- LavaDatabase.kt: Incrementó la versión del esquema de 1 a 2.
+- LavaRepository.kt y LavaRepositoryRoom.kt: Actualizó la firma de crearPedido con el parámetro descuento y calculó el total guardando dicho valor.
+- NuevoPedidoViewModel.kt: Implementó la función pura calcularDescuento con constantes UMBRAL_KG_DESCUENTO (5.0) y PORCENTAJE_DESCUENTO_KG (0.10), y expuso StateFlows para subtotal, descuento y total.
+- NuevoPedidoScreen.kt: Renderizó las filas de Subtotal, Descuento por volumen (10 %) en color primario cuando aplica, y Total.
+- DetallePedidoScreen.kt: Mostró la fila de Descuento por volumen con monto negativo antes del Total si el pedido tiene descuento guardado.
 
 **Que tuve que corregir yo:** PENDIENTE: lo completa el estudiante después de revisar el código
 **Respeta MVVM?:** PENDIENTE: lo completa el estudiante (Si / No y por qué)
 
 ## Reflexion (5 lineas)
-- Que mejoro la IA y que no?: PENDIENTE
-- Que error cometio?: PENDIENTE
-- Que aprendi sobre MVVM, Room y reglas de negocio?: PENDIENTE
+La IA mejoró la rapidez al generar en pocos minutos las consultas, las funciones del Repository y los cambios visuales, aunque no reconoció las convenciones del proyecto como Room 3 y requirió la revisión de cada archivo. Sin embargo, no cometió ningún error y la tarea se realizó correctamente. Aprendí que cualquier mejora atraviesa las capas de MVVM respetando su función única (el DAO consulta, el Repository delega, el ViewModel decide y la View muestra), además de entender cómo Room usa Flow para actualizar la pantalla y la necesidad de centralizar reglas de negocio probando casos límite.

@@ -37,6 +37,23 @@ fun calcularFechaEntrega(horas: Int, desde: LocalDate = LocalDate.now()): LocalD
 }
 
 private const val MAX_PEDIDOS_ACTIVOS = 3
+private const val UMBRAL_KG_DESCUENTO = 5.0
+private const val PORCENTAJE_DESCUENTO_KG = 0.10
+
+/**
+ * Aplica 10 % de descuento por cada línea cuyo servicio sea por KG y supere los 5.0 kg.
+ * El descuento resultante se redondea a 2 decimales.
+ */
+fun calcularDescuento(lineas: List<LineaResumen>): Double {
+    val totalDescuento = lineas.sumOf { l ->
+        if (Unidad.desde(l.servicio.unidad) == Unidad.KG && l.cantidad > UMBRAL_KG_DESCUENTO) {
+            l.subtotal * PORCENTAJE_DESCUENTO_KG
+        } else {
+            0.0
+        }
+    }
+    return kotlin.math.round(totalDescuento * 100.0) / 100.0
+}
 
 class NuevoPedidoViewModel(
     private val repo: LavaRepository,
@@ -75,10 +92,20 @@ class NuevoPedidoViewModel(
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    /** Se recalcula en cada cambio: suma de cantidad × precio. */
-    val total: StateFlow<Double> = resumen
+    /** Suma de subtotales de los servicios elegidos (antes de descuento). */
+    val subtotal: StateFlow<Double> = resumen
         .map { lineas -> lineas.sumOf { it.subtotal } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
+
+    /** Descuento por volumen: 10 % para líneas por KG con más de 5 kg. */
+    val descuento: StateFlow<Double> = resumen
+        .map { lineas -> calcularDescuento(lineas) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
+
+    /** Total a pagar: subtotal − descuento. */
+    val total: StateFlow<Double> = combine(subtotal, descuento) { sub, desc ->
+        (sub - desc).coerceAtLeast(0.0)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 
     /** Hoy + el mayor tiempo de entrega de los servicios elegidos; null si no hay ninguno. */
     val fechaEntrega: StateFlow<LocalDate?> = resumen
@@ -131,7 +158,7 @@ class NuevoPedidoViewModel(
                     _mensaje.value = "Ya tienes 3 pedidos activos"
                     return@launch
                 }
-                repo.crearPedido(usuarioId, lineas, fecha.toString(), _nota.value.trim())
+                repo.crearPedido(usuarioId, lineas, fecha.toString(), _nota.value.trim(), descuento.value)
                 _pedidoCreado.value = true
             } catch (e: CancellationException) {
                 throw e

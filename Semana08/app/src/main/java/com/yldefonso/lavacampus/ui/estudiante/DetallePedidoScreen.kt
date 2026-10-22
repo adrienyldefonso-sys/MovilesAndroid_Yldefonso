@@ -127,6 +127,20 @@ fun DetallePedidoScreen(vm: DetallePedidoViewModel, onAtras: () -> Unit) {
                     }
                 }
                 HorizontalDivider()
+                if (p.descuento > 0.0) {
+                    Row {
+                        Text(
+                            "Descuento por volumen",
+                            modifier = Modifier.weight(1f),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            "-${soles(p.descuento)}",
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
                 Row {
                     Text("Total", fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                     Text(soles(p.total), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)

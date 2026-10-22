@@ -48,6 +48,8 @@ fun NuevoPedidoScreen(
     val cantidades by vm.cantidades.collectAsState()
     val nota by vm.nota.collectAsState()
     val resumen by vm.resumen.collectAsState()
+    val subtotal by vm.subtotal.collectAsState()
+    val descuento by vm.descuento.collectAsState()
     val total by vm.total.collectAsState()
     val fecha by vm.fechaEntrega.collectAsState()
     val puedeConfirmar by vm.puedeConfirmar.collectAsState()
@@ -156,6 +158,24 @@ fun NuevoPedidoScreen(
                             }
                         }
                         HorizontalDivider()
+                        Row {
+                            Text("Subtotal", modifier = Modifier.weight(1f))
+                            Text(soles(subtotal))
+                        }
+                        if (descuento > 0.0) {
+                            Row {
+                                Text(
+                                    "Descuento por volumen (10 %)",
+                                    modifier = Modifier.weight(1f),
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                Text(
+                                    "-${soles(descuento)}",
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                        }
                         Row {
                             Text("Total", fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                             Text(soles(total), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)

@@ -28,5 +28,28 @@ Cambios realizados por capa:
 
 **Respeta MVVM?:** Si. La View (BandejaScreen y PanelScreen) solo observa los StateFlow con collectAsState() y no usa el DAO ni el Repository. Las funciones nuevas se declararon primero en la interface LavaRepository y LavaRepositoryRoom solo delega al DAO. La fecha de hoy y los StateFlow están en los ViewModels, y no se modificó ninguna entidad ni la versión de la base.
 
+## Prompt 2
+**Texto enviado a Gemini:**
+Mejora "DESCUENTO POR VOLUMEN". Aplicar 10 % de descuento por cada línea de pedido cuyo servicio se cobra por KG y cuya cantidad es mayor a 5.0 kg.
+Cambios por capa:
+1. Entidad (Pedido.kt): agregar parámetro val descuento: Double = 0.0 al final.
+2. Base de datos (LavaDatabase.kt): subir versión de 1 a 2.
+3. Repositorio (LavaRepository.kt y LavaRepositoryRoom.kt): actualizar firma de crearPedido para incluir descuento: Double. Calcular total = (sumaSubtotales - descuento) y guardar el descuento en el Pedido.
+4. ViewModel (NuevoPedidoViewModel.kt): función pura calcularDescuento(lineas), exponer subtotal y descuento como StateFlow, y calcular total como subtotal - descuento. Pasar descuento a repo.crearPedido(...).
+5. Vista (NuevoPedidoScreen.kt): en la tarjeta "Resumen", mostrar Subtotal, fila "Descuento por volumen (10 %)" en negativo si descuento > 0 con el color primario, y Total.
+6. Vista (DetallePedidoScreen.kt): si pedido.descuento > 0, agregar fila "Descuento por volumen" con monto negativo antes de Total.
+
+**Que genero la IA:**
+Modificó los 7 archivos por capa:
+- Pedido.kt: Agregó el campo descuento con valor por defecto 0.0.
+- LavaDatabase.kt: Incrementó la versión del esquema de 1 a 2.
+- LavaRepository.kt y LavaRepositoryRoom.kt: Actualizó la firma de crearPedido con el parámetro descuento y calculó el total guardando dicho valor.
+- NuevoPedidoViewModel.kt: Implementó la función pura calcularDescuento con constantes UMBRAL_KG_DESCUENTO (5.0) y PORCENTAJE_DESCUENTO_KG (0.10), y expuso StateFlows para subtotal, descuento y total.
+- NuevoPedidoScreen.kt: Renderizó las filas de Subtotal, Descuento por volumen (10 %) en color primario cuando aplica, y Total.
+- DetallePedidoScreen.kt: Mostró la fila de Descuento por volumen con monto negativo antes del Total si el pedido tiene descuento guardado.
+
+**Que tuve que corregir yo:** La app se cerraba al abrir con IllegalStateException: A migration from 1 to 2 was required but not found, porque Gemini subió la versión de la base a 2 pero el emulador conservaba la base versión 1. Lo resolví agregando fallbackToDestructiveMigration(dropAllTables = true) en LavaDatabase, que recrea la base y vuelve a sembrar los datos ficticios.
+**Respeta MVVM?:** Sí, porque la regla del descuento está en NuevoPedidoViewModel, las pantallas solo observan StateFlow sin usar DAO ni Repository, y crearPedido se cambió primero en la interface LavaRepository y el Repository solo guarda el valor recibido.
+
 ## Reflexion (5 lineas)
 La IA mejoró la rapidez al generar en pocos minutos las consultas, las funciones del Repository y los cambios visuales, aunque no reconoció las convenciones del proyecto como Room 3 y requirió la revisión de cada archivo. Sin embargo, no cometió ningún error y la tarea se realizó correctamente. Aprendí que cualquier mejora atraviesa las capas de MVVM respetando su función única (el DAO consulta, el Repository delega, el ViewModel decide y la View muestra), además de entender cómo Room usa Flow para actualizar la pantalla y la necesidad de centralizar reglas de negocio probando casos límite.
