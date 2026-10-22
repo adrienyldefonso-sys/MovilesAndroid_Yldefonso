@@ -35,4 +35,12 @@ class LavaViewModelFactory(
         override fun <T : ViewModel> create(modelClass: Class<T>): T =
             NuevoPedidoViewModel(repo, usuarioId, prefs.recibirPedidos, pedidoARepetir) as T
     }
+
+    /** Notificaciones del estudiante (esAdmin = false) o del administrador (esAdmin = true). */
+    fun paraNotificaciones(usuarioId: Int, esAdmin: Boolean): ViewModelProvider.Factory =
+        object : ViewModelProvider.Factory {
+            @Suppress("UNCHECKED_CAST")
+            override fun <T : ViewModel> create(modelClass: Class<T>): T =
+                NotificacionesViewModel(repo, usuarioId, esAdmin, prefs.notificaciones) as T
+        }
 }

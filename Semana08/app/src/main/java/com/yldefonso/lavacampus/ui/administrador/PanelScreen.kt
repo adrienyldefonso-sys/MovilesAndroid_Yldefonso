@@ -13,7 +13,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.outlined.CreditCard
 import androidx.compose.material3.Button
@@ -21,7 +20,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -35,17 +33,20 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.yldefonso.lavacampus.model.EstadoPedido
+import com.yldefonso.lavacampus.ui.components.CampanaNotificaciones
 import com.yldefonso.lavacampus.ui.components.fechaPanel
 import com.yldefonso.lavacampus.ui.components.graficos.GraficoBarras
 import com.yldefonso.lavacampus.ui.components.graficos.GraficoDona
 import com.yldefonso.lavacampus.ui.components.soles
+import com.yldefonso.lavacampus.viewmodel.NotificacionesViewModel
 import com.yldefonso.lavacampus.viewmodel.PanelViewModel
 
 @Composable
 fun PanelScreen(
     vm: PanelViewModel,
     onVerListos: () -> Unit,
-    onNotificaciones: () -> Unit = {},
+    notificaciones: NotificacionesViewModel,
+    onAbrirPedido: (Int) -> Unit,
     barraInferior: @Composable () -> Unit = {}
 ) {
     val hoy by vm.pedidosHoy.collectAsState()
@@ -82,9 +83,7 @@ fun PanelScreen(
                         color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
                     )
                 }
-                IconButton(onClick = onNotificaciones) {
-                    Icon(Icons.Filled.Notifications, contentDescription = "Notificaciones")
-                }
+                CampanaNotificaciones(vm = notificaciones, onAbrirPedido = onAbrirPedido)
             }
 
             // ---- 3 contadores ----

@@ -36,6 +36,7 @@ import com.yldefonso.lavacampus.viewmodel.GestionPedidoViewModel
 import com.yldefonso.lavacampus.viewmodel.InicioViewModel
 import com.yldefonso.lavacampus.viewmodel.LavaViewModelFactory
 import com.yldefonso.lavacampus.viewmodel.MisPedidosViewModel
+import com.yldefonso.lavacampus.viewmodel.NotificacionesViewModel
 import com.yldefonso.lavacampus.viewmodel.NuevoPedidoViewModel
 import com.yldefonso.lavacampus.viewmodel.PanelViewModel
 import com.yldefonso.lavacampus.viewmodel.PerfilViewModel
@@ -114,9 +115,14 @@ fun NavLava(sesionVm: SesionViewModel, factory: LavaViewModelFactory) {
                     key = "inicio-${u.id}",
                     factory = factory.paraUsuario(u.id, ::InicioViewModel)
                 )
+                val notiVm: NotificacionesViewModel = viewModel(
+                    key = "noti-${u.id}",
+                    factory = factory.paraNotificaciones(u.id, esAdmin = false)
+                )
                 InicioScreen(
                     vm = vm,
                     usuario = u,
+                    notificaciones = notiVm,
                     onNuevoPedido = { nav.navigate(Rutas.NUEVO_PEDIDO) },
                     onMisPedidos = { irATab(Rutas.MIS_PEDIDOS, Rutas.INICIO) },
                     onTarifas = { irATab(Rutas.TARIFAS, Rutas.INICIO) },
@@ -210,12 +216,21 @@ fun NavLava(sesionVm: SesionViewModel, factory: LavaViewModelFactory) {
 
         // ================= ADMINISTRADOR =================
         composable(Rutas.PANEL) {
-            val vm: PanelViewModel = viewModel(factory = factory)
-            PanelScreen(
-                vm = vm,
-                onVerListos = { irATab(Rutas.BANDEJA, Rutas.PANEL) },
-                barraInferior = barraAdmin
-            )
+            val usuario by sesionVm.usuarioActual.collectAsState()
+            usuario?.let { u ->
+                val vm: PanelViewModel = viewModel(factory = factory)
+                val notiVm: NotificacionesViewModel = viewModel(
+                    key = "noti-admin-${u.id}",
+                    factory = factory.paraNotificaciones(u.id, esAdmin = true)
+                )
+                PanelScreen(
+                    vm = vm,
+                    notificaciones = notiVm,
+                    onAbrirPedido = { id -> nav.navigate(Rutas.gestion(id)) },
+                    onVerListos = { irATab(Rutas.BANDEJA, Rutas.PANEL) },
+                    barraInferior = barraAdmin
+                )
+            }
         }
 
         composable(Rutas.BANDEJA) {

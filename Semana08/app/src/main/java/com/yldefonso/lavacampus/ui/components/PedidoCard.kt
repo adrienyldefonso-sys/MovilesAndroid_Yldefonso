@@ -26,6 +26,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.yldefonso.lavacampus.data.local.relation.PedidoConDetalle
 import com.yldefonso.lavacampus.model.EstadoPedido
+import java.time.LocalDate
 
 /**
  * Tarjeta de pedido. LISTO con casillero: borde y botón verdes.
@@ -39,21 +40,24 @@ fun PedidoCard(
     modifier: Modifier = Modifier,
     onCancelar: (() -> Unit)? = null,
     onRepetir: (() -> Unit)? = null,
-    mostrarEstudiante: Boolean = false
+    mostrarEstudiante: Boolean = false,
+    resaltarCasillero: Boolean = true,
+    fechaEnSubtitulo: Boolean = false
 ) {
     val p = pedido.pedido
     val estado = EstadoPedido.valueOf(p.estado)
     val listo = estado == EstadoPedido.LISTO && p.casillero != null
     val icono = pedido.detalles.firstOrNull()?.servicio?.icono ?: "wash"
     val subtitulo = (if (mostrarEstudiante) "${nombreCorto(pedido.usuario.nombre)} · " else "") +
-            resumenCantidades(pedido.detalles)
+            resumenCantidades(pedido.detalles) +
+            (if (fechaEnSubtitulo) " · ${fechaPanel(LocalDate.parse(p.fechaRegistro))}" else "")
 
     Card(
         onClick = onClick,
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-        border = if (listo) BorderStroke(2.dp, estado.color) else null,
+        border = if (listo && resaltarCasillero) BorderStroke(2.dp, estado.color) else null,
         modifier = modifier.fillMaxWidth()
     ) {
         Row(Modifier.padding(14.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -86,7 +90,7 @@ fun PedidoCard(
                     EstadoPedidoChip(estado)
                     Spacer(Modifier.weight(1f))
                     when {
-                        listo -> Surface(color = estado.color, shape = RoundedCornerShape(50)) {
+                        listo && resaltarCasillero -> Surface(color = estado.color, shape = RoundedCornerShape(50)) {
                             Text(
                                 "Casillero ${p.casillero}",
                                 color = Color.White,
@@ -95,6 +99,12 @@ fun PedidoCard(
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                             )
                         }
+                        listo -> Text(
+                            "Casillero ${p.casillero}",
+                            color = estado.color,
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold
+                        )
                         onCancelar != null -> Text(
                             "Cancelar",
                             color = MaterialTheme.colorScheme.error,
