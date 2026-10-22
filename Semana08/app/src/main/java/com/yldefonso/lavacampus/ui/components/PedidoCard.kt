@@ -38,6 +38,7 @@ fun PedidoCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     onCancelar: (() -> Unit)? = null,
+    onRepetir: (() -> Unit)? = null,
     mostrarEstudiante: Boolean = false
 ) {
     val p = pedido.pedido
@@ -100,6 +101,13 @@ fun PedidoCard(
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.SemiBold,
                             modifier = Modifier.clickable(onClick = onCancelar).padding(4.dp)
+                        )
+                        onRepetir != null -> Text(
+                            "Pedir de nuevo",
+                            color = MaterialTheme.colorScheme.primary,
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.clickable(onClick = onRepetir).padding(4.dp)
                         )
                         estado.esActivo -> Text(
                             "Entrega ${diaCorto(p.fechaEntrega)}",

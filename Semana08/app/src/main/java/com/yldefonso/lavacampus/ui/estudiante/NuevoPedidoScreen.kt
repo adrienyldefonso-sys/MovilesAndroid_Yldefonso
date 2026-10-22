@@ -56,6 +56,7 @@ fun NuevoPedidoScreen(
     val guardando by vm.guardando.collectAsState()
     val mensaje by vm.mensaje.collectAsState()
     val creado by vm.pedidoCreado.collectAsState()
+    val avisoRepetir by vm.avisoRepetir.collectAsState()
 
     LaunchedEffect(creado) { if (creado) onPedidoCreado() }
 
@@ -99,6 +100,24 @@ fun NuevoPedidoScreen(
                         "La lavandería no está recibiendo pedidos",
                         color = MaterialTheme.colorScheme.onErrorContainer,
                         fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
+            }
+
+            avisoRepetir?.let { aviso ->
+                Card(
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = aviso,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium,
                         modifier = Modifier.padding(16.dp)
                     )
                 }

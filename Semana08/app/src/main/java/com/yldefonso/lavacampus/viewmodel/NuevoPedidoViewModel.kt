@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -58,8 +59,45 @@ fun calcularDescuento(lineas: List<LineaResumen>): Double {
 class NuevoPedidoViewModel(
     private val repo: LavaRepository,
     private val usuarioId: Int,
-    recibirPedidos: Flow<Boolean>
+    recibirPedidos: Flow<Boolean>,
+    pedidoARepetir: Int? = null
 ) : ViewModel() {
+
+    private val _avisoRepetir = MutableStateFlow<String?>(null)
+    val avisoRepetir: StateFlow<String?> = _avisoRepetir.asStateFlow()
+
+    fun limpiarAviso() { _avisoRepetir.value = null }
+
+    init {
+        if (pedidoARepetir != null) {
+            viewModelScope.launch {
+                val p = repo.observarPedido(pedidoARepetir).first() ?: return@launch
+                if (p.pedido.usuarioId != usuarioId) return@launch
+
+                val activos = repo.observarServiciosActivos().first()
+                val mapaActivos = activos.associateBy { it.id }
+
+                val mapaCantidades = mutableMapOf<Int, Double>()
+                var omitidos = false
+
+                for (d in p.detalles) {
+                    val s = mapaActivos[d.detalle.servicioId]
+                    if (s != null) {
+                        val regla = s.regla()
+                        val cantidadAjustada = d.detalle.cantidad.coerceIn(regla.minimo, regla.maximo)
+                        mapaCantidades[s.id] = cantidadAjustada
+                    } else {
+                        omitidos = true
+                    }
+                }
+
+                _cantidades.value = mapaCantidades
+                if (omitidos) {
+                    _avisoRepetir.value = "Algunos servicios ya no están disponibles y no se agregaron"
+                }
+            }
+        }
+    }
 
     /** Si el administrador apagó "Recibir pedidos", no se pueden crear pedidos. */
     val recibiendo: StateFlow<Boolean> = recibirPedidos

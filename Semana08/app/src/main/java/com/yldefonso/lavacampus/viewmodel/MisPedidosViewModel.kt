@@ -39,6 +39,12 @@ class MisPedidosViewModel(
     fun puedeCancelar(pedido: PedidoConDetalle): Boolean =
         pedido.pedido.estado == EstadoPedido.RECIBIDO.name
 
+    /** Un pedido se puede repetir solo si su estado es ENTREGADO o CANCELADO. */
+    fun puedeRepetir(pedido: PedidoConDetalle): Boolean {
+        val estado = EstadoPedido.valueOf(pedido.pedido.estado)
+        return estado == EstadoPedido.ENTREGADO || estado == EstadoPedido.CANCELADO
+    }
+
     fun cancelar(pedido: PedidoConDetalle) {
         val actual = activos.value.firstOrNull { it.pedido.id == pedido.pedido.id } ?: return
         if (!puedeCancelar(actual)) return

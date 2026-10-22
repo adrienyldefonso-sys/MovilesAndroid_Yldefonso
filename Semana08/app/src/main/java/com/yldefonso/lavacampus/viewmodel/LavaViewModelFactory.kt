@@ -30,9 +30,9 @@ class LavaViewModelFactory(
     }
 
     /** Nuevo pedido necesita además la preferencia "Recibir pedidos". */
-    fun paraNuevoPedido(usuarioId: Int): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
+    fun paraNuevoPedido(usuarioId: Int, pedidoARepetir: Int? = null): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T =
-            NuevoPedidoViewModel(repo, usuarioId, prefs.recibirPedidos) as T
+            NuevoPedidoViewModel(repo, usuarioId, prefs.recibirPedidos, pedidoARepetir) as T
     }
 }

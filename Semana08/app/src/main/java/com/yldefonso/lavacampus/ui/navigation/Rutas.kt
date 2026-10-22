@@ -6,6 +6,8 @@ object Rutas {
     const val INICIO = "inicio"
     const val PANEL = "panel"
     const val NUEVO_PEDIDO = "nuevo_pedido"
+    const val NUEVO_PEDIDO_RUTA = "nuevo_pedido?repetir={repetir}"
+    fun nuevoPedido(repetir: Int) = "nuevo_pedido?repetir=$repetir"
     const val SERVICIOS = "servicios"
 
     const val DETALLE = "detalle/{pedidoId}"

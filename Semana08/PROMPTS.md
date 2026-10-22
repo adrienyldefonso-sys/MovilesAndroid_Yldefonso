@@ -48,6 +48,33 @@ Modificó los 7 archivos por capa:
 - NuevoPedidoScreen.kt: Renderizó las filas de Subtotal, Descuento por volumen (10 %) en color primario cuando aplica, y Total.
 - DetallePedidoScreen.kt: Mostró la fila de Descuento por volumen con monto negativo antes del Total si el pedido tiene descuento guardado.
 
+**Que tuve que corregir yo:** La app se cerraba al abrir con IllegalStateException: A migration from 1 to 2 was required but not found, porque Gemini subió la versión de la base a 2 pero el emulador conservaba la base versión 1. Lo resolví agregando fallbackToDestructiveMigration(dropAllTables = true) en LavaDatabase, que recrea la base y vuelve a sembrar los datos ficticios.
+**Respeta MVVM?:** Sí, porque la regla del descuento está en NuevoPedidoViewModel, las pantallas solo observan StateFlow sin usar DAO ni Repository, y crearPedido se cambió primero en la interface LavaRepository y el Repository solo guarda el valor recibido.
+
+## Prompt 3
+**Texto enviado a Gemini:**
+Mejora "REPETIR UN PEDIDO". Permitir repetir un pedido desde el Historial de Mis pedidos cargando sus líneas en Nuevo pedido con precios actuales.
+Cambios por capa:
+1. Rutas (Rutas.kt): agregar NUEVO_PEDIDO_RUTA ("nuevo_pedido?repetir={repetir}") y función nuevoPedido(repetir: Int).
+2. ViewModel (NuevoPedidoViewModel.kt): agregar parámetro opcional pedidoARepetir: Int? al constructor, avisoRepetir: StateFlow<String?>, limpiarAviso() y lógica en init para copiar cantidades ajustadas según reglas de servicios activos o informar servicios omitidos.
+3. Factory (LavaViewModelFactory.kt): actualizar paraNuevoPedido(usuarioId, pedidoARepetir).
+4. ViewModel de Mis pedidos (MisPedidosViewModel.kt): agregar función puedeRepetir(pedido) para validar estado ENTREGADO o CANCELADO.
+5. Componente (PedidoCard.kt): agregar parámetro opcional onRepetir y renderizar enlace "Pedir de nuevo" en color primario y negrita.
+6. Vista (MisPedidosScreen.kt): agregar parámetro onRepetir y pasar callback a PedidoCard únicamente en el historial.
+7. Navegación (NavLava.kt): actualizar la ruta de Nuevo pedido para leer el argumento opcional repetir, usar ViewModel key dinámica "nuevo-${u.id}-$repetirArg", y conectar onRepetir desde MisPedidosScreen.
+8. Vista (NuevoPedidoScreen.kt): observar vm.avisoRepetir y renderizar tarjeta informativa sobre "Elige tus servicios" si hay un aviso.
+
+**Que genero la IA:**
+Modificó los 8 archivos por capa:
+- Rutas.kt: Definió el patrón de ruta parametrizada NUEVO_PEDIDO_RUTA y la función generadora nuevoPedido(repetir).
+- NuevoPedidoViewModel.kt: Implementó la carga reactiva de líneas anteriores verificando que pertenezcan al mismo estudiante y que correspondan a servicios activos (ajustando límites min/max) en el bloque init, además de exponer avisoRepetir.
+- LavaViewModelFactory.kt: Pasó pedidoARepetir a NuevoPedidoViewModel.
+- MisPedidosViewModel.kt: Añadió la función de negocio puedeRepetir para pedidos ENTREGADO o CANCELADO.
+- PedidoCard.kt: Mostró el enlace "Pedir de nuevo" cuando onRepetir no es nulo.
+- MisPedidosScreen.kt: Conectó el evento de repetición desde la pestaña Historial.
+- NavLava.kt: Registró la ruta con argumento opcional de repetición y ViewModel con key única.
+- NuevoPedidoScreen.kt: Renderizó la tarjeta azul informativa de servicios omitidos sobre el selector de servicios.
+
 **Que tuve que corregir yo:** PENDIENTE: lo completa el estudiante después de revisar el código
 **Respeta MVVM?:** PENDIENTE: lo completa el estudiante (Si / No y por qué)
 

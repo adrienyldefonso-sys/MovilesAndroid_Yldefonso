@@ -46,6 +46,7 @@ fun MisPedidosScreen(
     onAtras: () -> Unit,
     onPedido: (Int) -> Unit,
     onNuevoPedido: () -> Unit,
+    onRepetir: (Int) -> Unit = {},
     barraInferior: @Composable () -> Unit = {}
 ) {
     val activos by vm.activos.collectAsState()
@@ -91,7 +92,8 @@ fun MisPedidosScreen(
                         PedidoCard(
                             pedido = pedido,
                             onClick = { onPedido(pedido.pedido.id) },
-                            onCancelar = if (vm.puedeCancelar(pedido)) ({ porCancelar = pedido }) else null,
+                            onCancelar = if (pestana == 0 && vm.puedeCancelar(pedido)) ({ porCancelar = pedido }) else null,
+                            onRepetir = if (pestana == 1 && vm.puedeRepetir(pedido)) ({ onRepetir(pedido.pedido.id) }) else null,
                             mostrarEstudiante = true   // quita esta línea si no quieres "Ana T. ·"
                         )
                     }
