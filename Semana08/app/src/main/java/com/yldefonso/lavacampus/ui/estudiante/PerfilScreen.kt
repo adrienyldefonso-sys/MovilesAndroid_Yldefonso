@@ -1,31 +1,47 @@
 package com.yldefonso.lavacampus.ui.estudiante
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.yldefonso.lavacampus.data.local.entity.Usuario
-import com.yldefonso.lavacampus.ui.components.AvatarIniciales
 import com.yldefonso.lavacampus.ui.components.FilaSwitch
 import com.yldefonso.lavacampus.ui.components.formatoCantidad
 import com.yldefonso.lavacampus.viewmodel.PerfilViewModel
@@ -46,6 +62,8 @@ fun PerfilScreen(
     val oscuro by sesion.modoOscuro.collectAsState()
     val avisos by sesion.notificaciones.collectAsState()
 
+    val primario = MaterialTheme.colorScheme.primary
+
     Scaffold(bottomBar = barraInferior) { padding ->
         Column(
             Modifier
@@ -55,79 +73,201 @@ fun PerfilScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            // ---- Título ----
             Text("Perfil", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
 
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                AvatarIniciales(nombre = usuario.nombre, tamano = 64.dp)
-                Column {
-                    Text(usuario.nombre, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                    Text("Código ${usuario.codigo}", style = MaterialTheme.typography.bodyMedium)
-                    Text(usuario.correo, style = MaterialTheme.typography.bodySmall)
+            // ---- Tarjeta del Usuario ----
+            Card(
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(56.dp)
+                            .background(
+                                color = primario.copy(alpha = 0.15f),
+                                shape = CircleShape
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Person,
+                            contentDescription = null,
+                            tint = primario,
+                            modifier = Modifier.size(32.dp)
+                        )
+                    }
+
+                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text(
+                            text = usuario.nombre,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = usuario.correo,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        )
+                        Surface(
+                            shape = RoundedCornerShape(50),
+                            color = primario.copy(alpha = 0.15f),
+                            modifier = Modifier.padding(top = 2.dp)
+                        ) {
+                            Text(
+                                text = "Estudiante",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = primario,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
                 }
             }
 
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            // ---- 3 Estadísticas ----
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
                 Estadistica("Pedidos activos", activos.toString(), Modifier.weight(1f))
                 Estadistica("Pedidos totales", totales.toString(), Modifier.weight(1f))
-                Estadistica("Kilos lavados", formatoCantidad(kilos, "KG"), Modifier.weight(1f))
+                Estadistica("Lavados", "${formatoCantidad(kilos, "KG")} kg", Modifier.weight(1f))
             }
 
+            // ---- Banner: Cambiar de perfil ----
             Card(
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = primario),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(onClick = onCambiarPerfil)
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.SwapHoriz,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.size(28.dp)
+                    )
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Cambiar de perfil",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                        Text(
+                            text = "Modo práctica: ir a vista Administrador",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f)
+                        )
+                    }
+                    Icon(
+                        imageVector = Icons.Filled.ChevronRight,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onPrimary
+                    )
+                }
+            }
+
+            // ---- Preferencias ----
+            Text("Preferencias", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+
+            Card(
+                shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Column(Modifier.padding(16.dp)) {
+                Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
                     FilaSwitch(
                         titulo = "Modo oscuro",
-                        subtitulo = "Se recuerda al cerrar la app",
+                        subtitulo = "Cambia el tema de la app",
                         marcado = oscuro,
                         onCambio = sesion::cambiarModoOscuro
                     )
                     FilaSwitch(
-                        titulo = "Avisos",
-                        subtitulo = "Cuando tu pedido esté listo",
+                        titulo = "Avisos de pedido listo",
+                        subtitulo = "Notificar cuando puedas recoger",
                         marcado = avisos,
                         onCambio = sesion::cambiarNotificaciones
                     )
                 }
             }
 
-            OutlinedButton(onClick = onCambiarPerfil, modifier = Modifier.fillMaxWidth()) {
-                Text("Cambiar de perfil")
-            }
+            // ---- Pie de página DataStore ----
+            Text(
+                text = buildAnnotatedString {
+                    append("Se guardan en el dispositivo ")
+                    withStyle(SpanStyle(color = primario, fontWeight = FontWeight.Bold)) {
+                        append("con DataStore")
+                    }
+                },
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                modifier = Modifier.padding(start = 4.dp)
+            )
+
+            Spacer(Modifier.height(4.dp))
+
+            // ---- Botón Cerrar sesión ----
             OutlinedButton(
                 onClick = onCerrarSesion,
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = MaterialTheme.colorScheme.error
+                ),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.error),
+                shape = RoundedCornerShape(50),
                 modifier = Modifier.fillMaxWidth()
-            ) { Text("Cerrar sesión") }
+            ) {
+                Text("Cerrar sesión", fontWeight = FontWeight.Bold)
+            }
         }
     }
 }
 
 @Composable
 private fun Estadistica(titulo: String, valor: String, modifier: Modifier = Modifier) {
+    val colorFondo = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
+    val colorTexto = MaterialTheme.colorScheme.primary
+
     Card(
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+        colors = CardDefaults.cardColors(containerColor = colorFondo),
         modifier = modifier
     ) {
         Column(
-            Modifier.fillMaxWidth().padding(vertical = 14.dp, horizontal = 6.dp),
+            Modifier
+                .fillMaxWidth()
+                .padding(vertical = 14.dp, horizontal = 4.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
             Text(
-                valor,
+                text = valor,
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
+                color = colorTexto
             )
             Text(
-                titulo,
+                text = titulo,
                 style = MaterialTheme.typography.labelSmall,
                 textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
+                fontWeight = FontWeight.SemiBold,
+                color = colorTexto
             )
         }
     }

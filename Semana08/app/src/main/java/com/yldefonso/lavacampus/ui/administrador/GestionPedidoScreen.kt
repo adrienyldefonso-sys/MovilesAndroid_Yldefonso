@@ -1,15 +1,21 @@
 package com.yldefonso.lavacampus.ui.administrador
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
@@ -17,7 +23,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -32,6 +37,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.yldefonso.lavacampus.model.Casilleros
@@ -40,7 +46,6 @@ import com.yldefonso.lavacampus.ui.components.AppTopBar
 import com.yldefonso.lavacampus.ui.components.EstadoPedidoChip
 import com.yldefonso.lavacampus.ui.components.LavaButton
 import com.yldefonso.lavacampus.ui.components.StepperEstado
-import com.yldefonso.lavacampus.ui.components.fechaLarga
 import com.yldefonso.lavacampus.ui.components.formatoCantidad
 import com.yldefonso.lavacampus.ui.components.soles
 import com.yldefonso.lavacampus.viewmodel.GestionPedidoViewModel
@@ -60,7 +65,7 @@ fun GestionPedidoScreen(vm: GestionPedidoViewModel, onAtras: () -> Unit) {
     Scaffold(
         topBar = {
             AppTopBar(
-                titulo = pedidoActual?.let { "Pedido #${it.pedido.id}" } ?: "Pedido",
+                titulo = pedidoActual?.let { "Gestionar pedido #${it.pedido.id.toString().padStart(3, '0')}" } ?: "Gestionar pedido",
                 onAtras = onAtras,
                 claro = true
             )
@@ -77,6 +82,13 @@ fun GestionPedidoScreen(vm: GestionPedidoViewModel, onAtras: () -> Unit) {
         val estado = EstadoPedido.valueOf(p.estado)
         val siguiente = estado.siguiente()
 
+        val iniciales = pedidoActual.usuario.nombre
+            .split(" ")
+            .filter { it.isNotBlank() }
+            .take(2)
+            .mapNotNull { it.firstOrNull()?.uppercase() }
+            .joinToString("")
+
         Column(
             Modifier
                 .fillMaxSize()
@@ -85,9 +97,28 @@ fun GestionPedidoScreen(vm: GestionPedidoViewModel, onAtras: () -> Unit) {
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            // ---- Estudiante ----
+            // ---- Tarjeta del Estudiante con Avatar ----
             Tarjeta {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(44.dp)
+                            .background(
+                                color = MaterialTheme.colorScheme.primaryContainer,
+                                shape = CircleShape
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = iniciales.ifEmpty { "U" },
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
                     Column(Modifier.weight(1f)) {
                         Text(
                             pedidoActual.usuario.nombre,
@@ -95,47 +126,49 @@ fun GestionPedidoScreen(vm: GestionPedidoViewModel, onAtras: () -> Unit) {
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            "${pedidoActual.usuario.codigo} · ${pedidoActual.usuario.correo}",
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                        Text(
-                            "Entrega estimada: ${fechaLarga(p.fechaEntrega)}",
-                            style = MaterialTheme.typography.bodySmall
+                            pedidoActual.usuario.codigo,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                         )
                     }
                     EstadoPedidoChip(estado)
                 }
             }
 
-            // ---- Seguimiento ----
+            // ---- Seguimiento (línea de tiempo con checks) ----
             Tarjeta {
-                Text("Seguimiento", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                StepperEstado(estado = estado, vertical = true)
+                Text("Seguimiento", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                StepperEstado(
+                    estado = estado,
+                    vertical = true,
+                    colorCheck = Color.White
+                )
             }
 
-            // ---- Detalle ----
+            // ---- Detalle de prendas y servicios ----
             Tarjeta {
-                Text("Detalle", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                Text("Detalle", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 pedidoActual.detalles.forEach { d ->
-                    Row {
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                         Text(
                             "${d.servicio.nombre} · ${formatoCantidad(d.detalle.cantidad, d.servicio.unidad)}",
+                            style = MaterialTheme.typography.bodyMedium,
                             modifier = Modifier.weight(1f)
                         )
-                        Text(soles(d.detalle.subtotal))
+                        Text(
+                            soles(d.detalle.subtotal),
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 }
             }
 
-            // ---- Casillero ----
+            // ---- Casillero para el recojo ----
             Tarjeta {
-                Text("Casillero", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                Text("Casillero para el recojo", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 when (estado) {
                     EstadoPedido.EN_PROCESO -> {
-                        Text(
-                            elegido?.let { "Elegido: $it" } ?: "Elige un casillero libre para marcarlo como listo",
-                            style = MaterialTheme.typography.bodyMedium
-                        )
                         FlowRow(
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                             verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -144,11 +177,16 @@ fun GestionPedidoScreen(vm: GestionPedidoViewModel, onAtras: () -> Unit) {
                                 FilterChip(
                                     selected = c == elegido,
                                     onClick = { vm.elegirCasillero(c) },
-                                    enabled = c !in ocupados,   // ocupados: en gris y deshabilitados
+                                    enabled = c !in ocupados,
                                     label = { Text(c) }
                                 )
                             }
                         }
+                        Text(
+                            "Los casilleros en gris ya están ocupados",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                        )
                     }
                     EstadoPedido.LISTO -> Text(
                         "Asignado: ${p.casillero ?: "—"}",
@@ -157,54 +195,75 @@ fun GestionPedidoScreen(vm: GestionPedidoViewModel, onAtras: () -> Unit) {
                     )
                     EstadoPedido.RECIBIDO -> Text(
                         "Se elige al pasar el pedido a Listo",
-                        style = MaterialTheme.typography.bodyMedium
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                     )
                     else -> Text(p.casillero ?: "Sin casillero", style = MaterialTheme.typography.bodyMedium)
                 }
             }
 
-            // ---- Total y cobro ----
+            // ---- Total y Cobro ----
             Tarjeta {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
                     Column(Modifier.weight(1f)) {
-                        Text("Total", style = MaterialTheme.typography.labelMedium)
                         Text(
-                            soles(p.total),
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
+                            "Total ${soles(p.total)}",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            "Se cobra al entregar",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                         )
                     }
-                    Text("Cobrado", fontWeight = FontWeight.SemiBold)
+                    Text(
+                        "Cobrado",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Spacer(Modifier.width(8.dp))
                     Switch(
                         checked = p.pagado,
                         onCheckedChange = vm::marcarPagado,
-                        enabled = estado != EstadoPedido.CANCELADO,
-                        modifier = Modifier.padding(start = 8.dp)
+                        enabled = estado != EstadoPedido.CANCELADO
                     )
                 }
-                HorizontalDivider()
+            }
+
+            // ---- Mensaje de error / validación ----
+            mensaje?.let {
                 Text(
-                    "Recuerda: para entregar, el pedido debe estar cobrado.",
-                    style = MaterialTheme.typography.bodySmall
+                    it,
+                    color = MaterialTheme.colorScheme.error,
+                    fontWeight = FontWeight.SemiBold,
+                    style = MaterialTheme.typography.bodyMedium
                 )
             }
 
-            // ---- Motivo de rechazo ----
-            mensaje?.let {
-                Text(it, color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.SemiBold)
+            // ---- Botones de Acción ----
+            if (siguiente != null) {
+                LavaButton(
+                    texto = "Marcar como ${siguiente.etiqueta}",
+                    onClick = vm::avanzar
+                )
             }
 
-            // ---- Acciones ----
-            if (siguiente != null) {
-                LavaButton(texto = "Marcar como ${siguiente.etiqueta}", onClick = vm::avanzar)
-            }
             if (ReglasPedido.puedeCancelarAdmin(estado)) {
                 OutlinedButton(
                     onClick = { confirmarCancelar = true },
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
+                    ),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.error),
+                    shape = RoundedCornerShape(50),
                     modifier = Modifier.fillMaxWidth()
-                ) { Text("Cancelar pedido") }
+                ) {
+                    Text("Cancelar pedido", fontWeight = FontWeight.Bold)
+                }
             }
         }
 

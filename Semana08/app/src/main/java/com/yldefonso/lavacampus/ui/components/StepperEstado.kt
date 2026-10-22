@@ -45,13 +45,17 @@ fun StepperEstado(
     colorCheck: Color? = null
 ) {
     val actual = if (estado == EstadoPedido.CANCELADO) -1 else etapas.indexOf(estado)
+    val txtActivo = if (colorTexto != Color.Unspecified) colorTexto else MaterialTheme.colorScheme.onSurface
+    val txtInactivo = if (colorTextoInactivo != Color.Unspecified) colorTextoInactivo else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
 
     if (vertical) {
-        val alto = 56.dp
+        val alto = 48.dp
         Row(modifier) {
             Canvas(Modifier.width(28.dp).height(alto * etapas.size)) {
                 val h = alto.toPx()
                 val cx = size.width / 2f
+                val radio = 9.dp.toPx()
+
                 for (i in 0 until etapas.size - 1) {
                     drawLine(
                         color = if (i < actual) colorActivo else colorInactivo,
@@ -61,11 +65,27 @@ fun StepperEstado(
                     )
                 }
                 etapas.indices.forEach { i ->
+                    val alcanzada = i <= actual
+                    val center = Offset(cx, h * i + h / 2f)
+
                     drawCircle(
-                        color = if (i <= actual) colorActivo else colorInactivo,
-                        radius = 8.dp.toPx(),
-                        center = Offset(cx, h * i + h / 2f)
+                        color = if (alcanzada) colorActivo else colorInactivo,
+                        radius = radio,
+                        center = center
                     )
+
+                    if (alcanzada && colorCheck != null) {
+                        val check = Path().apply {
+                            moveTo(center.x - radio * 0.45f, center.y)
+                            lineTo(center.x - radio * 0.1f, center.y + radio * 0.38f)
+                            lineTo(center.x + radio * 0.5f, center.y - radio * 0.35f)
+                        }
+                        drawPath(
+                            path = check,
+                            color = colorCheck,
+                            style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+                        )
+                    }
                 }
             }
             Column {
@@ -74,6 +94,7 @@ fun StepperEstado(
                         Text(
                             text = e.etiqueta,
                             fontWeight = if (i == actual) FontWeight.Bold else FontWeight.Normal,
+                            color = if (i <= actual) txtActivo else txtInactivo,
                             modifier = Modifier.padding(start = 12.dp)
                         )
                     }
@@ -98,17 +119,18 @@ fun StepperEstado(
                 }
                 etapas.indices.forEach { i ->
                     val alcanzada = i <= actual
+                    val center = Offset(cx(i), cy)
+
                     drawCircle(
                         color = if (alcanzada) colorActivo else colorInactivo,
                         radius = radio,
-                        center = Offset(cx(i), cy)
+                        center = center
                     )
                     if (alcanzada && colorCheck != null) {
-                        val c = Offset(cx(i), cy)
                         val check = Path().apply {
-                            moveTo(c.x - radio * 0.45f, c.y)
-                            lineTo(c.x - radio * 0.1f, c.y + radio * 0.38f)
-                            lineTo(c.x + radio * 0.5f, c.y - radio * 0.35f)
+                            moveTo(center.x - radio * 0.45f, center.y)
+                            lineTo(center.x - radio * 0.1f, center.y + radio * 0.38f)
+                            lineTo(center.x + radio * 0.5f, center.y - radio * 0.35f)
                         }
                         drawPath(
                             path = check,
@@ -124,7 +146,7 @@ fun StepperEstado(
                         text = e.etiqueta,
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = if (i == actual) FontWeight.Bold else FontWeight.Normal,
-                        color = if (i <= actual) colorTexto else colorTextoInactivo,
+                        color = if (i <= actual) txtActivo else txtInactivo,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.weight(1f)
                     )
