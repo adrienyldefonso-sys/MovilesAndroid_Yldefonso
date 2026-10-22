@@ -75,8 +75,10 @@ Modificó los 8 archivos por capa:
 - NavLava.kt: Registró la ruta con argumento opcional de repetición y ViewModel con key única.
 - NuevoPedidoScreen.kt: Renderizó la tarjeta azul informativa de servicios omitidos sobre el selector de servicios.
 
-**Que tuve que corregir yo:** PENDIENTE: lo completa el estudiante después de revisar el código
-**Respeta MVVM?:** PENDIENTE: lo completa el estudiante (Si / No y por qué)
+**Que tuve que corregir yo:** En este paso el agente de IA dio correctamente el codigo y no se presentaron errores.
+**Respeta MVVM?:** Si,respeta toda la estructura y sobretodo el modelo esgtablecido en los archivos.
 
 ## Reflexion (5 lineas)
-La IA mejoró la rapidez al generar en pocos minutos las consultas, las funciones del Repository y los cambios visuales, aunque no reconoció las convenciones del proyecto como Room 3 y requirió la revisión de cada archivo. Sin embargo, no cometió ningún error y la tarea se realizó correctamente. Aprendí que cualquier mejora atraviesa las capas de MVVM respetando su función única (el DAO consulta, el Repository delega, el ViewModel decide y la View muestra), además de entender cómo Room usa Flow para actualizar la pantalla y la necesidad de centralizar reglas de negocio probando casos límite.
+- Que mejoro la IA y que no?: La IA aceleró la implementación de pedidos atrasados, descuento por volumen y repetir pedidos en todas las capas. Sin embargo, no siempre asumió las convenciones iniciales y requerí revisar minuciosamente cada archivo generado.
+- Que error cometio?: Al subir la versión de la base de datos a 2 en descuento por volumen, la app fallaba por falta de migración ("A migration from 1 to 2 was required but not found"), lo que solucioné agregando fallbackToDestructiveMigration en LavaDatabase.
+- Que aprendi sobre MVVM, Room y reglas de negocio?: Aprendí que la View solo observa StateFlow mientras el ViewModel concentra las reglas de negocio y el Repository delega datos. También comprendí cómo Flow actualiza automáticamente la interfaz y que alterar entidades en Room requiere gestionar la versión de la base.
