@@ -13,6 +13,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.outlined.History
+import androidx.compose.material.icons.outlined.ShoppingBag
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -78,9 +80,10 @@ fun MisPedidosScreen(
             val lista = if (pestana == 0) activos else historial
             if (lista.isEmpty()) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(
-                        if (pestana == 0) "No tienes pedidos activos" else "Aún no tienes pedidos en el historial",
-                        style = MaterialTheme.typography.bodyLarge
+                    com.yldefonso.lavacampus.ui.components.EstadoVacio(
+                        icono = if (pestana == 0) Icons.Outlined.ShoppingBag else Icons.Outlined.History,
+                        titulo = if (pestana == 0) "Sin pedidos activos" else "Historial vacío",
+                        mensaje = if (pestana == 0) "No tienes pedidos activos" else "Aún no tienes pedidos en el historial"
                     )
                 }
             } else {

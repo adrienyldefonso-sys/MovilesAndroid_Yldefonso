@@ -14,6 +14,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ReceiptLong
 import androidx.compose.material.icons.filled.LocalOffer
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.Card
@@ -190,7 +191,11 @@ fun InicioScreen(
                 )
             }
             if (recientes.isEmpty()) {
-                Text("Aún no tienes pedidos.", style = MaterialTheme.typography.bodyMedium)
+                com.yldefonso.lavacampus.ui.components.EstadoVacio(
+                    icono = Icons.AutoMirrored.Outlined.ReceiptLong,
+                    titulo = "Sin pedidos recientes",
+                    mensaje = "Aún no tienes pedidos."
+                )
             } else {
                 recientes.forEach { pedido ->
                     PedidoCard(

@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.People
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -98,10 +99,10 @@ fun ClientesScreen(
 
             if (clientes.isEmpty()) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(
-                        "No se encontraron clientes",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    com.yldefonso.lavacampus.ui.components.EstadoVacio(
+                        icono = Icons.Outlined.People,
+                        titulo = "Sin resultados",
+                        mensaje = "No se encontraron clientes"
                     )
                 }
             } else {

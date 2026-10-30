@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.outlined.NotificationsNone
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -50,9 +51,17 @@ fun CampanaNotificaciones(
             title = { Text("Notificaciones", fontWeight = FontWeight.Bold) },
             text = {
                 if (!habilitadas) {
-                    Text("Las notificaciones están desactivadas en Ajustes.")
+                    EstadoVacio(
+                        icono = Icons.Outlined.NotificationsNone,
+                        titulo = "Notificaciones desactivadas",
+                        mensaje = "Puedes activarlas desde los Ajustes."
+                    )
                 } else if (lista.isEmpty()) {
-                    Text("No tienes notificaciones por ahora.")
+                    EstadoVacio(
+                        icono = Icons.Outlined.NotificationsNone,
+                        titulo = "Sin notificaciones",
+                        mensaje = "No tienes notificaciones por ahora."
+                    )
                 } else {
                     LazyColumn(Modifier.heightIn(max = 380.dp)) {
                         items(lista, key = { "${it.pedidoId}-${it.titulo}" }) { n ->

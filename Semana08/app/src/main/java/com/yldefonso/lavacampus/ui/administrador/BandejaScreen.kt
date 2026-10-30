@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.Inbox
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -92,7 +93,11 @@ fun BandejaScreen(
 
             if (pedidos.isEmpty()) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("No hay pedidos para mostrar", style = MaterialTheme.typography.bodyLarge)
+                    com.yldefonso.lavacampus.ui.components.EstadoVacio(
+                        icono = Icons.Outlined.Inbox,
+                        titulo = "Sin pedidos",
+                        mensaje = "No hay pedidos para mostrar"
+                    )
                 }
             } else {
                 LazyColumn(
