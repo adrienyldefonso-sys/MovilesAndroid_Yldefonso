@@ -1,0 +1,14 @@
+# Android / Gradle
+build/
+.gradle/
+.idea/
+*.iml
+local.properties
+captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+# Firebase (contiene la clave de API del proyecto)
+google-services.json
+# Sistema
+.DS_Store
