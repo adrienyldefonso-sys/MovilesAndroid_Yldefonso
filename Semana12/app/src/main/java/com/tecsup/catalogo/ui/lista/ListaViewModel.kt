@@ -25,6 +25,10 @@ class ListaViewModel(
     private val _aviso = MutableStateFlow<String?>(null)
     val aviso: StateFlow<String?> = _aviso.asStateFlow()
 
+    // true mientras se sincroniza con la API (la UI muestra una barra de progreso).
+    private val _actualizando = MutableStateFlow(false)
+    val actualizando: StateFlow<Boolean> = _actualizando.asStateFlow()
+
     private var refrescoTerminado = false
 
     init {
@@ -38,10 +42,13 @@ class ListaViewModel(
     }
 
     fun refrescar() {
+        if (_actualizando.value) return // evita lanzar dos sincronizaciones a la vez
         if (_estado.value is UiState.Error) _estado.value = UiState.Cargando
+        _actualizando.value = true
         viewModelScope.launch {
             val resultado = repo.refrescar()
             refrescoTerminado = true
+            _actualizando.value = false
             resultado
                 .onSuccess { n ->
                     if (n == 0) _estado.value = UiState.Exito(emptyList())
@@ -49,8 +56,10 @@ class ListaViewModel(
                     notificador.mostrar("Datos actualizados", "Se guardaron $n elementos")
                 }
                 .onFailure { e ->
+                    // Sin nada guardado: pantalla de error con Reintentar.
+                    // Con datos guardados: se muestra la lista (sale de Room) con un aviso.
                     if (repo.cantidadGuardada() == 0) _estado.value = UiState.Error(mensajeDe(e))
-                    else _aviso.value = "Sin conexión: mostrando datos guardados"
+                    else _aviso.value = avisoDe(e)
                 }
         }
     }
@@ -64,5 +73,11 @@ class ListaViewModel(
         is HttpException -> "El servidor respondió con error ${e.code()}"
         is SerializationException -> "La respuesta del servidor no tiene el formato esperado"
         else -> "Ocurrió un error inesperado"
+    }
+
+    private fun avisoDe(e: Throwable) = when (e) {
+        is IOException -> "Sin conexión: mostrando datos guardados"
+        is HttpException -> "No se pudo actualizar (error ${e.code()}): mostrando datos guardados"
+        else -> "No se pudo actualizar: mostrando datos guardados"
     }
 }

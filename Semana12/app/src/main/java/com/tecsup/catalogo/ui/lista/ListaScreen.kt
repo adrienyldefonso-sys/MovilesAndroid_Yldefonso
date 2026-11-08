@@ -16,14 +16,17 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -47,6 +50,7 @@ import com.tecsup.catalogo.ui.theme.CatalogoTheme
 /**
  * H6: la pantalla observa el estado del ViewModel y comunica los eventos.
  * H7: se agrega la navegación hacia la pantalla de favoritos.
+ * H8: se incorpora el indicador de actualización y el aviso de modo sin conexión.
  */
 @Composable
 fun ListaScreen(
@@ -57,6 +61,7 @@ fun ListaScreen(
     val vm: ListaViewModel = viewModel(factory = factory)
     val estado by vm.estado.collectAsStateWithLifecycle()
     val aviso by vm.aviso.collectAsStateWithLifecycle()
+    val actualizando by vm.actualizando.collectAsStateWithLifecycle()
 
     ListaContent(
         estado = estado,
@@ -64,7 +69,8 @@ fun ListaScreen(
         onItemClick = onItemClick,
         onFavorito = { id -> vm.alternarFavorito(id) },
         onReintentar = { vm.refrescar() },
-        onVerFavoritos = onVerFavoritos
+        onVerFavoritos = onVerFavoritos,
+        actualizando = actualizando
     )
 }
 
@@ -76,13 +82,24 @@ fun ListaContent(
     onItemClick: (Int) -> Unit,
     onFavorito: (Int) -> Unit,
     onReintentar: () -> Unit,
-    onVerFavoritos: () -> Unit = {}
+    onVerFavoritos: () -> Unit = {},
+    actualizando: Boolean = false
 ) {
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Smartphones") },
                 actions = {
+                    IconButton(
+                        onClick = onReintentar,
+                        enabled = !actualizando
+                    ) {
+                        Icon(
+                            Icons.Filled.Refresh,
+                            contentDescription = "Actualizar"
+                        )
+                    }
+
                     IconButton(onClick = onVerFavoritos) {
                         Icon(
                             Icons.Filled.Favorite,
@@ -94,31 +111,40 @@ fun ListaContent(
         }
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize()) {
+
+            if (actualizando && estado is UiState.Exito) {
+                LinearProgressIndicator(
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+
             if (aviso != null) {
-                Text(
-                    text = aviso,
-                    style = MaterialTheme.typography.labelLarge,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(MaterialTheme.colorScheme.secondaryContainer)
-                        .padding(8.dp)
+                AvisoBanner(
+                    texto = aviso,
+                    onReintentar = onReintentar,
+                    habilitado = !actualizando
                 )
             }
 
             Box(Modifier.weight(1f).fillMaxWidth()) {
                 when (estado) {
                     UiState.Cargando -> Cargando()
+
                     is UiState.Error -> ErrorView(
                         estado.mensaje,
                         onReintentar
                     )
+
                     is UiState.Exito ->
-                        if (estado.datos.isEmpty()) VacioView()
-                        else ListaItems(
-                            estado.datos,
-                            onItemClick,
-                            onFavorito
-                        )
+                        if (estado.datos.isEmpty()) {
+                            VacioView()
+                        } else {
+                            ListaItems(
+                                estado.datos,
+                                onItemClick,
+                                onFavorito
+                            )
+                        }
                 }
             }
         }
@@ -202,6 +228,38 @@ internal fun ItemCard(
                         "Marcar como favorito"
                 )
             }
+        }
+    }
+}
+
+/**
+ * Aviso de modo sin conexión (R08):
+ * la lista se ve con lo guardado y se puede reintentar.
+ */
+@Composable
+private fun AvisoBanner(
+    texto: String,
+    onReintentar: () -> Unit,
+    habilitado: Boolean
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.secondaryContainer)
+            .padding(start = 12.dp, end = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = texto,
+            style = MaterialTheme.typography.labelLarge,
+            modifier = Modifier.weight(1f)
+        )
+
+        TextButton(
+            onClick = onReintentar,
+            enabled = habilitado
+        ) {
+            Text("Reintentar")
         }
     }
 }
