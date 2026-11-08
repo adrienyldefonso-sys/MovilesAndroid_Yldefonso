@@ -6,12 +6,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -45,11 +45,15 @@ import com.tecsup.catalogo.ui.components.ErrorView
 import com.tecsup.catalogo.ui.theme.CatalogoTheme
 
 /**
- * H6: la pantalla solo observa el estado del ViewModel y le avisa de los eventos.
- * Ya no usa los datos de prueba (siguen existiendo solo para los @Preview).
+ * H6: la pantalla observa el estado del ViewModel y comunica los eventos.
+ * H7: se agrega la navegación hacia la pantalla de favoritos.
  */
 @Composable
-fun ListaScreen(factory: ViewModelProvider.Factory, onItemClick: (Int) -> Unit = {}) {
+fun ListaScreen(
+    factory: ViewModelProvider.Factory,
+    onItemClick: (Int) -> Unit = {},
+    onVerFavoritos: () -> Unit = {}
+) {
     val vm: ListaViewModel = viewModel(factory = factory)
     val estado by vm.estado.collectAsStateWithLifecycle()
     val aviso by vm.aviso.collectAsStateWithLifecycle()
@@ -59,7 +63,8 @@ fun ListaScreen(factory: ViewModelProvider.Factory, onItemClick: (Int) -> Unit =
         aviso = aviso,
         onItemClick = onItemClick,
         onFavorito = { id -> vm.alternarFavorito(id) },
-        onReintentar = { vm.refrescar() }
+        onReintentar = { vm.refrescar() },
+        onVerFavoritos = onVerFavoritos
     )
 }
 
@@ -70,11 +75,22 @@ fun ListaContent(
     aviso: String?,
     onItemClick: (Int) -> Unit,
     onFavorito: (Int) -> Unit,
-    onReintentar: () -> Unit
+    onReintentar: () -> Unit,
+    onVerFavoritos: () -> Unit = {}
 ) {
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Smartphones") })
+            TopAppBar(
+                title = { Text("Smartphones") },
+                actions = {
+                    IconButton(onClick = onVerFavoritos) {
+                        Icon(
+                            Icons.Filled.Favorite,
+                            contentDescription = "Ver favoritos"
+                        )
+                    }
+                }
+            )
         }
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize()) {
@@ -92,10 +108,17 @@ fun ListaContent(
             Box(Modifier.weight(1f).fillMaxWidth()) {
                 when (estado) {
                     UiState.Cargando -> Cargando()
-                    is UiState.Error -> ErrorView(estado.mensaje, onReintentar)
+                    is UiState.Error -> ErrorView(
+                        estado.mensaje,
+                        onReintentar
+                    )
                     is UiState.Exito ->
                         if (estado.datos.isEmpty()) VacioView()
-                        else ListaItems(estado.datos, onItemClick, onFavorito)
+                        else ListaItems(
+                            estado.datos,
+                            onItemClick,
+                            onFavorito
+                        )
                 }
             }
         }
@@ -123,12 +146,15 @@ private fun ListaItems(
 }
 
 @Composable
-private fun ItemCard(
+internal fun ItemCard(
     item: Item,
     onClick: () -> Unit,
     onFavorito: () -> Unit
 ) {
-    Card(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
+    Card(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth()
+    ) {
         Row(
             Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -151,10 +177,12 @@ private fun ItemCard(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
+
                 Text(
                     text = item.subtitulo,
                     style = MaterialTheme.typography.bodyMedium
                 )
+
                 Text(
                     text = "US$ " + "%.2f".format(item.precio),
                     style = MaterialTheme.typography.bodyMedium,

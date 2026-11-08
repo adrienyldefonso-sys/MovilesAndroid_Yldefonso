@@ -1,3 +1,4 @@
+
 package com.tecsup.catalogo
 
 import android.content.Context
@@ -11,6 +12,7 @@ import com.tecsup.catalogo.data.repository.ItemRepository
 import com.tecsup.catalogo.data.repository.ItemRepositoryImpl
 import com.tecsup.catalogo.notification.Notificador
 import com.tecsup.catalogo.ui.detalle.DetalleViewModel
+import com.tecsup.catalogo.ui.favoritos.FavoritosViewModel
 import com.tecsup.catalogo.ui.lista.ListaViewModel
 
 /**
@@ -20,7 +22,9 @@ import com.tecsup.catalogo.ui.lista.ListaViewModel
  */
 class AppContainer(private val context: Context) {
 
-    private val database: AppDatabase by lazy { AppDatabase.crear(context) }
+    private val database: AppDatabase by lazy {
+        AppDatabase.crear(context)
+    }
 
     val itemRepository: ItemRepository by lazy {
         ItemRepositoryImpl(RetrofitClient.api, database.itemDao())
@@ -35,11 +39,24 @@ class AppContainer(private val context: Context) {
 /** Crea los ViewModel con las dependencias del AppContainer. Cada hito agrega su rama. */
 class ViewModelFactory(private val container: AppContainer) : ViewModelProvider.Factory {
     @Suppress("UNCHECKED_CAST")
-    override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T = when {
+    override fun <T : ViewModel> create(
+        modelClass: Class<T>,
+        extras: CreationExtras
+    ): T = when {
         modelClass.isAssignableFrom(ListaViewModel::class.java) ->
             ListaViewModel(container.itemRepository, container.notificador) as T
+
         modelClass.isAssignableFrom(DetalleViewModel::class.java) ->
-            DetalleViewModel(container.itemRepository, extras.createSavedStateHandle()) as T
-        else -> throw IllegalArgumentException("ViewModel desconocido: ${modelClass.name}")
+            DetalleViewModel(
+                container.itemRepository,
+                extras.createSavedStateHandle()
+            ) as T
+
+        modelClass.isAssignableFrom(FavoritosViewModel::class.java) ->
+            FavoritosViewModel(container.itemRepository) as T
+
+        else -> throw IllegalArgumentException(
+            "ViewModel desconocido: ${modelClass.name}"
+        )
     }
 }
