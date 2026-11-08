@@ -1,8 +1,5 @@
 package com.tecsup.catalogo.data.auth
 
-// H12/H13: CUANDO configures Firebase (dependencias descomentadas + google-services.json),
-// borra este bloque de comentario para activar la clase.
-/*
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.tecsup.catalogo.domain.model.Rol
@@ -28,10 +25,10 @@ class FirebaseAuthRepository(
 
     override fun cerrarSesion() = auth.signOut()
 
+    // El rol NO se decide en la app: se lee de Firestore (usuarios/{uid}, campo "rol").
     private suspend fun leerSesion(uid: String, correo: String): Sesion {
         val doc = db.collection("usuarios").document(uid).get().await()
         val rol = if (doc.getString("rol") == "admin") Rol.ADMIN else Rol.USUARIO
         return Sesion(uid, correo, rol)
     }
 }
-*/

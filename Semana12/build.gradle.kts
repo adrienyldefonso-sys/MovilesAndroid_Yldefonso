@@ -8,7 +8,6 @@ plugins {
     id("org.jetbrains.kotlin.plugin.serialization") version "2.0.21" apply false
     // KSP: formato <kotlin>-<ksp>, debe coincidir con la versión de Kotlin
     id("com.google.devtools.ksp") version "2.0.21-1.0.28" apply false
-
-    // ── FIREBASE (H12): descomentar esta línea ──
-    // id("com.google.gms.google-services") version "4.4.2" apply false
+    // Firebase: procesa google-services.json
+    id("com.google.gms.google-services") version "4.4.2" apply false
 }
