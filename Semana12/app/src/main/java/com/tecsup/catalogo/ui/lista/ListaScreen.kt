@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.outlined.FavoriteBorder
@@ -51,12 +52,14 @@ import com.tecsup.catalogo.ui.theme.CatalogoTheme
  * H6: la pantalla observa el estado del ViewModel y comunica los eventos.
  * H7: se agrega la navegación hacia la pantalla de favoritos.
  * H8: se incorpora el indicador de actualización y el aviso de modo sin conexión.
+ * H12: se agrega la opción para cerrar sesión.
  */
 @Composable
 fun ListaScreen(
     factory: ViewModelProvider.Factory,
     onItemClick: (Int) -> Unit = {},
-    onVerFavoritos: () -> Unit = {}
+    onVerFavoritos: () -> Unit = {},
+    onCerrarSesion: () -> Unit = {}
 ) {
     val vm: ListaViewModel = viewModel(factory = factory)
     val estado by vm.estado.collectAsStateWithLifecycle()
@@ -70,7 +73,8 @@ fun ListaScreen(
         onFavorito = { id -> vm.alternarFavorito(id) },
         onReintentar = { vm.refrescar() },
         onVerFavoritos = onVerFavoritos,
-        actualizando = actualizando
+        actualizando = actualizando,
+        onCerrarSesion = onCerrarSesion
     )
 }
 
@@ -83,7 +87,8 @@ fun ListaContent(
     onFavorito: (Int) -> Unit,
     onReintentar: () -> Unit,
     onVerFavoritos: () -> Unit = {},
-    actualizando: Boolean = false
+    actualizando: Boolean = false,
+    onCerrarSesion: () -> Unit = {}
 ) {
     Scaffold(
         topBar = {
@@ -104,6 +109,13 @@ fun ListaContent(
                         Icon(
                             Icons.Filled.Favorite,
                             contentDescription = "Ver favoritos"
+                        )
+                    }
+
+                    IconButton(onClick = onCerrarSesion) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.Logout,
+                            contentDescription = "Cerrar sesión"
                         )
                     }
                 }
