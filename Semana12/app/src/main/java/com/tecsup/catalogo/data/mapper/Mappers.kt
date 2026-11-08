@@ -1,10 +1,12 @@
 package com.tecsup.catalogo.data.mapper
 
+import com.tecsup.catalogo.data.local.ItemEntity
 import com.tecsup.catalogo.data.remote.dto.ItemDto
 import com.tecsup.catalogo.domain.model.Item
 
-/** Lista: solo los datos básicos. La descripción, el stock y el rating llegan con el detalle. */
-fun ItemDto.aModelo(esFavorito: Boolean = false): Item = Item(
+// Cadena de conversión: ItemDto (API) -> ItemEntity (Room) -> Item (UI)
+
+fun ItemDto.aEntity(esFavorito: Boolean = false): ItemEntity = ItemEntity(
     id = id,
     titulo = title,
     subtitulo = brand ?: "Sin marca",
@@ -13,6 +15,24 @@ fun ItemDto.aModelo(esFavorito: Boolean = false): Item = Item(
     esFavorito = esFavorito
 )
 
-/** Detalle: incluye los campos extra del segundo endpoint. */
-fun ItemDto.aModeloDetalle(esFavorito: Boolean = false): Item =
-    aModelo(esFavorito).copy(descripcion = description, stock = stock, rating = rating)
+fun ItemEntity.aModelo(): Item = Item(
+    id = id,
+    titulo = titulo,
+    subtitulo = subtitulo,
+    imagenUrl = imagenUrl,
+    precio = precio,
+    esFavorito = esFavorito
+)
+
+/** Detalle: viene directo de la API, con los campos extra del segundo endpoint. */
+fun ItemDto.aModeloDetalle(esFavorito: Boolean = false): Item = Item(
+    id = id,
+    titulo = title,
+    subtitulo = brand ?: "Sin marca",
+    imagenUrl = thumbnail,
+    precio = price,
+    esFavorito = esFavorito,
+    descripcion = description,
+    stock = stock,
+    rating = rating
+)
