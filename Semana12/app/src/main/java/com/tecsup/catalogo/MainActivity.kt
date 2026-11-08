@@ -4,7 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import com.tecsup.catalogo.ui.lista.ListaScreen
+import com.tecsup.catalogo.ui.navigation.AppNav
 import com.tecsup.catalogo.ui.theme.CatalogoTheme
 
 class MainActivity : ComponentActivity() {
@@ -14,8 +14,7 @@ class MainActivity : ComponentActivity() {
         val factory = ViewModelFactory(AppContainer(applicationContext))
         setContent {
             CatalogoTheme {
-                // H13/H14: se reemplaza por AppNav().
-                ListaScreen(factory)
+                AppNav(factory)
             }
         }
     }
