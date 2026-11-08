@@ -1,16 +1,17 @@
+
 package com.tecsup.catalogo.ui.lista
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -26,9 +27,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -36,6 +34,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.tecsup.catalogo.domain.model.Item
 import com.tecsup.catalogo.ui.UiState
@@ -44,21 +45,21 @@ import com.tecsup.catalogo.ui.components.ErrorView
 import com.tecsup.catalogo.ui.theme.CatalogoTheme
 
 /**
- * H4: versión con DATOS DE PRUEBA (sin red, sin ViewModel).
- * H6: se reemplaza por ListaViewModel + collectAsStateWithLifecycle().
- * ListaContent no cambia: solo dibuja el estado que recibe.
+ * H6: la pantalla solo observa el estado del ViewModel y le avisa de los eventos.
+ * Ya no usa los datos de prueba (siguen existiendo solo para los @Preview).
  */
 @Composable
-fun ListaScreen(onItemClick: (Int) -> Unit = {}) {
-    var items by remember { mutableStateOf(datosDePrueba) }
+fun ListaScreen(factory: ViewModelProvider.Factory, onItemClick: (Int) -> Unit = {}) {
+    val vm: ListaViewModel = viewModel(factory = factory)
+    val estado by vm.estado.collectAsStateWithLifecycle()
+    val aviso by vm.aviso.collectAsStateWithLifecycle()
+
     ListaContent(
-        estado = UiState.Exito(items),
-        aviso = null,
+        estado = estado,
+        aviso = aviso,
         onItemClick = onItemClick,
-        onFavorito = { id ->
-            items = items.map { if (it.id == id) it.copy(esFavorito = !it.esFavorito) else it }
-        },
-        onReintentar = {}
+        onFavorito = { id -> vm.alternarFavorito(id) },
+        onReintentar = { vm.refrescar() }
     )
 }
 
@@ -72,7 +73,9 @@ fun ListaContent(
     onReintentar: () -> Unit
 ) {
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Smartphones") }) }
+        topBar = {
+            TopAppBar(title = { Text("Smartphones") })
+        }
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize()) {
             if (aviso != null) {
@@ -85,6 +88,7 @@ fun ListaContent(
                         .padding(8.dp)
                 )
             }
+
             Box(Modifier.weight(1f).fillMaxWidth()) {
                 when (estado) {
                     UiState.Cargando -> Cargando()
@@ -109,15 +113,26 @@ private fun ListaItems(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         items(datos, key = { it.id }) { item ->
-            ItemCard(item, onClick = { onItemClick(item.id) }, onFavorito = { onFavorito(item.id) })
+            ItemCard(
+                item,
+                onClick = { onItemClick(item.id) },
+                onFavorito = { onFavorito(item.id) }
+            )
         }
     }
 }
 
 @Composable
-private fun ItemCard(item: Item, onClick: () -> Unit, onFavorito: () -> Unit) {
+private fun ItemCard(
+    item: Item,
+    onClick: () -> Unit,
+    onFavorito: () -> Unit
+) {
     Card(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
-        Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            Modifier.padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             AsyncImage(
                 model = item.imagenUrl,
                 contentDescription = item.titulo,
@@ -126,7 +141,9 @@ private fun ItemCard(item: Item, onClick: () -> Unit, onFavorito: () -> Unit) {
                     .size(72.dp)
                     .background(MaterialTheme.colorScheme.surfaceVariant)
             )
+
             Spacer(Modifier.width(12.dp))
+
             Column(Modifier.weight(1f)) {
                 Text(
                     text = item.titulo,
@@ -134,27 +151,40 @@ private fun ItemCard(item: Item, onClick: () -> Unit, onFavorito: () -> Unit) {
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                Text(text = item.subtitulo, style = MaterialTheme.typography.bodyMedium)
+                Text(
+                    text = item.subtitulo,
+                    style = MaterialTheme.typography.bodyMedium
+                )
                 Text(
                     text = "US$ " + "%.2f".format(item.precio),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.primary
                 )
             }
+
             IconButton(onClick = onFavorito) {
                 Icon(
-                    imageVector = if (item.esFavorito) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                    contentDescription = if (item.esFavorito) "Quitar de favoritos" else "Marcar como favorito"
+                    imageVector = if (item.esFavorito)
+                        Icons.Filled.Favorite
+                    else
+                        Icons.Outlined.FavoriteBorder,
+                    contentDescription = if (item.esFavorito)
+                        "Quitar de favoritos"
+                    else
+                        "Marcar como favorito"
                 )
             }
         }
     }
 }
 
-/** Estado Vacío (R03). Vive aquí para no agregar archivos fuera de la estructura del laboratorio. */
+/** Estado Vacío (R03). */
 @Composable
 private fun VacioView() {
-    Box(Modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
+    Box(
+        Modifier.fillMaxSize().padding(24.dp),
+        contentAlignment = Alignment.Center
+    ) {
         Text(
             text = "No hay elementos para mostrar",
             style = MaterialTheme.typography.bodyLarge,
@@ -163,6 +193,7 @@ private fun VacioView() {
     }
 }
 
+// Datos de prueba utilizados únicamente para los Preview.
 private val datosDePrueba = listOf(
     Item(1, "Smartphone Demo 1", "Marca A", null, 299.99),
     Item(2, "Smartphone Demo 2", "Marca B", null, 449.50, esFavorito = true),
@@ -174,23 +205,34 @@ private val datosDePrueba = listOf(
 @Preview(showBackground = true)
 @Composable
 private fun PreviewExito() {
-    CatalogoTheme { ListaContent(UiState.Exito(datosDePrueba), null, {}, {}, {}) }
+    CatalogoTheme {
+        ListaContent(UiState.Exito(datosDePrueba), null, {}, {}, {})
+    }
 }
 
 @Preview(showBackground = true)
 @Composable
 private fun PreviewCargando() {
-    CatalogoTheme { ListaContent(UiState.Cargando, null, {}, {}, {}) }
+    CatalogoTheme {
+        ListaContent(UiState.Cargando, null, {}, {}, {})
+    }
 }
 
 @Preview(showBackground = true)
 @Composable
 private fun PreviewError() {
-    CatalogoTheme { ListaContent(UiState.Error("No hay conexión a internet"), null, {}, {}, {}) }
+    CatalogoTheme {
+        ListaContent(
+            UiState.Error("No hay conexión a internet"),
+            null, {}, {}, {}
+        )
+    }
 }
 
 @Preview(showBackground = true)
 @Composable
 private fun PreviewVacio() {
-    CatalogoTheme { ListaContent(UiState.Exito(emptyList()), null, {}, {}, {}) }
+    CatalogoTheme {
+        ListaContent(UiState.Exito(emptyList()), null, {}, {}, {})
+    }
 }

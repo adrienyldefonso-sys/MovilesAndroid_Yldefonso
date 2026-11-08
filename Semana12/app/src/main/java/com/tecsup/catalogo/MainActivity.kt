@@ -11,10 +11,11 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        val factory = ViewModelFactory(AppContainer(applicationContext))
         setContent {
             CatalogoTheme {
-                // H4: lista con datos de prueba. En H13/H14 se reemplaza por AppNav().
-                ListaScreen()
+                // H13/H14: se reemplaza por AppNav().
+                ListaScreen(factory)
             }
         }
     }
