@@ -16,6 +16,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.filled.AdminPanelSettings
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.outlined.FavoriteBorder
@@ -53,13 +54,17 @@ import com.tecsup.catalogo.ui.theme.CatalogoTheme
  * H7: se agrega la navegación hacia la pantalla de favoritos.
  * H8: se incorpora el indicador de actualización y el aviso de modo sin conexión.
  * H12: se agrega la opción para cerrar sesión.
+ * H13: se agrega el acceso al panel de administrador.
  */
+
 @Composable
 fun ListaScreen(
     factory: ViewModelProvider.Factory,
     onItemClick: (Int) -> Unit = {},
     onVerFavoritos: () -> Unit = {},
-    onCerrarSesion: () -> Unit = {}
+    onCerrarSesion: () -> Unit = {},
+    esAdmin: Boolean = false,
+    onAdmin: () -> Unit = {}
 ) {
     val vm: ListaViewModel = viewModel(factory = factory)
     val estado by vm.estado.collectAsStateWithLifecycle()
@@ -74,7 +79,9 @@ fun ListaScreen(
         onReintentar = { vm.refrescar() },
         onVerFavoritos = onVerFavoritos,
         actualizando = actualizando,
-        onCerrarSesion = onCerrarSesion
+        onCerrarSesion = onCerrarSesion,
+        esAdmin = esAdmin,
+        onAdmin = onAdmin
     )
 }
 
@@ -88,7 +95,9 @@ fun ListaContent(
     onReintentar: () -> Unit,
     onVerFavoritos: () -> Unit = {},
     actualizando: Boolean = false,
-    onCerrarSesion: () -> Unit = {}
+    onCerrarSesion: () -> Unit = {},
+    esAdmin: Boolean = false,
+    onAdmin: () -> Unit = {}
 ) {
     Scaffold(
         topBar = {
@@ -112,6 +121,15 @@ fun ListaContent(
                         )
                     }
 
+                    if (esAdmin) {
+                        IconButton(onClick = onAdmin) {
+                            Icon(
+                                Icons.Filled.AdminPanelSettings,
+                                contentDescription = "Panel Admin"
+                            )
+                        }
+                    }
+
                     IconButton(onClick = onCerrarSesion) {
                         Icon(
                             Icons.AutoMirrored.Filled.Logout,
@@ -122,11 +140,14 @@ fun ListaContent(
             )
         }
     ) { padding ->
-        Column(Modifier.padding(padding).fillMaxSize()) {
-
+        Column(
+            Modifier
+                .padding(padding)
+                .fillMaxSize()
+        ) {
             if (actualizando && estado is UiState.Exito) {
                 LinearProgressIndicator(
-                    modifier = Modifier.fillMaxWidth()
+                    Modifier.fillMaxWidth()
                 )
             }
 
@@ -138,7 +159,11 @@ fun ListaContent(
                 )
             }
 
-            Box(Modifier.weight(1f).fillMaxWidth()) {
+            Box(
+                Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+            ) {
                 when (estado) {
                     UiState.Cargando -> Cargando()
 
@@ -245,8 +270,8 @@ internal fun ItemCard(
 }
 
 /**
- * Aviso de modo sin conexión (R08):
- * la lista se ve con lo guardado y se puede reintentar.
+ * Aviso de modo sin conexión (R08).
+ * La lista se ve con lo guardado y se puede reintentar.
  */
 @Composable
 private fun AvisoBanner(
@@ -280,7 +305,9 @@ private fun AvisoBanner(
 @Composable
 private fun VacioView() {
     Box(
-        Modifier.fillMaxSize().padding(24.dp),
+        Modifier
+            .fillMaxSize()
+            .padding(24.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(
@@ -304,7 +331,13 @@ private val datosDePrueba = listOf(
 @Composable
 private fun PreviewExito() {
     CatalogoTheme {
-        ListaContent(UiState.Exito(datosDePrueba), null, {}, {}, {})
+        ListaContent(
+            UiState.Exito(datosDePrueba),
+            null,
+            {},
+            {},
+            {}
+        )
     }
 }
 
@@ -312,7 +345,13 @@ private fun PreviewExito() {
 @Composable
 private fun PreviewCargando() {
     CatalogoTheme {
-        ListaContent(UiState.Cargando, null, {}, {}, {})
+        ListaContent(
+            UiState.Cargando,
+            null,
+            {},
+            {},
+            {}
+        )
     }
 }
 
@@ -322,7 +361,10 @@ private fun PreviewError() {
     CatalogoTheme {
         ListaContent(
             UiState.Error("No hay conexión a internet"),
-            null, {}, {}, {}
+            null,
+            {},
+            {},
+            {}
         )
     }
 }
@@ -331,6 +373,12 @@ private fun PreviewError() {
 @Composable
 private fun PreviewVacio() {
     CatalogoTheme {
-        ListaContent(UiState.Exito(emptyList()), null, {}, {}, {})
+        ListaContent(
+            UiState.Exito(emptyList()),
+            null,
+            {},
+            {},
+            {}
+        )
     }
 }
