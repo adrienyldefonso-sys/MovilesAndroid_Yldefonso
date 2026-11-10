@@ -1,39 +1,59 @@
-
 package com.tecsup.catalogo.ui.lista
 
+import android.content.res.Configuration
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.AdminPanelSettings
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.Inbox
+import androidx.compose.material.icons.outlined.PhoneAndroid
+import androidx.compose.material.icons.outlined.WifiOff
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -99,10 +119,14 @@ fun ListaContent(
     esAdmin: Boolean = false,
     onAdmin: () -> Unit = {}
 ) {
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+
     Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            TopAppBar(
+            LargeTopAppBar(
                 title = { Text("Smartphones") },
+                scrollBehavior = scrollBehavior,
                 actions = {
                     IconButton(
                         onClick = onReintentar,
@@ -140,23 +164,36 @@ fun ListaContent(
             )
         }
     ) { padding ->
+        val backgroundBrush = Brush.verticalGradient(
+            colors = listOf(
+                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f),
+                MaterialTheme.colorScheme.background
+            )
+        )
+
         Column(
             Modifier
                 .padding(padding)
                 .fillMaxSize()
+                .background(backgroundBrush)
         ) {
-            if (actualizando && estado is UiState.Exito) {
+            AnimatedVisibility(visible = actualizando && estado is UiState.Exito) {
                 LinearProgressIndicator(
-                    Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                        .clip(RoundedCornerShape(4.dp))
                 )
             }
 
-            if (aviso != null) {
-                AvisoBanner(
-                    texto = aviso,
-                    onReintentar = onReintentar,
-                    habilitado = !actualizando
-                )
+            AnimatedVisibility(visible = aviso != null) {
+                if (aviso != null) {
+                    AvisoBanner(
+                        texto = aviso,
+                        onReintentar = onReintentar,
+                        habilitado = !actualizando
+                    )
+                }
             }
 
             Box(
@@ -195,9 +232,18 @@ private fun ListaItems(
     onFavorito: (Int) -> Unit
 ) {
     LazyColumn(
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
+        contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
+        item(key = "header_count") {
+            Text(
+                text = "${datos.size} equipos disponibles",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+            )
+        }
+
         items(datos, key = { it.id }) { item ->
             ItemCard(
                 item,
@@ -214,64 +260,133 @@ internal fun ItemCard(
     onClick: () -> Unit,
     onFavorito: () -> Unit
 ) {
+    val scale by animateFloatAsState(
+        targetValue = if (item.esFavorito) 1.15f else 1.0f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "favoritoScale"
+    )
+
     Card(
         onClick = onClick,
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Row(
-            Modifier.padding(12.dp),
+            Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            AsyncImage(
-                model = item.imagenUrl,
-                contentDescription = item.titulo,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .size(72.dp)
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
+            val imageGradient = Brush.linearGradient(
+                listOf(
+                    MaterialTheme.colorScheme.primaryContainer,
+                    MaterialTheme.colorScheme.surfaceVariant
+                )
             )
 
-            Spacer(Modifier.width(12.dp))
+            Box(
+                modifier = Modifier
+                    .size(88.dp)
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(imageGradient),
+                contentAlignment = Alignment.Center
+            ) {
+                AsyncImage(
+                    model = item.imagenUrl,
+                    contentDescription = item.titulo,
+                    contentScale = ContentScale.Crop,
+                    placeholder = rememberVectorPainter(Icons.Outlined.PhoneAndroid),
+                    error = rememberVectorPainter(Icons.Outlined.PhoneAndroid),
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
 
-            Column(Modifier.weight(1f)) {
+            Spacer(Modifier.width(16.dp))
+
+            Column(
+                Modifier
+                    .weight(1f)
+                    .padding(vertical = 2.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.secondaryContainer
+                ) {
+                    Text(
+                        text = item.subtitulo,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+
                 Text(
                     text = item.titulo,
                     style = MaterialTheme.typography.titleMedium,
-                    maxLines = 1,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
 
                 Text(
-                    text = item.subtitulo,
-                    style = MaterialTheme.typography.bodyMedium
-                )
-
-                Text(
                     text = "US$ " + "%.2f".format(item.precio),
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.primary
                 )
             }
 
-            IconButton(onClick = onFavorito) {
-                Icon(
-                    imageVector = if (item.esFavorito)
-                        Icons.Filled.Favorite
-                    else
-                        Icons.Outlined.FavoriteBorder,
-                    contentDescription = if (item.esFavorito)
-                        "Quitar de favoritos"
-                    else
-                        "Marcar como favorito"
-                )
+            Spacer(Modifier.width(8.dp))
+
+            val favContainer = if (item.esFavorito) {
+                MaterialTheme.colorScheme.tertiaryContainer
+            } else {
+                MaterialTheme.colorScheme.surfaceVariant
+            }
+            val favTint = if (item.esFavorito) {
+                MaterialTheme.colorScheme.tertiary
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            }
+
+            Surface(
+                onClick = onFavorito,
+                shape = CircleShape,
+                color = favContainer,
+                modifier = Modifier.size(44.dp)
+            ) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = if (item.esFavorito)
+                            Icons.Filled.Favorite
+                        else
+                            Icons.Outlined.FavoriteBorder,
+                        tint = favTint,
+                        contentDescription = if (item.esFavorito)
+                            "Quitar de favoritos"
+                        else
+                            "Marcar como favorito",
+                        modifier = Modifier.scale(scale)
+                    )
+                }
             }
         }
     }
 }
 
 /**
- * Aviso de modo sin conexión (R08).
- * La lista se ve con lo guardado y se puede reintentar.
+ * Aviso de modo sin conexión.
  */
 @Composable
 private fun AvisoBanner(
@@ -279,29 +394,43 @@ private fun AvisoBanner(
     onReintentar: () -> Unit,
     habilitado: Boolean
 ) {
-    Row(
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.secondaryContainer)
-            .padding(start = 12.dp, end = 4.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        shape = MaterialTheme.shapes.medium,
+        color = MaterialTheme.colorScheme.secondaryContainer,
+        tonalElevation = 2.dp
     ) {
-        Text(
-            text = texto,
-            style = MaterialTheme.typography.labelLarge,
-            modifier = Modifier.weight(1f)
-        )
-
-        TextButton(
-            onClick = onReintentar,
-            enabled = habilitado
+        Row(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text("Reintentar")
+            Icon(
+                imageVector = Icons.Outlined.WifiOff,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSecondaryContainer
+            )
+
+            Text(
+                text = texto,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                modifier = Modifier.weight(1f)
+            )
+
+            TextButton(
+                onClick = onReintentar,
+                enabled = habilitado
+            ) {
+                Text("Reintentar")
+            }
         }
     }
 }
 
-/** Estado Vacío (R03). */
+/** Estado Vacío. */
 @Composable
 private fun VacioView() {
     Box(
@@ -310,24 +439,51 @@ private fun VacioView() {
             .padding(24.dp),
         contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = "No hay elementos para mostrar",
-            style = MaterialTheme.typography.bodyLarge,
-            textAlign = TextAlign.Center
-        )
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Surface(
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                modifier = Modifier.size(80.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Outlined.Inbox,
+                        contentDescription = null,
+                        modifier = Modifier.size(40.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+            Text(
+                text = "Sin elementos",
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                textAlign = TextAlign.Center
+            )
+            Text(
+                text = "No hay equipos disponibles en este momento",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
+            )
+        }
     }
 }
 
 // Datos de prueba utilizados únicamente para los Preview.
 private val datosDePrueba = listOf(
-    Item(1, "Smartphone Demo 1", "Marca A", null, 299.99),
-    Item(2, "Smartphone Demo 2", "Marca B", null, 449.50, esFavorito = true),
-    Item(3, "Smartphone Demo 3", "Marca C", null, 199.00),
-    Item(4, "Smartphone Demo 4", "Marca A", null, 899.90),
-    Item(5, "Smartphone Demo 5", "Marca D", null, 129.99)
+    Item(1, "Smartphone Pro Max Ultra", "Apple", null, 999.99, esFavorito = true),
+    Item(2, "Galaxy Note Ultra 5G", "Samsung", null, 899.50),
+    Item(3, "Pixel 9 Pro XL", "Google", null, 799.00),
+    Item(4, "Xiaomi 14 Ultra", "Xiaomi", null, 699.90),
+    Item(5, "OnePlus 12", "OnePlus", null, 599.99)
 )
 
-@Preview(showBackground = true)
+@Preview(name = "Claro", showBackground = true)
+@Preview(name = "Oscuro", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun PreviewExito() {
     CatalogoTheme {
@@ -341,7 +497,7 @@ private fun PreviewExito() {
     }
 }
 
-@Preview(showBackground = true)
+@Preview(name = "Cargando", showBackground = true)
 @Composable
 private fun PreviewCargando() {
     CatalogoTheme {
@@ -355,7 +511,7 @@ private fun PreviewCargando() {
     }
 }
 
-@Preview(showBackground = true)
+@Preview(name = "Error", showBackground = true)
 @Composable
 private fun PreviewError() {
     CatalogoTheme {
@@ -369,7 +525,7 @@ private fun PreviewError() {
     }
 }
 
-@Preview(showBackground = true)
+@Preview(name = "Vacio", showBackground = true)
 @Composable
 private fun PreviewVacio() {
     CatalogoTheme {
