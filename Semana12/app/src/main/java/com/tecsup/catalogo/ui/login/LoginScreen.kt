@@ -103,6 +103,7 @@ fun LoginContent(
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .imePadding()
+                .background(MaterialTheme.colorScheme.background)
         ) {
             val headerGradient = Brush.linearGradient(
                 listOf(
@@ -114,28 +115,28 @@ fun LoginContent(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(280.dp)
+                    .height(300.dp)
                     .background(
                         headerGradient,
-                        shape = RoundedCornerShape(bottomStart = 40.dp, bottomEnd = 40.dp)
+                        shape = RoundedCornerShape(bottomStart = 48.dp, bottomEnd = 48.dp)
                     ),
                 contentAlignment = Alignment.Center
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
                     Surface(
                         shape = CircleShape,
                         color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f),
-                        modifier = Modifier.size(64.dp)
+                        modifier = Modifier.size(72.dp)
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 imageVector = Icons.Filled.PhoneAndroid,
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.onPrimary,
-                                modifier = Modifier.size(32.dp)
+                                modifier = Modifier.size(36.dp)
                             )
                         }
                     }
@@ -148,7 +149,7 @@ fun LoginContent(
                     )
 
                     Text(
-                        text = "Encuentra tu próximo smartphone",
+                        text = "Tu tienda tecnológica de confianza",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f),
                         textAlign = TextAlign.Center
@@ -164,7 +165,7 @@ fun LoginContent(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 24.dp)
-                        .offset(y = (-32).dp),
+                        .offset(y = (-36).dp),
                     shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
                     elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
@@ -249,7 +250,7 @@ fun LoginContent(
                                             tint = MaterialTheme.colorScheme.onErrorContainer
                                         )
                                         Text(
-                                            text = (estado as UiState.Error).mensaje,
+                                            text = estado.mensaje,
                                             color = MaterialTheme.colorScheme.onErrorContainer,
                                             style = MaterialTheme.typography.bodyMedium
                                         )
@@ -266,7 +267,7 @@ fun LoginContent(
                             shape = MaterialTheme.shapes.large,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(52.dp)
+                                .height(54.dp)
                         ) {
                             if (cargando) {
                                 CircularProgressIndicator(

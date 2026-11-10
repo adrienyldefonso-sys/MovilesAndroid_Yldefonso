@@ -36,7 +36,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -55,6 +54,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -127,38 +127,82 @@ fun ListaContent(
             LargeTopAppBar(
                 title = { Text("Smartphones") },
                 scrollBehavior = scrollBehavior,
+                colors = TopAppBarDefaults.largeTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background,
+                    scrolledContainerColor = MaterialTheme.colorScheme.surface
+                ),
                 actions = {
-                    IconButton(
-                        onClick = onReintentar,
-                        enabled = !actualizando
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(end = 12.dp)
                     ) {
-                        Icon(
-                            Icons.Filled.Refresh,
-                            contentDescription = "Actualizar"
-                        )
-                    }
-
-                    IconButton(onClick = onVerFavoritos) {
-                        Icon(
-                            Icons.Filled.Favorite,
-                            contentDescription = "Ver favoritos"
-                        )
-                    }
-
-                    if (esAdmin) {
-                        IconButton(onClick = onAdmin) {
-                            Icon(
-                                Icons.Filled.AdminPanelSettings,
-                                contentDescription = "Panel Admin"
-                            )
+                        Surface(
+                            onClick = onReintentar,
+                            enabled = !actualizando,
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.surfaceVariant,
+                            modifier = Modifier.size(40.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Filled.Refresh,
+                                    contentDescription = "Actualizar",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
                         }
-                    }
 
-                    IconButton(onClick = onCerrarSesion) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.Logout,
-                            contentDescription = "Cerrar sesión"
-                        )
+                        Surface(
+                            onClick = onVerFavoritos,
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.surfaceVariant,
+                            modifier = Modifier.size(40.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Filled.Favorite,
+                                    contentDescription = "Ver favoritos",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                        }
+
+                        if (esAdmin) {
+                            Surface(
+                                onClick = onAdmin,
+                                shape = CircleShape,
+                                color = MaterialTheme.colorScheme.surfaceVariant,
+                                modifier = Modifier.size(40.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = Icons.Filled.AdminPanelSettings,
+                                        contentDescription = "Panel Admin",
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            }
+                        }
+
+                        Surface(
+                            onClick = onCerrarSesion,
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.surfaceVariant,
+                            modifier = Modifier.size(40.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.Logout,
+                                    contentDescription = "Cerrar sesión",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                        }
                     }
                 }
             )
@@ -233,23 +277,164 @@ private fun ListaItems(
 ) {
     LazyColumn(
         contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        item(key = "header_count") {
-            Text(
-                text = "${datos.size} equipos disponibles",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
-            )
-        }
+        if (datos.isNotEmpty()) {
+            item(key = "featured_${datos[0].id}") {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "Destacado",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 4.dp)
+                    )
+                    FeaturedItemCard(
+                        item = datos[0],
+                        onClick = { onItemClick(datos[0].id) },
+                        onFavorito = { onFavorito(datos[0].id) }
+                    )
+                }
+            }
 
-        items(datos, key = { it.id }) { item ->
-            ItemCard(
-                item,
-                onClick = { onItemClick(item.id) },
-                onFavorito = { onFavorito(item.id) }
-            )
+            if (datos.size > 1) {
+                item(key = "header_others") {
+                    Text(
+                        text = "Todos los modelos (${datos.size})",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp)
+                    )
+                }
+
+                items(datos.drop(1), key = { it.id }) { item ->
+                    ItemCard(
+                        item,
+                        onClick = { onItemClick(item.id) },
+                        onFavorito = { onFavorito(item.id) }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+internal fun FeaturedItemCard(
+    item: Item,
+    onClick: () -> Unit,
+    onFavorito: () -> Unit
+) {
+    val scale by animateFloatAsState(
+        targetValue = if (item.esFavorito) 1.15f else 1.0f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "featuredFavScale"
+    )
+
+    Card(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.extraLarge,
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.outlineVariant),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
+                ) {
+                    Text(
+                        text = item.subtitulo,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+                    )
+                }
+
+                val favContainer = if (item.esFavorito) MaterialTheme.colorScheme.tertiaryContainer else MaterialTheme.colorScheme.surfaceVariant
+                val favTint = if (item.esFavorito) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurfaceVariant
+
+                Surface(
+                    onClick = onFavorito,
+                    shape = CircleShape,
+                    color = favContainer,
+                    modifier = Modifier.size(44.dp)
+                ) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = if (item.esFavorito) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                            tint = favTint,
+                            contentDescription = if (item.esFavorito) "Quitar de favoritos" else "Marcar como favorito",
+                            modifier = Modifier.scale(scale)
+                        )
+                    }
+                }
+            }
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp)
+                    .clip(MaterialTheme.shapes.large)
+                    .background(
+                        Brush.linearGradient(
+                            listOf(
+                                MaterialTheme.colorScheme.primaryContainer,
+                                MaterialTheme.colorScheme.surfaceVariant
+                            )
+                        )
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                AsyncImage(
+                    model = item.imagenUrl,
+                    contentDescription = item.titulo,
+                    contentScale = ContentScale.Fit,
+                    placeholder = rememberVectorPainter(Icons.Outlined.PhoneAndroid),
+                    error = rememberVectorPainter(Icons.Outlined.PhoneAndroid),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(20.dp)
+                )
+            }
+
+            Column(
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = item.titulo,
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = "S/ " + "%.2f".format(item.precio),
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
     }
 }
@@ -273,14 +458,14 @@ internal fun ItemCard(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.large,
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.outlineVariant),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Row(
             Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
+                .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             val imageGradient = Brush.linearGradient(
@@ -292,7 +477,7 @@ internal fun ItemCard(
 
             Box(
                 modifier = Modifier
-                    .size(88.dp)
+                    .size(96.dp)
                     .clip(RoundedCornerShape(20.dp))
                     .background(imageGradient),
                 contentAlignment = Alignment.Center
@@ -313,17 +498,19 @@ internal fun ItemCard(
                 Modifier
                     .weight(1f)
                     .padding(vertical = 2.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+                verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 Surface(
                     shape = CircleShape,
-                    color = MaterialTheme.colorScheme.secondaryContainer
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
                 ) {
                     Text(
                         text = item.subtitulo,
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -333,18 +520,20 @@ internal fun ItemCard(
                     text = item.titulo,
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.SemiBold,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
 
                 Text(
-                    text = "US$ " + "%.2f".format(item.precio),
+                    text = "S/ " + "%.2f".format(item.precio),
                     style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold
                 )
             }
 
-            Spacer(Modifier.width(8.dp))
+            Spacer(Modifier.width(12.dp))
 
             val favContainer = if (item.esFavorito) {
                 MaterialTheme.colorScheme.tertiaryContainer
@@ -500,6 +689,11 @@ private fun PreviewExito() {
 @Preview(name = "Cargando", showBackground = true)
 @Composable
 private fun PreviewCargando() {
+    CatalogoTypePreview()
+}
+
+@Composable
+private fun CatalogoTypePreview() {
     CatalogoTheme {
         ListaContent(
             UiState.Cargando,

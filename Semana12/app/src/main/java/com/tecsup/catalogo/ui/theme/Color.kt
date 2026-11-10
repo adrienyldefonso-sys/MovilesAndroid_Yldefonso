@@ -2,7 +2,7 @@ package com.tecsup.catalogo.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Paleta Clara (Light Theme)
+// Paleta Clara (Light Theme) - Estética Editorial / Tech Premium
 val PrimaryLight = Color(0xFF4F46E5)
 val OnPrimaryLight = Color(0xFFFFFFFF)
 val PrimaryContainerLight = Color(0xFFE0E7FF)
@@ -38,7 +38,7 @@ val SurfaceContainerLight = Color(0xFFEEEDF8)
 val SurfaceContainerHighLight = Color(0xFFE8E7F2)
 val SurfaceContainerHighestLight = Color(0xFFE3E1EC)
 
-// Paleta Oscura (Dark Theme)
+// Paleta Oscura (Dark Theme) - Estética Editorial / Tech Premium
 val PrimaryDark = Color(0xFFA5B4FC)
 val OnPrimaryDark = Color(0xFF1E1B4B)
 val PrimaryContainerDark = Color(0xFF3730A3)
