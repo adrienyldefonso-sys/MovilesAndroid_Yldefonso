@@ -66,7 +66,7 @@ dependencies {
     // Convierte un Task de Google en corrutina con .await()
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.1")
     // GoogleMap, Marker, Circle... como Composables.
-    implementation("com.google.maps.android:maps-compose:8.4.0")
+    implementation("com.google.maps.android:maps-compose:6.2.1")
     // viewModel(factory = ...) dentro de un Composable.
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
 }
