@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- TODO Paso 1: declarar ACCESS_COARSE_LOCATION y ACCESS_FINE_LOCATION aquí,
-         ANTES de la etiqueta <application>. -->
+    <!-- Permisos de ubicación (deben ir ANTES de <application>).
+         FINE = ubicación precisa (GPS); COARSE = aproximada (red/wifi).
+         El usuario decide cuál concede; ambos se piden juntos en el Paso 2. -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
     <application
         android:allowBackup="true"
@@ -11,8 +14,12 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.CampusGPS">
 
-        <!-- TODO Paso 1: meta-data com.google.android.geo.API_KEY con value="${MAPS_API_KEY}"
-             (la clave llega desde local.properties). -->
+        <!-- Clave de Google Maps. Es un servicio distinto al permiso de ubicación:
+             el permiso lo da el usuario; la clave identifica a TU app ante Google.
+             ${MAPS_API_KEY} se reemplaza en compilación con el valor de local.properties. -->
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="${MAPS_API_KEY}" />
 
         <activity
             android:name=".MainActivity"

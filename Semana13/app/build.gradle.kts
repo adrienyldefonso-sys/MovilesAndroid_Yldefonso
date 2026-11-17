@@ -8,10 +8,12 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
-// TODO Paso 1: lee local.properties (si existe) y úsalo en defaultConfig
-// Idea: aquí vivirá tu MAPS_API_KEY para que NO quede escrita en el código ni en GitHub.
+// Paso 1: lee local.properties (archivo local que NO se sube a GitHub, ver .gitignore).
+// Así la clave de Maps nunca queda escrita en el código ni en el repositorio.
 val localProps = Properties().apply {
-    // TODO Paso 1: cargar rootProject.file("local.properties")
+    val archivo = rootProject.file("local.properties")   // ubicado en la raíz del proyecto
+    // Si el archivo no existe (p. ej. otro compañero clona el repo) no falla: la clave queda vacía.
+    if (archivo.exists()) archivo.inputStream().use { load(it) }
 }
 
 android {
@@ -26,7 +28,9 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
-        // TODO Paso 1: manifestPlaceholders["MAPS_API_KEY"] = ...
+        // Inyecta la clave en el Manifest: reemplaza ${MAPS_API_KEY} de la etiqueta <meta-data>.
+        // getProperty(nombre, "") devuelve "" si la clave no está definida (no rompe el build).
+        manifestPlaceholders["MAPS_API_KEY"] = localProps.getProperty("MAPS_API_KEY", "")
     }
 
     buildTypes {
