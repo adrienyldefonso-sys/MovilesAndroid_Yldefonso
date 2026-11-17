@@ -1,0 +1,12 @@
+# Android Studio / Gradle
+*.iml
+.gradle/
+build/
+.idea/
+captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+*.aab
+# SEGURIDAD: aquí vive tu MAPS_API_KEY (Paso 1). NUNCA debe subirse a GitHub.
+local.properties

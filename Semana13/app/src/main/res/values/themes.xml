@@ -1,0 +1,4 @@
+<resources>
+    <!-- Tema XML mínimo (solo para la ventana inicial). Los colores reales los da el tema Compose. -->
+    <style name="Theme.CampusGPS" parent="android:Theme.Material.Light.NoActionBar" />
+</resources>
