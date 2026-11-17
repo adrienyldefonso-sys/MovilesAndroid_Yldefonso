@@ -2,8 +2,10 @@ package com.yldefonso.campusgps.ui
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
 import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
@@ -14,13 +16,15 @@ import com.yldefonso.campusgps.model.LugarConDistancia
 import com.yldefonso.campusgps.model.UbicacionUi
 
 /**
- * [G] Mapa de Google. Paso 3: la cámara viaja a tu posición y se dibuja el marcador "Estás aquí".
+ * [G] Mapa de Google.
+ * Paso 3: la cámara viaja a tu posición y se dibuja el marcador "Estás aquí".
+ * Paso 4: se dibuja un marcador azul por cada lugar del campus.
  * Solo DIBUJA lo que recibe: no consulta Repository ni calcula distancias.
  */
 @Composable
 fun MapaUbicacion(
     estado: UbicacionUi,
-    lugares: List<LugarConDistancia>,        // se usará en el Paso 4 (marcadores de lugares)
+    lugares: List<LugarConDistancia>,        // lista que llega ya lista desde el ViewModel
     seleccionado: Int?,                      // se usará en el Paso 6 (mover cámara al lugar tocado)
     modifier: Modifier = Modifier
 ) {
@@ -31,7 +35,6 @@ fun MapaUbicacion(
 
     // Se ejecuta cada vez que CAMBIA el estado. Si la ubicación llegó (Lista),
     // anima la cámara hasta tu posición con zoom 16 (nivel de calle).
-    // animate() es suspend: por eso va dentro de un LaunchedEffect (corrutina de Compose).
     LaunchedEffect(estado) {
         if (estado is UbicacionUi.Lista) {
             camara.animate(
@@ -43,15 +46,32 @@ fun MapaUbicacion(
     }
 
     GoogleMap(modifier = modifier, cameraPositionState = camara) {
-        // El marcador propio solo existe cuando ya tenemos la ubicación (estado Lista).
+        // Marcador propio: rojo (color por defecto), solo cuando ya tenemos la ubicación.
         if (estado is UbicacionUi.Lista) {
             val posicion = LatLng(estado.posicion.latitud, estado.posicion.longitud)
             Marker(
-                // key = posición: si buscas de nuevo en otro punto, el marcador se recrea y se mueve.
                 state = rememberMarkerState(key = "$posicion", position = posicion),
-                title = "Estás aquí"          // texto que se ve al tocar el marcador (rojo por defecto)
+                title = "Estás aquí"
             )
         }
-        // TODO 3 (Paso 4): un Marker por cada lugar
+
+        // Paso 4: un marcador por cada lugar del campus.
+        for (item in lugares) {
+            val lugar = item.lugar
+            // key(id): identifica cada marcador de forma estable. Si la lista se reordena
+            // (Paso 5), Compose reutiliza el marcador correcto en vez de recrearlos todos.
+            key(lugar.id) {
+                Marker(
+                    state = rememberMarkerState(
+                        key = "lugar-${lugar.id}",
+                        position = LatLng(lugar.latitud, lugar.longitud)
+                    ),
+                    title = lugar.nombre,           // nombre en negrita al tocar el marcador
+                    snippet = lugar.categoria,      // categoría en gris debajo del nombre
+                    // Azul para los lugares; el más cercano pasará a verde en el Paso 7.
+                    icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)
+                )
+            }
+        }
     }
 }
