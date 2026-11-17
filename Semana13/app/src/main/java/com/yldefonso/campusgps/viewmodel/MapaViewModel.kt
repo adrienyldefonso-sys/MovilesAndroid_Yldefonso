@@ -1,11 +1,14 @@
 package com.yldefonso.campusgps.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.yldefonso.campusgps.data.LugaresRepository
 import com.yldefonso.campusgps.data.UbicacionRepository
 import com.yldefonso.campusgps.model.LugarConDistancia
+import com.yldefonso.campusgps.model.Posicion
 import com.yldefonso.campusgps.model.UbicacionUi
+import com.yldefonso.campusgps.util.distanciaMetros
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -13,7 +16,7 @@ import kotlinx.coroutines.launch
 
 /**
  * [G] Guiado. Recibe SOLO interfaces (nunca un Context ni Composables).
- * Lo completarás en los pasos 5 a 8.
+ * Paso 5: calcula la distancia a cada lugar y ordena la lista de menor a mayor.
  */
 class MapaViewModel(
     private val ubicacionRepo: UbicacionRepository,
@@ -21,7 +24,6 @@ class MapaViewModel(
 ) : ViewModel() {
 
     // Patrón estándar: _estado es privado y mutable; "estado" es público y de solo lectura.
-    // Así solo el ViewModel puede cambiarlo y la View solo lo observa.
     private val _estado = MutableStateFlow<UbicacionUi>(UbicacionUi.Inicial)
     val estado: StateFlow<UbicacionUi> = _estado.asStateFlow()
 
@@ -42,7 +44,7 @@ class MapaViewModel(
             ubicacionRepo.obtenerPosicion()
                 .onSuccess {
                     _estado.value = UbicacionUi.Lista(it)
-                    // TODO Paso 5: actualizarDistancias(it)
+                    actualizarDistancias(it)          // Paso 5: SOLO se llama cuando la ubicación llega con éxito
                 }
                 .onFailure { _estado.value = UbicacionUi.Error(mensajeDe(it)) }
         }
@@ -51,6 +53,20 @@ class MapaViewModel(
     /** La View avisa que el usuario negó el permiso. */
     fun permisoDenegado() {
         _estado.value = UbicacionUi.Error("Sin permiso de ubicación no puedo mostrar dónde estás")
+    }
+
+    /**
+     * Paso 5: crea la lista con la distancia de cada lugar, la ordena de menor a mayor
+     * y la publica en _lugares. La View solo recibe el resultado ya calculado.
+     */
+    private fun actualizarDistancias(pos: Posicion) {
+        val ordenada = lugaresRepo.obtenerLugares()
+            .map { LugarConDistancia(it, distanciaMetros(pos, it)) }   // lugar + su distancia en metros
+            .sortedBy { it.metros }                                    // más cercano primero
+        _lugares.value = ordenada
+
+        // Verificación temporal del Paso 5 (la pantalla aún no muestra la lista): mira Logcat, filtro "CampusGPS".
+        ordenada.forEach { Log.d("CampusGPS", "${it.lugar.nombre}: ${it.metros} m") }
     }
 
     // TODO Paso 6: fun seleccionar(id: Int?)
