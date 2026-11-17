@@ -19,13 +19,14 @@ import com.yldefonso.campusgps.model.UbicacionUi
  * [G] Mapa de Google.
  * Paso 3: la cámara viaja a tu posición y se dibuja el marcador "Estás aquí".
  * Paso 4: se dibuja un marcador azul por cada lugar del campus.
+ * Paso 6: al seleccionar un lugar, la cámara viaja hasta él.
  * Solo DIBUJA lo que recibe: no consulta Repository ni calcula distancias.
  */
 @Composable
 fun MapaUbicacion(
     estado: UbicacionUi,
     lugares: List<LugarConDistancia>,        // lista que llega ya lista desde el ViewModel
-    seleccionado: Int?,                      // se usará en el Paso 6 (mover cámara al lugar tocado)
+    seleccionado: Int?,                      // id del lugar tocado en la lista (null = ninguno)
     modifier: Modifier = Modifier
 ) {
     // Estado de la cámara: empieza en Lima (punto base) con zoom 12 (vista de ciudad).
@@ -45,6 +46,16 @@ fun MapaUbicacion(
         }
     }
 
+    // Paso 6: cada vez que cambia el lugar seleccionado, la cámara viaja hasta él con zoom 17.
+    LaunchedEffect(seleccionado) {
+        val lugar = lugares.firstOrNull { it.lugar.id == seleccionado }?.lugar
+        if (lugar != null) {
+            camara.animate(
+                CameraUpdateFactory.newLatLngZoom(LatLng(lugar.latitud, lugar.longitud), 17f)
+            )
+        }
+    }
+
     GoogleMap(modifier = modifier, cameraPositionState = camara) {
         // Marcador propio: rojo (color por defecto), solo cuando ya tenemos la ubicación.
         if (estado is UbicacionUi.Lista) {
@@ -55,17 +66,23 @@ fun MapaUbicacion(
             )
         }
 
-        // Paso 4: un marcador por cada lugar del campus.
+        // Un marcador por cada lugar del campus.
         for (item in lugares) {
             val lugar = item.lugar
-            // key(id): identifica cada marcador de forma estable. Si la lista se reordena
-            // (Paso 5), Compose reutiliza el marcador correcto en vez de recrearlos todos.
+            // key(id): identifica cada marcador de forma estable aunque la lista se reordene.
             key(lugar.id) {
+                val estadoMarcador = rememberMarkerState(
+                    key = "lugar-${lugar.id}",
+                    position = LatLng(lugar.latitud, lugar.longitud)
+                )
+
+                // Paso 6: si este lugar es el seleccionado, abre su globo con nombre y categoría.
+                LaunchedEffect(seleccionado) {
+                    if (seleccionado == lugar.id) estadoMarcador.showInfoWindow()
+                }
+
                 Marker(
-                    state = rememberMarkerState(
-                        key = "lugar-${lugar.id}",
-                        position = LatLng(lugar.latitud, lugar.longitud)
-                    ),
+                    state = estadoMarcador,
                     title = lugar.nombre,           // nombre en negrita al tocar el marcador
                     snippet = lugar.categoria,      // categoría en gris debajo del nombre
                     // Azul para los lugares; el más cercano pasará a verde en el Paso 7.

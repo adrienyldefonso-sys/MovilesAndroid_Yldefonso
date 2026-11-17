@@ -31,8 +31,8 @@ import com.yldefonso.campusgps.viewmodel.MapaViewModel
 import java.util.Locale
 
 /**
- * [G] Pantalla principal. Paso 3: el mapa ocupa el espacio libre arriba y el botón
- * con las coordenadas queda debajo.
+ * [G] Pantalla principal. Paso 6: mapa arriba (weight 1f), botón y estado en medio,
+ * y la lista de lugares abajo con altura fija.
  * La View SOLO dibuja según el estado y le avisa eventos al ViewModel.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -75,7 +75,6 @@ fun PantallaMapa(vm: MapaViewModel) {
         }
     }
 
-    // TODO Paso 6: ListaLugares(...) debajo, con altura fija.
     // TODO Paso 8: MensajeError(...) cuando el estado sea Error.
 
     Scaffold(
@@ -100,7 +99,7 @@ fun PantallaMapa(vm: MapaViewModel) {
             )
 
             Column(
-                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                modifier = Modifier.fillMaxWidth().padding(8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Button(
@@ -108,7 +107,7 @@ fun PantallaMapa(vm: MapaViewModel) {
                     enabled = estado !is UbicacionUi.Buscando   // deshabilitado mientras busca
                 ) { Text("Obtener mi ubicación") }
 
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(4.dp))
 
                 // `when` sobre el sealed interface: un bloque por cada estado posible.
                 when (val e = estado) {
@@ -122,6 +121,15 @@ fun PantallaMapa(vm: MapaViewModel) {
                     is UbicacionUi.Error -> Text(e.mensaje, color = MaterialTheme.colorScheme.error)
                 }
             }
+
+            // Lista con altura FIJA (220.dp): así el mapa conserva el resto del espacio.
+            // onClick le pasa al ViewModel el id tocado; la lista no conoce al ViewModel.
+            ListaLugares(
+                lugares = lugares,
+                seleccionado = seleccionado,
+                onClick = { id -> vm.seleccionar(id) },
+                modifier = Modifier.fillMaxWidth().height(220.dp)
+            )
         }
     }
 }

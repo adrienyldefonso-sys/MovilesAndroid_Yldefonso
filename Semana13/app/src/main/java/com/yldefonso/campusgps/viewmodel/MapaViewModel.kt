@@ -1,6 +1,5 @@
 package com.yldefonso.campusgps.viewmodel
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.yldefonso.campusgps.data.LugaresRepository
@@ -16,7 +15,7 @@ import kotlinx.coroutines.launch
 
 /**
  * [G] Guiado. Recibe SOLO interfaces (nunca un Context ni Composables).
- * Paso 5: calcula la distancia a cada lugar y ordena la lista de menor a mayor.
+ * Paso 5: calcula distancias y ordena. Paso 6: guarda el lugar seleccionado.
  */
 class MapaViewModel(
     private val ubicacionRepo: UbicacionRepository,
@@ -33,7 +32,7 @@ class MapaViewModel(
     )
     val lugares: StateFlow<List<LugarConDistancia>> = _lugares.asStateFlow()
 
-    // Id del lugar tocado en la lista (null = ninguno). Se usará en el Paso 6.
+    // Id del lugar tocado en la lista (null = ninguno).
     private val _seleccionado = MutableStateFlow<Int?>(null)
     val seleccionado: StateFlow<Int?> = _seleccionado.asStateFlow()
 
@@ -44,7 +43,7 @@ class MapaViewModel(
             ubicacionRepo.obtenerPosicion()
                 .onSuccess {
                     _estado.value = UbicacionUi.Lista(it)
-                    actualizarDistancias(it)          // Paso 5: SOLO se llama cuando la ubicación llega con éxito
+                    actualizarDistancias(it)          // SOLO se llama cuando la ubicación llega con éxito
                 }
                 .onFailure { _estado.value = UbicacionUi.Error(mensajeDe(it)) }
         }
@@ -55,21 +54,21 @@ class MapaViewModel(
         _estado.value = UbicacionUi.Error("Sin permiso de ubicación no puedo mostrar dónde estás")
     }
 
+    /** Paso 6: la View avisa qué lugar tocó el usuario (null = quitar la selección). */
+    fun seleccionar(id: Int?) {
+        _seleccionado.value = id
+    }
+
     /**
      * Paso 5: crea la lista con la distancia de cada lugar, la ordena de menor a mayor
      * y la publica en _lugares. La View solo recibe el resultado ya calculado.
      */
     private fun actualizarDistancias(pos: Posicion) {
-        val ordenada = lugaresRepo.obtenerLugares()
+        _lugares.value = lugaresRepo.obtenerLugares()
             .map { LugarConDistancia(it, distanciaMetros(pos, it)) }   // lugar + su distancia en metros
             .sortedBy { it.metros }                                    // más cercano primero
-        _lugares.value = ordenada
-
-        // Verificación temporal del Paso 5 (la pantalla aún no muestra la lista): mira Logcat, filtro "CampusGPS".
-        ordenada.forEach { Log.d("CampusGPS", "${it.lugar.nombre}: ${it.metros} m") }
     }
 
-    // TODO Paso 6: fun seleccionar(id: Int?)
     // TODO Paso 7: val masCercano: StateFlow<Lugar?>
 
     // Traduce una excepción técnica a un mensaje entendible (se mejorará en el Paso 8).
