@@ -2,6 +2,8 @@ package com.yldefonso.campusgps.data
 
 import android.annotation.SuppressLint
 import android.content.Context
+import com.google.android.gms.common.ConnectionResult
+import com.google.android.gms.common.GoogleApiAvailability
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
@@ -16,9 +18,15 @@ import kotlinx.coroutines.tasks.await
 class UbicacionRepositoryGoogle(context: Context) : UbicacionRepository {
 
     // Usamos applicationContext para no retener una Activity (evita fugas de memoria).
-    private val cliente = LocationServices.getFusedLocationProviderClient(context.applicationContext)
+    private val appContext = context.applicationContext
+    private val cliente = LocationServices.getFusedLocationProviderClient(appContext)
 
-    // La verificación del permiso la hace la View (Paso 2); si falta, SecurityException se captura abajo.
+    // Paso 8: pregunta a Google si Play Services está instalado y funcionando en este dispositivo.
+    override fun playServicesDisponible(): Boolean =
+        GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(appContext) ==
+                ConnectionResult.SUCCESS
+
+    // La verificación del permiso la hace la View; si falta, SecurityException se captura abajo.
     @SuppressLint("MissingPermission")
     override suspend fun obtenerPosicion(): Result<Posicion> = try {
         // getCurrentLocation pide UNA ubicación fresca. .await() convierte el Task en corrutina.
@@ -29,7 +37,7 @@ class UbicacionRepositoryGoogle(context: Context) : UbicacionRepository {
             Result.success(Posicion(ubicacion.latitude, ubicacion.longitude))
         } else {
             // Devuelve null cuando no puede determinar la ubicación (p. ej. GPS apagado).
-            Result.failure(IllegalStateException("No se pudo obtener la ubicación"))
+            Result.failure(UbicacionNoDisponibleException())
         }
     } catch (e: CancellationException) {
         throw e                       // nunca tragarse la cancelación de una corrutina

@@ -37,8 +37,8 @@ import com.yldefonso.campusgps.viewmodel.MapaViewModel
 import java.util.Locale
 
 /**
- * [G] Pantalla principal. Paso 7: se agrega el botón "Ir al más cercano" y el texto
- * "Más cercano: nombre (distancia)" debajo del botón principal.
+ * [G] Pantalla principal. Paso 8: los errores se muestran con MensajeError
+ * (mensaje + botón según el tipo de error).
  * La View SOLO dibuja según el estado y le avisa eventos al ViewModel.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -48,7 +48,7 @@ fun PantallaMapa(vm: MapaViewModel) {
     val estado by vm.estado.collectAsState()
     val lugares by vm.lugares.collectAsState()
     val seleccionado by vm.seleccionado.collectAsState()
-    val masCercano by vm.masCercano.collectAsState()      // Paso 7: null hasta que haya ubicación
+    val masCercano by vm.masCercano.collectAsState()      // null hasta que haya ubicación
 
     // Context actual: lo necesitamos SOLO aquí en la View para consultar el permiso.
     val contexto = LocalContext.current
@@ -61,7 +61,7 @@ fun PantallaMapa(vm: MapaViewModel) {
         if (resultado.values.any { it }) vm.buscar() else vm.permisoDenegado()
     }
 
-    // Se ejecuta al pulsar el botón principal.
+    // Se ejecuta al pulsar el botón principal (y también desde "Reintentar").
     fun alPulsar() {
         val fine = ContextCompat.checkSelfPermission(
             contexto, Manifest.permission.ACCESS_FINE_LOCATION
@@ -81,8 +81,6 @@ fun PantallaMapa(vm: MapaViewModel) {
             )
         }
     }
-
-    // TODO Paso 8: MensajeError(...) cuando el estado sea Error.
 
     Scaffold(
         topBar = {
@@ -115,15 +113,13 @@ fun PantallaMapa(vm: MapaViewModel) {
                     enabled = estado !is UbicacionUi.Buscando   // deshabilitado mientras busca
                 ) { Text("Obtener mi ubicación") }
 
-                // Paso 7: botón con borde. Deshabilitado mientras masCercano sea null.
-                // Al pulsarlo le pide al ViewModel seleccionar ese lugar (la cámara viaja hasta él).
+                // Botón con borde. Deshabilitado mientras masCercano sea null.
                 OutlinedButton(
                     onClick = { masCercano?.let { vm.seleccionar(it.id) } },
                     enabled = masCercano != null
                 ) { Text("Ir al más cercano") }
 
-                // Paso 7: "Más cercano: nombre (distancia)". La distancia ya viene calculada
-                // en la lista; aquí solo se le da formato (no se calcula nada).
+                // "Más cercano: nombre (distancia)". La distancia ya viene calculada; aquí solo se formatea.
                 masCercano?.let { cercano ->
                     val metros = lugares.firstOrNull { it.lugar.id == cercano.id }?.metros
                     Text(
@@ -150,7 +146,8 @@ fun PantallaMapa(vm: MapaViewModel) {
                             style = MaterialTheme.typography.bodySmall
                         )
                     }
-                    is UbicacionUi.Error -> Text(e.mensaje, color = MaterialTheme.colorScheme.error)
+                    // Paso 8: recuadro de error + botón según el tipo (Abrir ajustes / Reintentar / ninguno).
+                    is UbicacionUi.Error -> MensajeError(error = e, onReintentar = { alPulsar() })
                 }
             }
 

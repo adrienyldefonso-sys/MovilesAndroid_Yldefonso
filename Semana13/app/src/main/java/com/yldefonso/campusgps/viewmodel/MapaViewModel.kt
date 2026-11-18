@@ -3,10 +3,12 @@ package com.yldefonso.campusgps.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.yldefonso.campusgps.data.LugaresRepository
+import com.yldefonso.campusgps.data.UbicacionNoDisponibleException
 import com.yldefonso.campusgps.data.UbicacionRepository
 import com.yldefonso.campusgps.model.Lugar
 import com.yldefonso.campusgps.model.LugarConDistancia
 import com.yldefonso.campusgps.model.Posicion
+import com.yldefonso.campusgps.model.TipoError
 import com.yldefonso.campusgps.model.UbicacionUi
 import com.yldefonso.campusgps.util.distanciaMetros
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,8 +21,7 @@ import kotlinx.coroutines.launch
 
 /**
  * [G] Guiado. Recibe SOLO interfaces (nunca un Context ni Composables).
- * Paso 5: calcula distancias y ordena. Paso 6: guarda el lugar seleccionado.
- * Paso 7: deriva cuál es el lugar más cercano.
+ * Paso 5: distancias. Paso 6: selección. Paso 7: más cercano. Paso 8: errores con tipo.
  */
 class MapaViewModel(
     private val ubicacionRepo: UbicacionRepository,
@@ -41,19 +42,22 @@ class MapaViewModel(
     private val _seleccionado = MutableStateFlow<Int?>(null)
     val seleccionado: StateFlow<Int?> = _seleccionado.asStateFlow()
 
-    /**
-     * Paso 7: lugar más cercano, DERIVADO de _lugares (no se guarda aparte, así nunca se desfasa).
-     * Como la lista ya está ordenada de menor a mayor, basta el primero con distancia calculada.
-     * Es null mientras no haya ubicación (todas las distancias son null).
-     * stateIn convierte el Flow en StateFlow; WhileSubscribed(5000) lo mantiene activo 5 s
-     * tras rotar la pantalla para no recalcular.
-     */
+    // Lugar más cercano, DERIVADO de _lugares (la lista ya viene ordenada). Null sin ubicación.
     val masCercano: StateFlow<Lugar?> = _lugares
         .map { lista -> lista.firstOrNull { it.metros != null }?.lugar }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     /** Se llama al pulsar "Obtener mi ubicación" (ya con permiso concedido). */
     fun buscar() {
+        // Paso 8: antes de buscar, verifica Play Services a través de la interface (sin Context).
+        if (!ubicacionRepo.playServicesDisponible()) {
+            _estado.value = UbicacionUi.Error(
+                "Este dispositivo no tiene Google Play Services",
+                TipoError.SIN_PLAY_SERVICES
+            )
+            return                                    // no sigue: no tiene sentido reintentar
+        }
+
         _estado.value = UbicacionUi.Buscando          // la View deshabilita el botón
         viewModelScope.launch {                       // corrutina atada a la vida del ViewModel
             ubicacionRepo.obtenerPosicion()
@@ -61,13 +65,16 @@ class MapaViewModel(
                     _estado.value = UbicacionUi.Lista(it)
                     actualizarDistancias(it)          // SOLO se llama cuando la ubicación llega con éxito
                 }
-                .onFailure { _estado.value = UbicacionUi.Error(mensajeDe(it)) }
+                .onFailure { _estado.value = errorDe(it) }
         }
     }
 
     /** La View avisa que el usuario negó el permiso. */
     fun permisoDenegado() {
-        _estado.value = UbicacionUi.Error("Sin permiso de ubicación no puedo mostrar dónde estás")
+        _estado.value = UbicacionUi.Error(
+            "Sin permiso de ubicación no puedo mostrar dónde estás",
+            TipoError.SIN_PERMISO                     // la View mostrará el botón "Abrir ajustes"
+        )
     }
 
     /** La View avisa qué lugar tocó el usuario (null = quitar la selección). */
@@ -75,19 +82,26 @@ class MapaViewModel(
         _seleccionado.value = id
     }
 
-    /**
-     * Crea la lista con la distancia de cada lugar, la ordena de menor a mayor
-     * y la publica en _lugares. La View solo recibe el resultado ya calculado.
-     */
+    /** Crea la lista con la distancia de cada lugar, la ordena de menor a mayor y la publica. */
     private fun actualizarDistancias(pos: Posicion) {
         _lugares.value = lugaresRepo.obtenerLugares()
             .map { LugarConDistancia(it, distanciaMetros(pos, it)) }   // lugar + su distancia en metros
             .sortedBy { it.metros }                                    // más cercano primero
     }
 
-    // Traduce una excepción técnica a un mensaje entendible (se mejorará en el Paso 8).
-    private fun mensajeDe(e: Throwable): String = when (e) {
-        is SecurityException -> "Falta el permiso de ubicación"
-        else -> e.message ?: "No se pudo obtener la ubicación"
+    /**
+     * Paso 8: traduce una excepción técnica a un Error con mensaje claro y un tipo.
+     * El tipo decide qué acción ofrece la pantalla.
+     */
+    private fun errorDe(e: Throwable): UbicacionUi.Error = when (e) {
+        is SecurityException -> UbicacionUi.Error(
+            "Sin permiso de ubicación no puedo mostrar dónde estás", TipoError.SIN_PERMISO
+        )
+        is UbicacionNoDisponibleException -> UbicacionUi.Error(
+            "No se pudo obtener la ubicación. Activa el GPS e intenta de nuevo", TipoError.GPS_APAGADO
+        )
+        else -> UbicacionUi.Error(
+            e.message ?: "No se pudo obtener la ubicación", TipoError.OTRO
+        )
     }
 }

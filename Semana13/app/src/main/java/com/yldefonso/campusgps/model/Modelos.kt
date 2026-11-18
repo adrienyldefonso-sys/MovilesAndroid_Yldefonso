@@ -17,6 +17,17 @@ data class Lugar(
 data class LugarConDistancia(val lugar: Lugar, val metros: Float?)
 
 /**
+ * Paso 8: clasifica QUÉ salió mal. La View usa este tipo para decidir qué botón mostrar
+ * (Abrir ajustes, Reintentar o ninguno).
+ */
+enum class TipoError {
+    SIN_PERMISO,        // el usuario negó el permiso de ubicación
+    GPS_APAGADO,        // ubicación apagada o no disponible
+    SIN_PLAY_SERVICES,  // el dispositivo no tiene Google Play Services
+    OTRO                // cualquier otro fallo inesperado
+}
+
+/**
  * Estados posibles de la pantalla. La View solo DIBUJA según cuál sea el estado actual.
  * "sealed" obliga a tratar todos los casos en un `when` (el compilador avisa si falta uno).
  */
@@ -24,5 +35,6 @@ sealed interface UbicacionUi {
     data object Inicial : UbicacionUi                          // aún no se pulsó el botón
     data object Buscando : UbicacionUi                         // esperando respuesta del GPS
     data class Lista(val posicion: Posicion) : UbicacionUi     // ubicación obtenida con éxito
-    data class Error(val mensaje: String) : UbicacionUi        // algo salió mal (Paso 8 añadirá el tipo)
+    // Paso 8: ahora el error trae mensaje (qué decir) y tipo (qué acción ofrecer).
+    data class Error(val mensaje: String, val tipo: TipoError) : UbicacionUi
 }
