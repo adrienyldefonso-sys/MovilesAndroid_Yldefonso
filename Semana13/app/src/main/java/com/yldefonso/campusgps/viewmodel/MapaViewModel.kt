@@ -4,18 +4,23 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.yldefonso.campusgps.data.LugaresRepository
 import com.yldefonso.campusgps.data.UbicacionRepository
+import com.yldefonso.campusgps.model.Lugar
 import com.yldefonso.campusgps.model.LugarConDistancia
 import com.yldefonso.campusgps.model.Posicion
 import com.yldefonso.campusgps.model.UbicacionUi
 import com.yldefonso.campusgps.util.distanciaMetros
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 /**
  * [G] Guiado. Recibe SOLO interfaces (nunca un Context ni Composables).
  * Paso 5: calcula distancias y ordena. Paso 6: guarda el lugar seleccionado.
+ * Paso 7: deriva cuál es el lugar más cercano.
  */
 class MapaViewModel(
     private val ubicacionRepo: UbicacionRepository,
@@ -36,6 +41,17 @@ class MapaViewModel(
     private val _seleccionado = MutableStateFlow<Int?>(null)
     val seleccionado: StateFlow<Int?> = _seleccionado.asStateFlow()
 
+    /**
+     * Paso 7: lugar más cercano, DERIVADO de _lugares (no se guarda aparte, así nunca se desfasa).
+     * Como la lista ya está ordenada de menor a mayor, basta el primero con distancia calculada.
+     * Es null mientras no haya ubicación (todas las distancias son null).
+     * stateIn convierte el Flow en StateFlow; WhileSubscribed(5000) lo mantiene activo 5 s
+     * tras rotar la pantalla para no recalcular.
+     */
+    val masCercano: StateFlow<Lugar?> = _lugares
+        .map { lista -> lista.firstOrNull { it.metros != null }?.lugar }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
     /** Se llama al pulsar "Obtener mi ubicación" (ya con permiso concedido). */
     fun buscar() {
         _estado.value = UbicacionUi.Buscando          // la View deshabilita el botón
@@ -54,13 +70,13 @@ class MapaViewModel(
         _estado.value = UbicacionUi.Error("Sin permiso de ubicación no puedo mostrar dónde estás")
     }
 
-    /** Paso 6: la View avisa qué lugar tocó el usuario (null = quitar la selección). */
+    /** La View avisa qué lugar tocó el usuario (null = quitar la selección). */
     fun seleccionar(id: Int?) {
         _seleccionado.value = id
     }
 
     /**
-     * Paso 5: crea la lista con la distancia de cada lugar, la ordena de menor a mayor
+     * Crea la lista con la distancia de cada lugar, la ordena de menor a mayor
      * y la publica en _lugares. La View solo recibe el resultado ya calculado.
      */
     private fun actualizarDistancias(pos: Posicion) {
@@ -68,8 +84,6 @@ class MapaViewModel(
             .map { LugarConDistancia(it, distanciaMetros(pos, it)) }   // lugar + su distancia en metros
             .sortedBy { it.metros }                                    // más cercano primero
     }
-
-    // TODO Paso 7: val masCercano: StateFlow<Lugar?>
 
     // Traduce una excepción técnica a un mensaje entendible (se mejorará en el Paso 8).
     private fun mensajeDe(e: Throwable): String = when (e) {

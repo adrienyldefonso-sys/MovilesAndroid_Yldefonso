@@ -12,14 +12,16 @@ import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
+import com.yldefonso.campusgps.model.Lugar
 import com.yldefonso.campusgps.model.LugarConDistancia
 import com.yldefonso.campusgps.model.UbicacionUi
 
 /**
  * [G] Mapa de Google.
  * Paso 3: la cámara viaja a tu posición y se dibuja el marcador "Estás aquí".
- * Paso 4: se dibuja un marcador azul por cada lugar del campus.
+ * Paso 4: se dibuja un marcador por cada lugar del campus.
  * Paso 6: al seleccionar un lugar, la cámara viaja hasta él.
+ * Paso 7: el lugar más cercano se dibuja en verde; los demás siguen en azul.
  * Solo DIBUJA lo que recibe: no consulta Repository ni calcula distancias.
  */
 @Composable
@@ -27,6 +29,7 @@ fun MapaUbicacion(
     estado: UbicacionUi,
     lugares: List<LugarConDistancia>,        // lista que llega ya lista desde el ViewModel
     seleccionado: Int?,                      // id del lugar tocado en la lista (null = ninguno)
+    masCercano: Lugar?,                      // Paso 7: lugar más cercano (null si aún no hay ubicación)
     modifier: Modifier = Modifier
 ) {
     // Estado de la cámara: empieza en Lima (punto base) con zoom 12 (vista de ciudad).
@@ -34,8 +37,7 @@ fun MapaUbicacion(
         position = CameraPosition.fromLatLngZoom(LatLng(-12.0464, -77.0428), 12f)
     }
 
-    // Se ejecuta cada vez que CAMBIA el estado. Si la ubicación llegó (Lista),
-    // anima la cámara hasta tu posición con zoom 16 (nivel de calle).
+    // Cuando la ubicación llega (Lista), anima la cámara hasta tu posición con zoom 16.
     LaunchedEffect(estado) {
         if (estado is UbicacionUi.Lista) {
             camara.animate(
@@ -46,7 +48,7 @@ fun MapaUbicacion(
         }
     }
 
-    // Paso 6: cada vez que cambia el lugar seleccionado, la cámara viaja hasta él con zoom 17.
+    // Cada vez que cambia el lugar seleccionado, la cámara viaja hasta él con zoom 17.
     LaunchedEffect(seleccionado) {
         val lugar = lugares.firstOrNull { it.lugar.id == seleccionado }?.lugar
         if (lugar != null) {
@@ -76,17 +78,22 @@ fun MapaUbicacion(
                     position = LatLng(lugar.latitud, lugar.longitud)
                 )
 
-                // Paso 6: si este lugar es el seleccionado, abre su globo con nombre y categoría.
+                // Si este lugar es el seleccionado, abre su globo con nombre y categoría.
                 LaunchedEffect(seleccionado) {
                     if (seleccionado == lugar.id) estadoMarcador.showInfoWindow()
                 }
+
+                // Paso 7: verde (HUE_GREEN) para el más cercano; azul (HUE_AZURE) para los demás.
+                val color = if (lugar.id == masCercano?.id)
+                    BitmapDescriptorFactory.HUE_GREEN
+                else
+                    BitmapDescriptorFactory.HUE_AZURE
 
                 Marker(
                     state = estadoMarcador,
                     title = lugar.nombre,           // nombre en negrita al tocar el marcador
                     snippet = lugar.categoria,      // categoría en gris debajo del nombre
-                    // Azul para los lugares; el más cercano pasará a verde en el Paso 7.
-                    icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)
+                    icon = BitmapDescriptorFactory.defaultMarker(color)
                 )
             }
         }

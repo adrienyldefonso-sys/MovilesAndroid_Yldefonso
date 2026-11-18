@@ -14,6 +14,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -24,15 +25,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.yldefonso.campusgps.model.UbicacionUi
+import com.yldefonso.campusgps.util.formatearDistancia
 import com.yldefonso.campusgps.viewmodel.MapaViewModel
 import java.util.Locale
 
 /**
- * [G] Pantalla principal. Paso 6: mapa arriba (weight 1f), botón y estado en medio,
- * y la lista de lugares abajo con altura fija.
+ * [G] Pantalla principal. Paso 7: se agrega el botón "Ir al más cercano" y el texto
+ * "Más cercano: nombre (distancia)" debajo del botón principal.
  * La View SOLO dibuja según el estado y le avisa eventos al ViewModel.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -42,6 +48,7 @@ fun PantallaMapa(vm: MapaViewModel) {
     val estado by vm.estado.collectAsState()
     val lugares by vm.lugares.collectAsState()
     val seleccionado by vm.seleccionado.collectAsState()
+    val masCercano by vm.masCercano.collectAsState()      // Paso 7: null hasta que haya ubicación
 
     // Context actual: lo necesitamos SOLO aquí en la View para consultar el permiso.
     val contexto = LocalContext.current
@@ -95,6 +102,7 @@ fun PantallaMapa(vm: MapaViewModel) {
                 estado = estado,
                 lugares = lugares,
                 seleccionado = seleccionado,
+                masCercano = masCercano,
                 modifier = Modifier.weight(1f).fillMaxWidth()
             )
 
@@ -107,23 +115,46 @@ fun PantallaMapa(vm: MapaViewModel) {
                     enabled = estado !is UbicacionUi.Buscando   // deshabilitado mientras busca
                 ) { Text("Obtener mi ubicación") }
 
-                Spacer(Modifier.height(4.dp))
+                // Paso 7: botón con borde. Deshabilitado mientras masCercano sea null.
+                // Al pulsarlo le pide al ViewModel seleccionar ese lugar (la cámara viaja hasta él).
+                OutlinedButton(
+                    onClick = { masCercano?.let { vm.seleccionar(it.id) } },
+                    enabled = masCercano != null
+                ) { Text("Ir al más cercano") }
+
+                // Paso 7: "Más cercano: nombre (distancia)". La distancia ya viene calculada
+                // en la lista; aquí solo se le da formato (no se calcula nada).
+                masCercano?.let { cercano ->
+                    val metros = lugares.firstOrNull { it.lugar.id == cercano.id }?.metros
+                    Text(
+                        buildAnnotatedString {
+                            withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append("Más cercano: ") }
+                            append(cercano.nombre)
+                            if (metros != null) append(" (${formatearDistancia(metros)})")
+                        },
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+
+                Spacer(Modifier.height(2.dp))
 
                 // `when` sobre el sealed interface: un bloque por cada estado posible.
                 when (val e = estado) {
-                    UbicacionUi.Inicial -> Text("Pulsa el botón para empezar")
+                    UbicacionUi.Inicial -> Text("Pulsa el botón para empezar", style = MaterialTheme.typography.bodySmall)
                     UbicacionUi.Buscando -> CircularProgressIndicator()
                     is UbicacionUi.Lista -> {
-                        // Locale.US garantiza punto decimal (-12.0464) en cualquier idioma del celular.
-                        Text("Latitud: ${String.format(Locale.US, "%.4f", e.posicion.latitud)}")
-                        Text("Longitud: ${String.format(Locale.US, "%.4f", e.posicion.longitud)}")
+                        // Una sola línea para ahorrar espacio. Locale.US garantiza punto decimal.
+                        Text(
+                            "Latitud: ${String.format(Locale.US, "%.4f", e.posicion.latitud)}   " +
+                                    "Longitud: ${String.format(Locale.US, "%.4f", e.posicion.longitud)}",
+                            style = MaterialTheme.typography.bodySmall
+                        )
                     }
                     is UbicacionUi.Error -> Text(e.mensaje, color = MaterialTheme.colorScheme.error)
                 }
             }
 
             // Lista con altura FIJA (220.dp): así el mapa conserva el resto del espacio.
-            // onClick le pasa al ViewModel el id tocado; la lista no conoce al ViewModel.
             ListaLugares(
                 lugares = lugares,
                 seleccionado = seleccionado,
