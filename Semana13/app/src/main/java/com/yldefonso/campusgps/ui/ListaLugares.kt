@@ -37,6 +37,7 @@ import com.yldefonso.campusgps.util.formatearDistancia
 fun ListaLugares(
     lugares: List<LugarConDistancia>,
     seleccionado: Int?,
+    idsDentroDelRadio: Set<Int>,
     onClick: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -77,11 +78,25 @@ fun ListaLugares(
                     // weight(1f): el nombre/categoría ocupa el espacio y empuja la distancia a la derecha.
                     Column(modifier = Modifier.weight(1f)) {
                         Text(item.lugar.nombre, fontWeight = FontWeight.Bold)
-                        Text(
-                            item.lugar.categoria,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Text(
+                                item.lugar.categoria,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            // Si el lugar está dentro del radio seleccionado, muestra una etiqueta clara.
+                            if (idsDentroDelRadio.contains(item.lugar.id)) {
+                                Text(
+                                    "• Dentro del radio",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
                     }
 
                     // Si metros es null (aún no se busca la ubicación) muestra "Sin calcular".

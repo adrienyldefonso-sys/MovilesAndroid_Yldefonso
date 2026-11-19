@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -41,6 +42,15 @@ class MapaViewModel(
     // Id del lugar tocado en la lista (null = ninguno).
     private val _seleccionado = MutableStateFlow<Int?>(null)
     val seleccionado: StateFlow<Int?> = _seleccionado.asStateFlow()
+
+    // Radio de cercanía seleccionado (por defecto 200 metros).
+    private val _radioMetros = MutableStateFlow(200)
+    val radioMetros: StateFlow<Int> = _radioMetros.asStateFlow()
+
+    // Ids de los lugares dentro del radio, DERIVADO de lugares y radioMetros con combine/map/stateIn.
+    val idsDentroDelRadio: StateFlow<Set<Int>> = combine(_lugares, _radioMetros) { lista, radio ->
+        lista.filter { it.metros != null && it.metros <= radio }.map { it.lugar.id }.toSet()
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptySet())
 
     // Lugar más cercano, DERIVADO de _lugares (la lista ya viene ordenada). Null sin ubicación.
     val masCercano: StateFlow<Lugar?> = _lugares
@@ -80,6 +90,11 @@ class MapaViewModel(
     /** La View avisa qué lugar tocó el usuario (null = quitar la selección). */
     fun seleccionar(id: Int?) {
         _seleccionado.value = id
+    }
+
+    /** Cambia el radio de cercanía seleccionado por el usuario (100m, 200m, 500m). */
+    fun cambiarRadio(metros: Int) {
+        _radioMetros.value = metros
     }
 
     /** Crea la lista con la distancia de cada lugar, la ordena de menor a mayor y la publica. */

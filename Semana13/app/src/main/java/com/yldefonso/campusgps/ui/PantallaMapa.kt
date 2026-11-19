@@ -49,6 +49,8 @@ fun PantallaMapa(vm: MapaViewModel) {
     val lugares by vm.lugares.collectAsState()
     val seleccionado by vm.seleccionado.collectAsState()
     val masCercano by vm.masCercano.collectAsState()      // null hasta que haya ubicación
+    val radioMetros by vm.radioMetros.collectAsState()    // radio de cercanía (100m, 200m, 500m)
+    val idsDentroDelRadio by vm.idsDentroDelRadio.collectAsState() // ids de lugares dentro del radio
 
     // Context actual: lo necesitamos SOLO aquí en la View para consultar el permiso.
     val contexto = LocalContext.current
@@ -101,6 +103,7 @@ fun PantallaMapa(vm: MapaViewModel) {
                 lugares = lugares,
                 seleccionado = seleccionado,
                 masCercano = masCercano,
+                radioMetros = radioMetros,
                 modifier = Modifier.weight(1f).fillMaxWidth()
             )
 
@@ -108,6 +111,14 @@ fun PantallaMapa(vm: MapaViewModel) {
                 modifier = Modifier.fillMaxWidth().padding(8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                // Selector compacto de radio de cercanía y conteo de lugares.
+                SelectorRadio(
+                    radioActual = radioMetros,
+                    onRadioChange = { vm.cambiarRadio(it) },
+                    cantidadDentro = idsDentroDelRadio.size
+                )
+                Spacer(Modifier.height(4.dp))
+
                 Button(
                     onClick = { alPulsar() },                    // pasa por la verificación de permiso
                     enabled = estado !is UbicacionUi.Buscando   // deshabilitado mientras busca
@@ -155,6 +166,7 @@ fun PantallaMapa(vm: MapaViewModel) {
             ListaLugares(
                 lugares = lugares,
                 seleccionado = seleccionado,
+                idsDentroDelRadio = idsDentroDelRadio,
                 onClick = { id -> vm.seleccionar(id) },
                 modifier = Modifier.fillMaxWidth().height(220.dp)
             )

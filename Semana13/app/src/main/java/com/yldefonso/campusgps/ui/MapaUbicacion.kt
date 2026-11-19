@@ -1,5 +1,6 @@
 package com.yldefonso.campusgps.ui
 
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.key
@@ -8,6 +9,7 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.Circle
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.rememberCameraPositionState
@@ -30,6 +32,7 @@ fun MapaUbicacion(
     lugares: List<LugarConDistancia>,        // lista que llega ya lista desde el ViewModel
     seleccionado: Int?,                      // id del lugar tocado en la lista (null = ninguno)
     masCercano: Lugar?,                      // Paso 7: lugar más cercano (null si aún no hay ubicación)
+    radioMetros: Int,                        // Radio de cercanía elegido (100m, 200m, 500m)
     modifier: Modifier = Modifier
 ) {
     // Estado de la cámara: empieza en Lima (punto base) con zoom 12 (vista de ciudad).
@@ -65,6 +68,14 @@ fun MapaUbicacion(
             Marker(
                 state = rememberMarkerState(key = "$posicion", position = posicion),
                 title = "Estás aquí"
+            )
+            // Círculo de cercanía alrededor de la posición del usuario con el radio elegido.
+            Circle(
+                center = posicion,
+                radius = radioMetros.toDouble(),
+                fillColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                strokeColor = MaterialTheme.colorScheme.primary,
+                strokeWidth = 2f
             )
         }
 
