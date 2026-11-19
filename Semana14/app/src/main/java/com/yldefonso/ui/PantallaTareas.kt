@@ -67,6 +67,7 @@ fun PantallaTareas(vm: TareasViewModel) {
             TarjetaProgreso(vm)
             TarjetaPrimos(vm)
             TarjetaCargas(vm)
+            TarjetaComparacion(vm)
         }
     }
 }
@@ -279,6 +280,93 @@ private fun Tarjeta(titulo: String, contenido: @Composable () -> Unit) {
                 modifier = Modifier.fillMaxWidth()
             )
             contenido()
+        }
+    }
+}
+
+@Composable
+private fun TarjetaComparacion(vm: TareasViewModel) {
+    val comparacion by vm.comparacion.collectAsState()
+
+    if (comparacion.unaPorUna.isNotEmpty() || comparacion.aLaVez.isNotEmpty()) {
+        Tarjeta("Comparación de tiempos") {
+            val ultimosUna = comparacion.unaPorUna.takeLast(5)
+            val ultimosAlavez = comparacion.aLaVez.takeLast(5)
+            val maxFilas = maxOf(ultimosUna.size, ultimosAlavez.size)
+
+            val promUna = if (comparacion.unaPorUna.isNotEmpty()) comparacion.unaPorUna.average().toLong() else null
+            val promAlavez = if (comparacion.aLaVez.isNotEmpty()) comparacion.aLaVez.average().toLong() else null
+
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                // Cabecera
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = "Una por una",
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.weight(1f),
+                        textAlign = TextAlign.Center
+                    )
+                    Text(
+                        text = "A la vez",
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.weight(1f),
+                        textAlign = TextAlign.Center
+                    )
+                }
+
+                // Filas de intentos (últimos 5)
+                for (i in 0 until maxFilas) {
+                    val tUna = ultimosUna.getOrNull(i)?.let { "$it ms" } ?: "-"
+                    val tAlavez = ultimosAlavez.getOrNull(i)?.let { "$it ms" } ?: "-"
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        Text(
+                            text = tUna,
+                            modifier = Modifier.weight(1f),
+                            textAlign = TextAlign.Center
+                        )
+                        Text(
+                            text = tAlavez,
+                            modifier = Modifier.weight(1f),
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+
+                // Fila Promedio
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = promUna?.let { "Prom: $it ms" } ?: "Prom: -",
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.weight(1f),
+                        textAlign = TextAlign.Center
+                    )
+                    Text(
+                        text = promAlavez?.let { "Prom: $it ms" } ?: "Prom: -",
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.weight(1f),
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+
+            // Línea de ahorro
+            if (promUna != null && promAlavez != null) {
+                val ahorro = promUna - promAlavez
+                Text(
+                    text = "A la vez ahorra ≈ $ahorro ms en promedio",
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.Medium,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+
+            OutlinedButton(onClick = { vm.limpiarComparacion() }) {
+                Text("Limpiar")
+            }
         }
     }
 }

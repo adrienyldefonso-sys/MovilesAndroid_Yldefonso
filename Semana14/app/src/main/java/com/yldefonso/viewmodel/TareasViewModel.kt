@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.yldefonso.data.TareasRepository
 import com.yldefonso.model.CargaUi
+import com.yldefonso.model.ComparacionTiempos
 import com.yldefonso.model.PrimosUi
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -16,6 +17,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
@@ -24,7 +26,7 @@ import java.io.IOException
 class TareasViewModel(private val repo: TareasRepository) : ViewModel() {
 
     companion object {
-        private const val TIEMPO_MAXIMO_MS = 4000L
+        private const val TIEMPO_MAXIMO_MS = 6000L
     }
 
     // ----- Tarea con progreso (pasos 1 a 4)
@@ -106,6 +108,13 @@ class TareasViewModel(private val repo: TareasRepository) : ViewModel() {
     private val _carga = MutableStateFlow<CargaUi>(CargaUi.Inicial)
     val carga: StateFlow<CargaUi> = _carga.asStateFlow()
 
+    private val _comparacion = MutableStateFlow(ComparacionTiempos())
+    val comparacion: StateFlow<ComparacionTiempos> = _comparacion.asStateFlow()
+
+    fun limpiarComparacion() {
+        _comparacion.value = ComparacionTiempos()
+    }
+
     // Paso 7: interruptor para simular que los pedidos fallan
     private val _simularError = MutableStateFlow(false)
     val simularError: StateFlow<Boolean> = _simularError.asStateFlow()
@@ -155,6 +164,7 @@ class TareasViewModel(private val repo: TareasRepository) : ViewModel() {
                 }
                 val ms = System.currentTimeMillis() - inicio
                 _carga.value = CargaUi.Exito("Una por una", perfil, pedidosSize, ms)
+                _comparacion.update { it.copy(unaPorUna = it.unaPorUna + ms) }
             } catch (e: TimeoutCancellationException) {
                 _carga.value = CargaUi.Error("Tardó demasiado")
             } catch (e: CancellationException) {
@@ -182,6 +192,7 @@ class TareasViewModel(private val repo: TareasRepository) : ViewModel() {
                 }
                 val ms = System.currentTimeMillis() - inicio
                 _carga.value = CargaUi.Exito("A la vez", perfil, pedidosSize, ms)
+                _comparacion.update { it.copy(aLaVez = it.aLaVez + ms) }
             } catch (e: TimeoutCancellationException) {
                 _carga.value = CargaUi.Error("Tardó demasiado")
             } catch (e: CancellationException) {
