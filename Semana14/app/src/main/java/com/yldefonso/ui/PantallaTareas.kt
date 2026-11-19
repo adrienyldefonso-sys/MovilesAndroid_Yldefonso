@@ -1,6 +1,5 @@
 package com.yldefonso.ui
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -65,31 +64,28 @@ private fun TarjetaProgreso(vm: TareasViewModel) {
     var toques by remember { mutableIntStateOf(0) }
 
     Tarjeta("Tarea con progreso") {
-        // Paso 1: prueba de vida. Si deja de sumar, la pantalla está congelada
+        // Prueba de vida: si deja de sumar, la pantalla está congelada
         Button(onClick = { toques++ }) {
             Text("Tócame: $toques")
         }
-        // Paso 1: llama a la versión MAL (bloquea el hilo principal)
-        Button(onClick = { vm.tareaLargaMala() }) {
-            Text("Tarea larga (MAL)")
+        // Paso 2: ahora llama a tareaLarga() (corrutina, no bloquea)
+        Button(onClick = { vm.tareaLarga() }) {
+            Text("Tarea larga")
         }
         Text(mensaje)
 
         Surface(
-            color = MaterialTheme.colorScheme.errorContainer,
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.error),
+            color = MaterialTheme.colorScheme.primaryContainer,
             shape = MaterialTheme.shapes.small
         ) {
             Text(
-                text = "Lo que observas: durante 4 segundos nada responde y el texto «Trabajando...» no aparece",
-                color = MaterialTheme.colorScheme.error,
+                text = "Los toques siguen sumando mientras trabaja",
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
                 style = MaterialTheme.typography.bodySmall,
-                fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(8.dp)
             )
         }
-        // TODO Paso 2: botón «Tarea larga»
         // TODO Paso 3: LinearProgressIndicator y porcentaje
         // TODO Paso 4: botones Iniciar / Cancelar
     }
