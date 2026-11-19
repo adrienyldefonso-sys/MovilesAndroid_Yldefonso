@@ -10,9 +10,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -25,7 +25,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.yldefonso.viewmodel.TareasViewModel
 
@@ -61,6 +60,7 @@ fun PantallaTareas(vm: TareasViewModel) {
 @Composable
 private fun TarjetaProgreso(vm: TareasViewModel) {
     val mensaje by vm.mensaje.collectAsState()
+    val progreso by vm.progreso.collectAsState()
     var toques by remember { mutableIntStateOf(0) }
 
     Tarjeta("Tarea con progreso") {
@@ -68,25 +68,18 @@ private fun TarjetaProgreso(vm: TareasViewModel) {
         Button(onClick = { toques++ }) {
             Text("Tócame: $toques")
         }
-        // Paso 2: ahora llama a tareaLarga() (corrutina, no bloquea)
+        // Paso 3: el botón se llama Iniciar y llama a tareaLarga()
         Button(onClick = { vm.tareaLarga() }) {
-            Text("Tarea larga")
+            Text("Iniciar")
         }
+        // Paso 3: barra de progreso y porcentaje debajo
+        // (si marca error, usa progress = progreso en vez de la lambda)
+        LinearProgressIndicator(
+            progress = { progreso },
+            modifier = Modifier.fillMaxWidth()
+        )
+        Text("${(progreso * 100).toInt()} %")
         Text(mensaje)
-
-        Surface(
-            color = MaterialTheme.colorScheme.primaryContainer,
-            shape = MaterialTheme.shapes.small
-        ) {
-            Text(
-                text = "Los toques siguen sumando mientras trabaja",
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                style = MaterialTheme.typography.bodySmall,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(8.dp)
-            )
-        }
-        // TODO Paso 3: LinearProgressIndicator y porcentaje
         // TODO Paso 4: botones Iniciar / Cancelar
     }
 }
