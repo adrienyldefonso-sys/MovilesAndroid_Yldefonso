@@ -23,6 +23,7 @@ import kotlinx.coroutines.launch
 /**
  * [G] Guiado. Recibe SOLO interfaces (nunca un Context ni Composables).
  * Paso 5: distancias. Paso 6: selección. Paso 7: más cercano. Paso 8: errores con tipo.
+ * Fase 2: Radio de cercanía y Filtrado por categoría.
  */
 class MapaViewModel(
     private val ubicacionRepo: UbicacionRepository,
@@ -39,6 +40,18 @@ class MapaViewModel(
     )
     val lugares: StateFlow<List<LugarConDistancia>> = _lugares.asStateFlow()
 
+    // Categorías disponibles obtenidas directamente de los datos (sin escribir a mano en la vista).
+    val categoriasDisponibles: List<String> = lugaresRepo.obtenerLugares().map { it.categoria }.distinct()
+
+    // Categorías actualmente activas en el filtro (vacío = se muestran todos los lugares).
+    private val _categoriasActivas = MutableStateFlow<Set<String>>(emptySet())
+    val categoriasActivas: StateFlow<Set<String>> = _categoriasActivas.asStateFlow()
+
+    // Lista de lugares visible según el filtro de categorías, DERIVADA de _lugares y _categoriasActivas.
+    val lugaresVisibles: StateFlow<List<LugarConDistancia>> = combine(_lugares, _categoriasActivas) { lista, activas ->
+        if (activas.isEmpty()) lista else lista.filter { activas.contains(it.lugar.categoria) }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), _lugares.value)
+
     // Id del lugar tocado en la lista (null = ninguno).
     private val _seleccionado = MutableStateFlow<Int?>(null)
     val seleccionado: StateFlow<Int?> = _seleccionado.asStateFlow()
@@ -47,15 +60,27 @@ class MapaViewModel(
     private val _radioMetros = MutableStateFlow(200)
     val radioMetros: StateFlow<Int> = _radioMetros.asStateFlow()
 
-    // Ids de los lugares dentro del radio, DERIVADO de lugares y radioMetros con combine/map/stateIn.
-    val idsDentroDelRadio: StateFlow<Set<Int>> = combine(_lugares, _radioMetros) { lista, radio ->
+    // Ids de los lugares dentro del radio y visibles, DERIVADO de lugaresVisibles y radioMetros.
+    val idsDentroDelRadio: StateFlow<Set<Int>> = combine(lugaresVisibles, _radioMetros) { lista, radio ->
         lista.filter { it.metros != null && it.metros <= radio }.map { it.lugar.id }.toSet()
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptySet())
 
-    // Lugar más cercano, DERIVADO de _lugares (la lista ya viene ordenada). Null sin ubicación.
-    val masCercano: StateFlow<Lugar?> = _lugares
+    // Lugar más cercano, DERIVADO de lugaresVisibles (calculado SOBRE LOS LUGARES FILTRADOS).
+    val masCercano: StateFlow<Lugar?> = lugaresVisibles
         .map { lista -> lista.firstOrNull { it.metros != null }?.lugar }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    init {
+        // Si el lugar seleccionado queda oculto por el filtro de categorías, limpia la selección.
+        viewModelScope.launch {
+            lugaresVisibles.collect { visibles ->
+                val actual = _seleccionado.value
+                if (actual != null && visibles.none { it.lugar.id == actual }) {
+                    _seleccionado.value = null
+                }
+            }
+        }
+    }
 
     /** Se llama al pulsar "Obtener mi ubicación" (ya con permiso concedido). */
     fun buscar() {
@@ -95,6 +120,16 @@ class MapaViewModel(
     /** Cambia el radio de cercanía seleccionado por el usuario (100m, 200m, 500m). */
     fun cambiarRadio(metros: Int) {
         _radioMetros.value = metros
+    }
+
+    /** Alterna la activación de una categoría en el filtro de la vista. */
+    fun alternarCategoria(categoria: String) {
+        val actual = _categoriasActivas.value
+        _categoriasActivas.value = if (actual.contains(categoria)) {
+            actual - categoria
+        } else {
+            actual + categoria
+        }
     }
 
     /** Crea la lista con la distancia de cada lugar, la ordena de menor a mayor y la publica. */

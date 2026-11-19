@@ -39,6 +39,7 @@ import java.util.Locale
 /**
  * [G] Pantalla principal. Paso 8: los errores se muestran con MensajeError
  * (mensaje + botón según el tipo de error).
+ * Fase 2: Incluye selector de radio de cercanía y filtros por categoría.
  * La View SOLO dibuja según el estado y le avisa eventos al ViewModel.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -47,10 +48,12 @@ fun PantallaMapa(vm: MapaViewModel) {
     // collectAsState: cada vez que un estado cambia, Compose redibuja lo que lo usa.
     val estado by vm.estado.collectAsState()
     val lugares by vm.lugares.collectAsState()
+    val lugaresVisibles by vm.lugaresVisibles.collectAsState()
     val seleccionado by vm.seleccionado.collectAsState()
     val masCercano by vm.masCercano.collectAsState()      // null hasta que haya ubicación
     val radioMetros by vm.radioMetros.collectAsState()    // radio de cercanía (100m, 200m, 500m)
-    val idsDentroDelRadio by vm.idsDentroDelRadio.collectAsState() // ids de lugares dentro del radio
+    val idsDentroDelRadio by vm.idsDentroDelRadio.collectAsState() // ids de lugares dentro del radio y visibles
+    val categoriasActivas by vm.categoriasActivas.collectAsState() // categorías seleccionadas en el filtro
 
     // Context actual: lo necesitamos SOLO aquí en la View para consultar el permiso.
     val contexto = LocalContext.current
@@ -98,9 +101,10 @@ fun PantallaMapa(vm: MapaViewModel) {
         Column(modifier = Modifier.fillMaxSize().padding(padding)) {
 
             // weight(1f): el mapa ocupa TODO el espacio que sobra; lo de abajo mantiene su tamaño.
+            // Recibe lugaresVisibles para mostrar solo los marcadores de las categorías filtradas.
             MapaUbicacion(
                 estado = estado,
-                lugares = lugares,
+                lugares = lugaresVisibles,
                 seleccionado = seleccionado,
                 masCercano = masCercano,
                 radioMetros = radioMetros,
@@ -111,7 +115,15 @@ fun PantallaMapa(vm: MapaViewModel) {
                 modifier = Modifier.fillMaxWidth().padding(8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Selector compacto de radio de cercanía y conteo de lugares.
+                // Fila de chips compactos con scroll horizontal para filtrar por categoría.
+                FiltroCategorias(
+                    categorias = vm.categoriasDisponibles,
+                    categoriasActivas = categoriasActivas,
+                    onToggleCategoria = { vm.alternarCategoria(it) }
+                )
+                Spacer(Modifier.height(2.dp))
+
+                // Selector compacto de radio de cercanía y conteo de lugares visibles.
                 SelectorRadio(
                     radioActual = radioMetros,
                     onRadioChange = { vm.cambiarRadio(it) },
@@ -130,7 +142,7 @@ fun PantallaMapa(vm: MapaViewModel) {
                     enabled = masCercano != null
                 ) { Text("Ir al más cercano") }
 
-                // "Más cercano: nombre (distancia)". La distancia ya viene calculada; aquí solo se formatea.
+                // "Más cercano: nombre (distancia)". Calculado sobre los lugares visibles.
                 masCercano?.let { cercano ->
                     val metros = lugares.firstOrNull { it.lugar.id == cercano.id }?.metros
                     Text(
@@ -162,9 +174,9 @@ fun PantallaMapa(vm: MapaViewModel) {
                 }
             }
 
-            // Lista con altura FIJA (220.dp): así el mapa conserva el resto del espacio.
+            // Lista con altura FIJA (220.dp): muestra solo los lugares visibles según el filtro de categorías.
             ListaLugares(
-                lugares = lugares,
+                lugares = lugaresVisibles,
                 seleccionado = seleccionado,
                 idsDentroDelRadio = idsDentroDelRadio,
                 onClick = { id -> vm.seleccionar(id) },
