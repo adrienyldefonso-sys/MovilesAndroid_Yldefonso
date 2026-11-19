@@ -45,7 +45,7 @@ import java.util.Locale
 /**
  * [G] Pantalla principal. Paso 8: los errores se muestran con MensajeError
  * (mensaje + botón según el tipo de error).
- * Fase 2: Incluye selector de radio de cercanía, filtros por categoría y punto azul nativo.
+ * Fase 2: Incluye selector de radio, filtros por categoría, punto azul nativo y acción "Cómo llegar a pie".
  * La View SOLO dibuja según el estado y le avisa eventos al ViewModel.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -210,12 +210,13 @@ fun PantallaMapa(vm: MapaViewModel) {
                 }
             }
 
-            // Lista con altura FIJA (220.dp): muestra solo los lugares visibles según el filtro de categorías.
+            // Lista con altura FIJA (220.dp): muestra solo los lugares visibles y permite abrir ruta a pie.
             ListaLugares(
                 lugares = lugaresVisibles,
                 seleccionado = seleccionado,
                 idsDentroDelRadio = idsDentroDelRadio,
                 onClick = { id -> vm.seleccionar(id) },
+                onComoLlegar = { lugar -> abrirRutaAPie(contexto, lugar) },
                 modifier = Modifier.fillMaxWidth().height(220.dp)
             )
         }

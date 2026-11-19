@@ -1,6 +1,7 @@
 package com.yldefonso.campusgps.util
 
 import java.util.Locale
+import kotlin.math.ceil
 import kotlin.math.roundToInt
 
 /**
@@ -15,3 +16,12 @@ fun formatearDistancia(metros: Float): String =
         // Locale.US garantiza punto decimal (1.5) aunque el celular esté en español.
         String.format(Locale.US, "%.1f km", metros / 1000f)
     }
+
+/**
+ * Calcula el tiempo estimado a pie a razón de 80 metros por minuto.
+ * Redondea hacia arriba y asegura un mínimo de 1 minuto.
+ */
+fun formatearTiempoAPie(metros: Float): String {
+    val minutos = maxOf(1, ceil(metros / 80f).toInt())
+    return "~$minutos min a pie"
+}

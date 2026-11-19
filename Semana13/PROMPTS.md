@@ -5,6 +5,7 @@
 | #1 | Radio de cercanía | Estoy en la Fase 2 de un laboratorio de Android. El proyecto es CampusGPS (Kotlin, Jetpack Compose, Material 3, paquete com.yldefonso.campusgps, patrón MVVM + Repository). Quiero agregar la mejora "Radio de cercanía" SIN romper la arquitectura... [selector 100m/200m/500m, círculo en mapa, marca en lista, texto de conteo, ViewModel con combine y StateFlow, sin cambiar comportamiento anterior ni añadir dependencias]. | Gemini creó el composable `ui/SelectorRadio.kt` con un selector compacto (`SingleChoiceSegmentedButtonRow`), actualizó `MapaViewModel.kt` añadiendo `radioMetros` y `idsDentroDelRadio` (derivado con `combine`), dibujó el `Circle` en `MapaUbicacion.kt`, marcó los lugares dentro del radio en `ListaLugares.kt`, e integró todo en `PantallaMapa.kt`. | (completar por el estudiante tras revisar el código) | (completar por el estudiante tras revisar el código) |
 | #2 | Filtrar por categoría | Seguimos en la Fase 2 de CampusGPS. Ya existe la mejora 1 (Radio de cercanía). Ahora quiero la mejora 2: "Filtrar por categoría", SIN romper la arquitectura ni la mejora 1... [fila de chips FilterChip con scroll horizontal LazyRow, selección múltiple, obtención de categorías desde los datos, cálculo de lugar más cercano y contador dentro del radio sobre lugares visibles, limpieza de selección si el lugar oculto es seleccionado, StateFlow derivado lugaresVisibles con combine, sin nuevas dependencias]. | Gemini creó el composable `ui/SelectorFiltro.kt` / `ui/FiltroCategorias.kt` con `LazyRow` y `FilterChip`, actualizó `MapaViewModel.kt` con `categoriasActivas`, `lugaresDisponibles`, y el StateFlow derivado `lugaresVisibles` (con `combine`), y ajustó `PantallaMapa.kt` pasando `lugaresVisibles` a `MapaUbicacion` y `ListaLugares`. | (completar por el estudiante tras revisar el código) | (completar por el estudiante tras revisar el código) |
 | #3 | Punto azul nativo | Seguimos en la Fase 2 de CampusGPS. Ya existen la mejora 1 (Radio de cercanía) y la mejora 2 (Filtrar por categoría). Ahora quiero la mejora 3: "Punto azul nativo", SIN romper las anteriores ni la arquitectura... [activar isMyLocationEnabled y myLocationButtonEnabled solo si hay permiso de ubicación FINE o COARSE, evitar SecurityException si no hay permiso, actualizar dinámicamente al conceder permiso desde el lanzador o al reanudar la app con LifecycleEventObserver en ON_RESUME, mantener elementos existentes sin modificar ViewModel ni repositorios, usar MapProperties y MapUiSettings con remember]. | Gemini actualizó `PantallaMapa.kt` añadiendo verificación de permisos con `ContextCompat.checkSelfPermission` y observación del ciclo de vida con `DisposableEffect` (ON_RESUME), y actualizó `MapaUbicacion.kt` aceptando `permisoUbicacion: Boolean` y configurando `MapProperties(isMyLocationEnabled = ...)` y `MapUiSettings(myLocationButtonEnabled = ...)`. | (completar por el estudiante tras revisar el código) | (completar por el estudiante tras revisar el código) |
+| #4 | Cómo llegar a pie (extra, fuera de la guía) | Seguimos con CampusGPS. Ya existen las mejoras 1, 2 y 3. Quiero una mejora EXTRA, fuera de la guía, para que la app sea más profesional: "Cómo llegar a pie"... [tiempo estimado a pie en cada tarjeta con metros != null a 80m/min redondeando hacia arriba mín 1 min, botón "Cómo llegar" en la tarjeta seleccionada cuando hay metros != null que abre Google Maps con Intent ACTION_VIEW y URI de direcciones a pie, manejo de ActivityNotFoundException con Toast, función pura formatearTiempoAPie en util/Formato.kt, función abrirRutaAPie en ui/AbrirRuta.kt con Context, callback onComoLlegar en ListaLugares, sin modificar ViewModel ni añadir dependencias]. | Gemini añadió la función pura `formatearTiempoAPie` en `util/Formato.kt`, creó `ui/AbrirRuta.kt` con `abrirRutaAPie` (manejando Intent y Toast), actualizó `ListaLugares.kt` mostrando el tiempo estimado a pie en las tarjetas y el botón "Cómo llegar" en la tarjeta seleccionada mediante `onComoLlegar`, e integró el llamado en `PantallaMapa.kt`. | (completar por el estudiante tras revisar el código) | (completar por el estudiante tras revisar el código) |
 
 ## Detalle de la mejora #1
 
@@ -91,3 +92,31 @@ Activar el punto azul nativo de Google Maps y el botón de "mi ubicación" respe
 2. Pulsar "Obtener mi ubicación" y aceptar los permisos en el diálogo del sistema.
 3. Comprobar que el punto azul nativo de Google Maps y el botón de ubicación aparecen inmediatamente en el mapa, conviviendo con el marcador rojo "Estás aquí", el círculo de radio y los marcadores de lugares.
 4. Ir a los Ajustes del dispositivo, revocar el permiso de ubicación y volver a la app: verificar que el punto azul se desactiva de forma dinámica gracias al observador de ciclo de vida (`ON_RESUME`).
+
+## Detalle de la mejora #4
+
+### Qué se pidió
+Agregar la funcionalidad extra "Cómo llegar a pie":
+1. Mostrar el tiempo estimado a pie en cada tarjeta de la lista junto a la distancia (ej. `"~2 min a pie"`), calculado a 80 metros por minuto (redondeando hacia arriba, mínimo 1 minuto). Si `metros` es null, no se muestra.
+2. Añadir un botón de texto `"Cómo llegar"` en la tarjeta SELECCIONADA cuando ya hay distancia calculada (`metros != null`), que abre la ruta a pie hacia ese lugar en Google Maps o navegador mediante un `Intent ACTION_VIEW` con URI de Google Maps directions (`travelmode=walking`).
+3. Envolver `startActivity` en `try/catch (ActivityNotFoundException)` para mostrar un Toast corto `"No se pudo abrir la ruta"` si falla, sin requerir `<queries>` en el Manifest.
+4. Respetar la arquitectura estricta: ViewModel intacto, función pura `formatearTiempoAPie` en `util/Formato.kt`, función `abrirRutaAPie` con `Context` en `ui/AbrirRuta.kt`, y lambda `onComoLlegar` en `ListaLugares`.
+
+### Archivos modificados y creados
+- **Creado:**
+  - `ui/AbrirRuta.kt`: Función utilitaria para construir el Intent de Google Maps Directions y abrirlo de manera segura con manejo de excepciones y Toast.
+- **Modificados:**
+  - `util/Formato.kt`: Adición de la función pura `formatearTiempoAPie(Float): String`.
+  - `ui/ListaLugares.kt`: Inclusión del tiempo estimado a pie junto a la distancia en cada tarjeta y del botón `"Cómo llegar"` en la tarjeta seleccionada mediante el callback `onComoLlegar`.
+  - `ui/PantallaMapa.kt`: Conexión de `ListaLugares` con `abrirRutaAPie(contexto, lugar)`.
+
+### Cómo funciona el flujo
+1. **Cálculo:** Una vez obtenida la ubicación, cada lugar calcula su distancia en metros. La función pura `formatearTiempoAPie` traduce dichos metros a tiempo estimado a pie (`~N min a pie`).
+2. **Visualización:** `ListaLugares` muestra la distancia y el tiempo a pie en cada tarjeta. Si el usuario selecciona un lugar y ya hay distancia, aparece el botón `"Cómo llegar"`.
+3. **Acción:** Al pulsar `"Cómo llegar"`, la tarjeta avisa a `PantallaMapa` mediante la lambda `onComoLlegar`. `PantallaMapa` ejecuta `abrirRutaAPie`, la cual genera el Intent con la URI de Google Maps (`travelmode=walking`) y lanza la actividad para mostrar la ruta a pie.
+
+### Cómo probarlo
+1. Ejecutar la app y pulsar "Obtener mi ubicación".
+2. Observar que en cada tarjeta de la lista, junto a la distancia en metros o kilómetros, aparece el tiempo estimado a pie (ej. `~2 min a pie`).
+3. Tocar cualquier lugar para seleccionarlo: verificar que aparece el botón de texto `"Cómo llegar"` en la parte inferior de su tarjeta.
+4. Pulsar `"Cómo llegar"` y comprobar que se abre Google Maps (o el navegador) trazando la ruta a pie hacia el destino seleccionado.

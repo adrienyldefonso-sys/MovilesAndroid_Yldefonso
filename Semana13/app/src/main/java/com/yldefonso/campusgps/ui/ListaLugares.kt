@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -19,19 +20,23 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.yldefonso.campusgps.model.Lugar
 import com.yldefonso.campusgps.model.LugarConDistancia
 import com.yldefonso.campusgps.util.formatearDistancia
+import com.yldefonso.campusgps.util.formatearTiempoAPie
 
 /**
  * [A] Lista de lugares del campus (Paso 6).
- * No conoce el ViewModel: recibe la lista, el id seleccionado y un onClick(id).
- * Solo DIBUJA; la distancia ya viene calculada en cada LugarConDistancia.
+ * No conoce el ViewModel: recibe la lista, el id seleccionado, ids dentro del radio, un onClick(id) y onComoLlegar(lugar).
+ * Añade la funcionalidad extra "Cómo llegar a pie" en la tarjeta seleccionada.
+ * Solo DIBUJA; la distancia y el tiempo ya vienen calculados.
  */
 @Composable
 fun ListaLugares(
@@ -39,6 +44,7 @@ fun ListaLugares(
     seleccionado: Int?,
     idsDentroDelRadio: Set<Int>,
     onClick: (Int) -> Unit,
+    onComoLlegar: (Lugar) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     // LazyColumn: solo compone las tarjetas visibles (eficiente y con scroll automático).
@@ -63,48 +69,75 @@ fun ListaLugares(
                 ),
                 border = if (esSeleccionado) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null
             ) {
-                Row(
-                    modifier = Modifier.padding(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // Punto de color (azul como los marcadores; el Paso 7 lo pondrá verde en el más cercano).
-                    Box(
-                        modifier = Modifier
-                            .size(10.dp)
-                            .background(Color(0xFF1E88E5), CircleShape)
-                    )
-                    Spacer(Modifier.width(10.dp))
+                Column(modifier = Modifier.padding(12.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Punto de color (azul como los marcadores; el más cercano se resalta en el mapa).
+                        Box(
+                            modifier = Modifier
+                                .size(10.dp)
+                                .background(Color(0xFF1E88E5), CircleShape)
+                        )
+                        Spacer(Modifier.width(10.dp))
 
-                    // weight(1f): el nombre/categoría ocupa el espacio y empuja la distancia a la derecha.
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(item.lugar.nombre, fontWeight = FontWeight.Bold)
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            Text(
-                                item.lugar.categoria,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            // Si el lugar está dentro del radio seleccionado, muestra una etiqueta clara.
-                            if (idsDentroDelRadio.contains(item.lugar.id)) {
+                        // weight(1f): el nombre/categoría ocupa el espacio y empuja la distancia a la derecha.
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(item.lugar.nombre, fontWeight = FontWeight.Bold)
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
                                 Text(
-                                    "• Dentro del radio",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.primary,
-                                    fontWeight = FontWeight.Bold
+                                    item.lugar.categoria,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                // Si el lugar está dentro del radio seleccionado, muestra una etiqueta clara.
+                                if (idsDentroDelRadio.contains(item.lugar.id)) {
+                                    Text(
+                                        "• Dentro del radio",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+                        }
+
+                        // Distancia y tiempo estimado a pie (si la ubicación ya fue obtenida).
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text(
+                                text = item.metros?.let { formatearDistancia(it) } ?: "Sin calcular",
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            if (item.metros != null) {
+                                Text(
+                                    text = formatearTiempoAPie(item.metros),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
                     }
 
-                    // Si metros es null (aún no se busca la ubicación) muestra "Sin calcular".
-                    Text(
-                        text = item.metros?.let { formatearDistancia(it) } ?: "Sin calcular",
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                    // Botón "Cómo llegar": solo aparece en la tarjeta SELECCIONADA cuando ya hay distancia calculada.
+                    if (esSeleccionado && item.metros != null) {
+                        Spacer(Modifier.height(6.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.End
+                        ) {
+                            TextButton(
+                                onClick = { onComoLlegar(item.lugar) },
+                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
+                            ) {
+                                Text("Cómo llegar")
+                            }
+                        }
+                    }
                 }
             }
         }
