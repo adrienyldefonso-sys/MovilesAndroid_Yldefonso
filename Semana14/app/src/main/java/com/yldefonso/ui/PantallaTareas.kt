@@ -11,6 +11,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -34,6 +35,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.yldefonso.model.CargaUi
 import com.yldefonso.model.PrimosUi
 import com.yldefonso.ui.theme.VerdeExito
 import com.yldefonso.ui.theme.VerdeExitoTexto
@@ -116,7 +118,7 @@ private fun TarjetaPrimos(vm: TareasViewModel) {
     val calculando = primos is PrimosUi.Calculando
 
     Tarjeta("Contar números primos") {
-        // Paso 5: solo acepta dígitos (máx. 9 para no desbordar Int)
+        // Solo acepta dígitos (máx. 9 para no desbordar Int)
         OutlinedTextField(
             value = texto,
             onValueChange = { nuevo -> texto = nuevo.filter { it.isDigit() }.take(9) },
@@ -149,27 +151,18 @@ private fun TarjetaPrimos(vm: TareasViewModel) {
             is PrimosUi.Inicial -> Unit
             is PrimosUi.Calculando -> Text("Calculando...")
             is PrimosUi.Cancelado -> Text("Cancelado")
-            is PrimosUi.Listo -> Surface(
-                color = VerdeExito,
-                shape = MaterialTheme.shapes.small,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(
-                    modifier = Modifier.padding(12.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = "Primos hasta $calculado: ${estado.cantidad}",
-                        color = VerdeExitoTexto,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center
-                    )
-                    Text(
-                        text = "Tiempo: ${estado.milisegundos} ms",
-                        color = VerdeExitoTexto,
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
+            is PrimosUi.Listo -> CuadroVerde {
+                Text(
+                    text = "Primos hasta $calculado: ${estado.cantidad}",
+                    color = VerdeExitoTexto,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center
+                )
+                Text(
+                    text = "Tiempo: ${estado.milisegundos} ms",
+                    color = VerdeExitoTexto,
+                    style = MaterialTheme.typography.bodySmall
+                )
             }
         }
     }
@@ -177,9 +170,64 @@ private fun TarjetaPrimos(vm: TareasViewModel) {
 
 @Composable
 private fun TarjetaCargas(vm: TareasViewModel) {
+    val carga by vm.carga.collectAsState()
+    val cargando = carga is CargaUi.Cargando
+
     Tarjeta("Dos cargas") {
-        // TODO Paso 6: botones «Una por una» / «A la vez» y resultado
-        // TODO Paso 7: Switch «Simular error» y botón Reintentar
+        // Paso 6: los botones se deshabilitan mientras carga (evita una segunda carga)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedButton(
+                onClick = { vm.cargarUnaPorUna() },
+                enabled = !cargando
+            ) {
+                Text("Una por una")
+            }
+            Button(
+                onClick = { vm.cargarALaVez() },
+                enabled = !cargando
+            ) {
+                Text("A la vez")
+            }
+        }
+        when (val estado = carga) {
+            is CargaUi.Inicial -> Unit
+            is CargaUi.Cargando -> CircularProgressIndicator()
+            is CargaUi.Exito -> CuadroVerde {
+                val estilo = MaterialTheme.typography.bodySmall
+                Text(
+                    "Modo: ${estado.modo}",
+                    color = VerdeExitoTexto,
+                    fontWeight = FontWeight.Bold
+                )
+                Text("Perfil: ${estado.perfil}", color = VerdeExitoTexto, style = estilo)
+                Text("Pedidos: ${estado.pedidos}", color = VerdeExitoTexto, style = estilo)
+                Text("Tiempo: ${estado.milisegundos} ms", color = VerdeExitoTexto, style = estilo)
+            }
+            // TODO Paso 7: recuadro de error con botón Reintentar
+            is CargaUi.Error -> Text(estado.mensaje)
+        }
+        Text(
+            text = "«Una por una» tarda ≈ 5000 ms",
+            style = MaterialTheme.typography.bodySmall
+        )
+        // TODO Paso 7: Switch «Simular error»
+    }
+}
+
+// Recuadro verde reutilizable para los resultados
+@Composable
+private fun CuadroVerde(contenido: @Composable () -> Unit) {
+    Surface(
+        color = VerdeExito,
+        shape = MaterialTheme.shapes.small,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier.padding(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            contenido()
+        }
     }
 }
 
