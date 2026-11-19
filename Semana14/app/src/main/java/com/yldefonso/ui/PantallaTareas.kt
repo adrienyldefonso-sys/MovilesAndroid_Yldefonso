@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -14,7 +15,9 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -22,12 +25,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.yldefonso.model.PrimosUi
+import com.yldefonso.ui.theme.VerdeExito
+import com.yldefonso.ui.theme.VerdeExitoTexto
 import com.yldefonso.viewmodel.TareasViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -71,7 +80,7 @@ private fun TarjetaProgreso(vm: TareasViewModel) {
         Button(onClick = { toques++ }) {
             Text("Tócame: $toques")
         }
-        // Paso 4: Iniciar se deshabilita mientras corre; Cancelar solo mientras corre
+        // Iniciar se deshabilita mientras corre; Cancelar solo mientras corre
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Button(
                 onClick = { vm.tareaLarga() },
@@ -98,8 +107,71 @@ private fun TarjetaProgreso(vm: TareasViewModel) {
 
 @Composable
 private fun TarjetaPrimos(vm: TareasViewModel) {
+    val primos by vm.primos.collectAsState()
+    var texto by remember { mutableStateOf("500000") }
+    var calculado by remember { mutableIntStateOf(0) } // N usado en el último cálculo
+
+    val numero = texto.toIntOrNull()
+    val valido = numero != null && numero >= 2
+    val calculando = primos is PrimosUi.Calculando
+
     Tarjeta("Contar números primos") {
-        // TODO Paso 5: OutlinedTextField, botones Contar / Cancelar y resultado
+        // Paso 5: solo acepta dígitos (máx. 9 para no desbordar Int)
+        OutlinedTextField(
+            value = texto,
+            onValueChange = { nuevo -> texto = nuevo.filter { it.isDigit() }.take(9) },
+            label = { Text("Hasta el número") },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth()
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Button(
+                onClick = {
+                    // Ignora textos no numéricos o menores que 2
+                    if (valido) {
+                        calculado = numero!!
+                        vm.contar(numero)
+                    }
+                },
+                enabled = valido && !calculando
+            ) {
+                Text("Contar")
+            }
+            OutlinedButton(
+                onClick = { vm.cancelarPrimos() },
+                enabled = calculando
+            ) {
+                Text("Cancelar")
+            }
+        }
+        when (val estado = primos) {
+            is PrimosUi.Inicial -> Unit
+            is PrimosUi.Calculando -> Text("Calculando...")
+            is PrimosUi.Cancelado -> Text("Cancelado")
+            is PrimosUi.Listo -> Surface(
+                color = VerdeExito,
+                shape = MaterialTheme.shapes.small,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier.padding(12.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Primos hasta $calculado: ${estado.cantidad}",
+                        color = VerdeExitoTexto,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center
+                    )
+                    Text(
+                        text = "Tiempo: ${estado.milisegundos} ms",
+                        color = VerdeExitoTexto,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            }
+        }
     }
 }
 
