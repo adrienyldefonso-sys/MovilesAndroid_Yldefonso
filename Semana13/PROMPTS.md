@@ -6,6 +6,7 @@
 | #2 | Filtrar por categoría | Seguimos en la Fase 2 de CampusGPS. Ya existe la mejora 1 (Radio de cercanía). Ahora quiero la mejora 2: "Filtrar por categoría", SIN romper la arquitectura ni la mejora 1... [fila de chips FilterChip con scroll horizontal LazyRow, selección múltiple, obtención de categorías desde los datos, cálculo de lugar más cercano y contador dentro del radio sobre lugares visibles, limpieza de selección si el lugar oculto es seleccionado, StateFlow derivado lugaresVisibles con combine, sin nuevas dependencias]. | Gemini creó el composable `ui/SelectorFiltro.kt` / `ui/FiltroCategorias.kt` con `LazyRow` y `FilterChip`, actualizó `MapaViewModel.kt` con `categoriasActivas`, `lugaresDisponibles`, y el StateFlow derivado `lugaresVisibles` (con `combine`), y ajustó `PantallaMapa.kt` pasando `lugaresVisibles` a `MapaUbicacion` y `ListaLugares`. | (completar por el estudiante tras revisar el código) | (completar por el estudiante tras revisar el código) |
 | #3 | Punto azul nativo | Seguimos en la Fase 2 de CampusGPS. Ya existen la mejora 1 (Radio de cercanía) y la mejora 2 (Filtrar por categoría). Ahora quiero la mejora 3: "Punto azul nativo", SIN romper las anteriores ni la arquitectura... [activar isMyLocationEnabled y myLocationButtonEnabled solo si hay permiso de ubicación FINE o COARSE, evitar SecurityException si no hay permiso, actualizar dinámicamente al conceder permiso desde el lanzador o al reanudar la app con LifecycleEventObserver en ON_RESUME, mantener elementos existentes sin modificar ViewModel ni repositorios, usar MapProperties y MapUiSettings con remember]. | Gemini actualizó `PantallaMapa.kt` añadiendo verificación de permisos con `ContextCompat.checkSelfPermission` y observación del ciclo de vida con `DisposableEffect` (ON_RESUME), y actualizó `MapaUbicacion.kt` aceptando `permisoUbicacion: Boolean` y configurando `MapProperties(isMyLocationEnabled = ...)` y `MapUiSettings(myLocationButtonEnabled = ...)`. | (completar por el estudiante tras revisar el código) | (completar por el estudiante tras revisar el código) |
 | #4 | Cómo llegar a pie (extra, fuera de la guía) | Seguimos con CampusGPS. Ya existen las mejoras 1, 2 y 3. Quiero una mejora EXTRA, fuera de la guía, para que la app sea más profesional: "Cómo llegar a pie"... [tiempo estimado a pie en cada tarjeta con metros != null a 80m/min redondeando hacia arriba mín 1 min, botón "Cómo llegar" en la tarjeta seleccionada cuando hay metros != null que abre Google Maps con Intent ACTION_VIEW y URI de direcciones a pie, manejo de ActivityNotFoundException con Toast, función pura formatearTiempoAPie en util/Formato.kt, función abrirRutaAPie en ui/AbrirRuta.kt con Context, callback onComoLlegar en ListaLugares, sin modificar ViewModel ni añadir dependencias]. | Gemini añadió la función pura `formatearTiempoAPie` en `util/Formato.kt`, creó `ui/AbrirRuta.kt` con `abrirRutaAPie` (manejando Intent y Toast), actualizó `ListaLugares.kt` mostrando el tiempo estimado a pie en las tarjetas y el botón "Cómo llegar" en la tarjeta seleccionada mediante `onComoLlegar`, e integró el llamado en `PantallaMapa.kt`. | (completar por el estudiante tras revisar el código) | (completar por el estudiante tras revisar el código) |
+| #5 | Rediseño UI Profesional con Componentes Reutilizables y Tokens (Material 3) | Realizar un refactor exclusivo de la interfaz, extrayendo componentes reutilizables sin estado y mejorando considerablemente el diseño visual inspirándose en aplicaciones reales de navegación universitaria... [creación de ui/components/ con TarjetaLugar, InsigniaInfo, BotonPrincipal, BotonSecundario, TituloSeccion; tokens en ui/theme/Dimens.kt; paleta en Color.kt y Theme.kt (#6547F5); strings en strings.xml; iconos profesionales sin emojis/estrellas/corazones; BottomSheetScaffold para mapa protagonista al 60%; state hoisting estricto; arquitectura MVVM intacta]. | Gemini implementó el refactor visual completo creando la carpeta `ui/components/` (`TarjetaLugar`, `InsigniaInfo`, `Botones`, `TituloSeccion`) y `ui/theme/Dimens.kt`, actualizó `Color.kt` y `Theme.kt` con la paleta moderna (#6547F5), centralizó textos en `strings.xml`, integró iconos profesionales por categoría mediante `obtenerIconoCategoria`, estructuró el mapa como protagonista (60%) con un panel inferior deslizable (`BottomSheetScaffold`), y aseguró el cumplimiento de *state hoisting* y accesibilidad. | (completar por el estudiante tras revisar el código) | (completar por el estudiante tras revisar el código) |
 
 ## Detalle de la mejora #1
 
@@ -120,3 +121,40 @@ Agregar la funcionalidad extra "Cómo llegar a pie":
 2. Observar que en cada tarjeta de la lista, junto a la distancia en metros o kilómetros, aparece el tiempo estimado a pie (ej. `~2 min a pie`).
 3. Tocar cualquier lugar para seleccionarlo: verificar que aparece el botón de texto `"Cómo llegar"` en la parte inferior de su tarjeta.
 4. Pulsar `"Cómo llegar"` y comprobar que se abre Google Maps (o el navegador) trazando la ruta a pie hacia el destino seleccionado.
+
+## Detalle de la mejora #5
+
+### Qué se pidió
+Refactor de UI con componentes reutilizables y tokens de diseño:
+1. Crear la carpeta `ui/components/` con componentes sin estado (state hoisting): `TarjetaLugar`, `InsigniaInfo`, `BotonPrincipal`, `BotonSecundario` y `TituloSeccion`.
+2. Crear tokens de diseño en `ui/theme/Dimens.kt` (`object Dimens`) y colores semánticos en `Color.kt` / formas en `Theme.kt`, eliminando valores hardcoded o `Color(0xFF...)` directos en los composables.
+3. Mover todos los textos visibles a `res/values/strings.xml` usando `stringResource` y placeholders (`%1$s`, `%2$d`).
+4. Mejorar accesibilidad (`contentDescription` en elementos informativos y áreas táctiles mínimas de 48dp en botones y chips).
+5. Añadir `@Preview` (con `showBackground = true`) a cada componente nuevo de `ui/components/` con datos de ejemplo.
+6. Mantener inalterados la arquitectura MVVM, el ViewModel, los repositorios y el comportamiento funcional general.
+
+### Archivos modificados y creados
+- **Creados:**
+  - `ui/components/InsigniaInfo.kt`: Insignia reutilizable con texto y color personalizable + Preview.
+  - `ui/components/TarjetaLugar.kt`: Tarjeta reutilizable con datos del lugar, tiempos, insignias y botón de ruta + Preview.
+  - `ui/components/Botones.kt`: Componentes `BototonPrincipal` y `BotonSecundario` accesibles (min 48dp) + Previews.
+  - `ui/components/TituloSeccion.kt`: Título en negrita para encabezados + Preview.
+  - `ui/theme/Dimens.kt`: Objeto con constantes de dimensiones y espaciados.
+- **Modificados:**
+  - `ui/theme/Color.kt`: Inclusión de colores semánticos y paleta profesional (`#6547F5`).
+  - `ui/theme/Theme.kt`: Configuración de `shapes = AppShapes` en `MaterialTheme`.
+  - `res/values/strings.xml`: Centralización de todas las cadenas de texto visibles.
+  - `ui/ListaLugares.kt`: Refactorizado para usar `TarjetaLugar`.
+  - `ui/PantallaMapa.kt`: Refactorizado con mapa protagonista (60%) y panel inferior deslizable (`BottomSheetScaffold`), utilizando los componentes reutilizables.
+  - `ui/SelectorRadio.kt`, `ui/FiltroCategorias.kt`, `ui/MensajeError.kt`: Refactorizados con tokens de diseño, iconos profesionales, accesibilidad y `stringResource`.
+
+### Componentes extraídos y responsabilidad
+- **`TarjetaLugar`**: Renderiza cada lugar en formato compacto (64-76 dp) con icono en contenedor pastel de 42 dp, nombre, categoría, distancia con pin, tiempo a pie, insignia de radio y botón de ruta (State Hoisting).
+- **`InsigniaInfo`**: Etiqueta compacta para estados (Dentro del radio) con color e icono opcional.
+- **`BototonPrincipal` / `BotonSecundario`**: Botones accesibles de altura mínima 48 dp con soporte para iconos de Material Design 3.
+- **`TituloSeccion`**: Encabezados de sección tipográficos con icono opcional.
+
+### Cómo ejecutar y probar
+1. Compilar y ejecutar la aplicación en el emulador o dispositivo.
+2. Deslizar o interactuar con el panel inferior deslizable (*BottomSheet*) para alternar entre la vista del mapa protagonista (60%) y la lista completa de lugares.
+3. Verificar que los iconos vectoriales por categoría, chips, selector de radio sin texto redundante y tarjetas compactas funcionen correctamente junto a la navegación de rutas a pie.

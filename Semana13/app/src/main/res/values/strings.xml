@@ -1,3 +1,21 @@
 <resources>
     <string name="app_name">CampusGPS</string>
+    <string name="subtitulo_app">Explora tu campus</string>
+    <string name="seccion_filtros">Categorías</string>
+    <string name="seccion_radio">Radio de cercanía</string>
+    <string name="seccion_lugares">Lugares cercanos</string>
+    <string name="btn_obtener_ubicacion">Obtener mi ubicación</string>
+    <string name="btn_ir_mas_cercano">Ir al más cercano</string>
+    <string name="mas_cercano_formato">Más cercano: %1$s (%2$s)</string>
+    <string name="mas_cercano_simple">Más cercano: %1$s</string>
+    <string name="texto_inicial">Pulsa el botón para empezar</string>
+    <string name="lat_long_formato">Latitud: %.4f   Longitud: %.4f</string>
+    <string name="etiqueta_dentro_radio">Dentro del radio</string>
+    <string name="sin_calcular">Sin calcular</string>
+    <string name="btn_como_llegar">Cómo llegar</string>
+    <string name="btn_abrir_ajustes">Abrir ajustes</string>
+    <string name="btn_reintentar">Reintentar</string>
+    <string name="radio_opcion">%1$d m</string>
+    <string name="conteo_dentro_radio_formato">%1$d lugares dentro de %2$d m</string>
+    <string name="desc_indicador_lugar">Indicador de lugar</string>
 </resources>
