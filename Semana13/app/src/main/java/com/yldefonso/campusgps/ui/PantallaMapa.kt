@@ -20,8 +20,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -31,6 +34,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.yldefonso.campusgps.model.UbicacionUi
 import com.yldefonso.campusgps.util.formatearDistancia
 import com.yldefonso.campusgps.viewmodel.MapaViewModel
@@ -39,7 +45,7 @@ import java.util.Locale
 /**
  * [G] Pantalla principal. Paso 8: los errores se muestran con MensajeError
  * (mensaje + botón según el tipo de error).
- * Fase 2: Incluye selector de radio de cercanía y filtros por categoría.
+ * Fase 2: Incluye selector de radio de cercanía, filtros por categoría y punto azul nativo.
  * La View SOLO dibuja según el estado y le avisa eventos al ViewModel.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -55,15 +61,41 @@ fun PantallaMapa(vm: MapaViewModel) {
     val idsDentroDelRadio by vm.idsDentroDelRadio.collectAsState() // ids de lugares dentro del radio y visibles
     val categoriasActivas by vm.categoriasActivas.collectAsState() // categorías seleccionadas en el filtro
 
-    // Context actual: lo necesitamos SOLO aquí en la View para consultar el permiso.
+    // Context actual y propietario del ciclo de vida para verificar permisos.
     val contexto = LocalContext.current
+    val cicloVidaOwner = LocalLifecycleOwner.current
+
+    // Estado booleano que indica si el permiso de ubicación está concedido (FINE o COARSE).
+    val permisoUbicacion = remember {
+        val fine = ContextCompat.checkSelfPermission(contexto, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        val coarse = ContextCompat.checkSelfPermission(contexto, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        mutableStateOf(fine || coarse)
+    }
+
+    // Observa el ciclo de vida para verificar permisos al volver a la app (ej. desde Ajustes).
+    DisposableEffect(cicloVidaOwner) {
+        val observador = LifecycleEventObserver { _, evento ->
+            if (evento == Lifecycle.Event.ON_RESUME) {
+                val fine = ContextCompat.checkSelfPermission(contexto, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                val coarse = ContextCompat.checkSelfPermission(contexto, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                permisoUbicacion.value = fine || coarse
+            }
+        }
+        cicloVidaOwner.lifecycle.addObserver(observador)
+        onDispose {
+            cicloVidaOwner.lifecycle.removeObserver(observador)
+        }
+    }
 
     // Lanzador que muestra el cuadro de permiso de Android (lo dibuja el sistema).
     val lanzador = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { resultado ->
-        // Basta con que el usuario conceda UNO (preciso o aproximado) para obtener la ubicación.
-        if (resultado.values.any { it }) vm.buscar() else vm.permisoDenegado()
+        // Actualiza el estado de permiso según la respuesta del usuario.
+        val concedido = resultado.values.any { it }
+        permisoUbicacion.value = concedido
+        // Si el usuario concede al menos uno, busca la ubicación; si no, avisa al ViewModel.
+        if (concedido) vm.buscar() else vm.permisoDenegado()
     }
 
     // Se ejecuta al pulsar el botón principal (y también desde "Reintentar").
@@ -74,6 +106,9 @@ fun PantallaMapa(vm: MapaViewModel) {
         val coarse = ContextCompat.checkSelfPermission(
             contexto, Manifest.permission.ACCESS_COARSE_LOCATION
         ) == PackageManager.PERMISSION_GRANTED
+
+        // Actualiza el estado de permiso antes de decidir.
+        permisoUbicacion.value = fine || coarse
 
         if (fine || coarse) {
             vm.buscar()   // ya tiene permiso: busca directo
@@ -101,13 +136,14 @@ fun PantallaMapa(vm: MapaViewModel) {
         Column(modifier = Modifier.fillMaxSize().padding(padding)) {
 
             // weight(1f): el mapa ocupa TODO el espacio que sobra; lo de abajo mantiene su tamaño.
-            // Recibe lugaresVisibles para mostrar solo los marcadores de las categorías filtradas.
+            // Recibe lugaresVisibles y el estado de permiso para activar el punto azul nativo.
             MapaUbicacion(
                 estado = estado,
                 lugares = lugaresVisibles,
                 seleccionado = seleccionado,
                 masCercano = masCercano,
                 radioMetros = radioMetros,
+                permisoUbicacion = permisoUbicacion.value,
                 modifier = Modifier.weight(1f).fillMaxWidth()
             )
 

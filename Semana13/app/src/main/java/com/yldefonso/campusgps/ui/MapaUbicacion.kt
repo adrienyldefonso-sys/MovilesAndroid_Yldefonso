@@ -4,6 +4,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.key
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
@@ -11,6 +12,8 @@ import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.Circle
 import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapProperties
+import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
@@ -24,7 +27,8 @@ import com.yldefonso.campusgps.model.UbicacionUi
  * Paso 4: se dibuja un marcador por cada lugar del campus.
  * Paso 6: al seleccionar un lugar, la cámara viaja hasta él.
  * Paso 7: el lugar más cercano se dibuja en verde; los demás siguen en azul.
- * Solo DIBUJA lo que recibe: no consulta Repository ni calcula distancias.
+ * Fase 2: Activa el punto azul nativo y el botón de ubicación si [permisoUbicacion] es true.
+ * Solo DIBUJA lo que recibe: no consulta Repository ni calcula distancias ni verifica permisos.
  */
 @Composable
 fun MapaUbicacion(
@@ -33,11 +37,22 @@ fun MapaUbicacion(
     seleccionado: Int?,                      // id del lugar tocado en la lista (null = ninguno)
     masCercano: Lugar?,                      // Paso 7: lugar más cercano (null si aún no hay ubicación)
     radioMetros: Int,                        // Radio de cercanía elegido (100m, 200m, 500m)
+    permisoUbicacion: Boolean,               // Indica si se concedió permiso de ubicación (FINE o COARSE)
     modifier: Modifier = Modifier
 ) {
     // Estado de la cámara: empieza en Lima (punto base) con zoom 12 (vista de ciudad).
     val camara = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(LatLng(-12.0464, -77.0428), 12f)
+    }
+
+    // Propiedades del mapa: activa el punto azul nativo solo si hay permiso.
+    val properties = remember(permisoUbicacion) {
+        MapProperties(isMyLocationEnabled = permisoUbicacion)
+    }
+
+    // Configuración de la UI del mapa: activa el botón nativo "mi ubicación" solo si hay permiso.
+    val uiSettings = remember(permisoUbicacion) {
+        MapUiSettings(myLocationButtonEnabled = permisoUbicacion)
     }
 
     // Cuando la ubicación llega (Lista), anima la cámara hasta tu posición con zoom 16.
@@ -61,7 +76,12 @@ fun MapaUbicacion(
         }
     }
 
-    GoogleMap(modifier = modifier, cameraPositionState = camara) {
+    GoogleMap(
+        modifier = modifier,
+        cameraPositionState = camara,
+        properties = properties,
+        uiSettings = uiSettings
+    ) {
         // Marcador propio: rojo (color por defecto), solo cuando ya tenemos la ubicación.
         if (estado is UbicacionUi.Lista) {
             val posicion = LatLng(estado.posicion.latitud, estado.posicion.longitud)

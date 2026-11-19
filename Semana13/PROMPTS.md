@@ -4,6 +4,7 @@
 |---|---|---|---|---|---|
 | #1 | Radio de cercanía | Estoy en la Fase 2 de un laboratorio de Android. El proyecto es CampusGPS (Kotlin, Jetpack Compose, Material 3, paquete com.yldefonso.campusgps, patrón MVVM + Repository). Quiero agregar la mejora "Radio de cercanía" SIN romper la arquitectura... [selector 100m/200m/500m, círculo en mapa, marca en lista, texto de conteo, ViewModel con combine y StateFlow, sin cambiar comportamiento anterior ni añadir dependencias]. | Gemini creó el composable `ui/SelectorRadio.kt` con un selector compacto (`SingleChoiceSegmentedButtonRow`), actualizó `MapaViewModel.kt` añadiendo `radioMetros` y `idsDentroDelRadio` (derivado con `combine`), dibujó el `Circle` en `MapaUbicacion.kt`, marcó los lugares dentro del radio en `ListaLugares.kt`, e integró todo en `PantallaMapa.kt`. | (completar por el estudiante tras revisar el código) | (completar por el estudiante tras revisar el código) |
 | #2 | Filtrar por categoría | Seguimos en la Fase 2 de CampusGPS. Ya existe la mejora 1 (Radio de cercanía). Ahora quiero la mejora 2: "Filtrar por categoría", SIN romper la arquitectura ni la mejora 1... [fila de chips FilterChip con scroll horizontal LazyRow, selección múltiple, obtención de categorías desde los datos, cálculo de lugar más cercano y contador dentro del radio sobre lugares visibles, limpieza de selección si el lugar oculto es seleccionado, StateFlow derivado lugaresVisibles con combine, sin nuevas dependencias]. | Gemini creó el composable `ui/SelectorFiltro.kt` / `ui/FiltroCategorias.kt` con `LazyRow` y `FilterChip`, actualizó `MapaViewModel.kt` con `categoriasActivas`, `lugaresDisponibles`, y el StateFlow derivado `lugaresVisibles` (con `combine`), y ajustó `PantallaMapa.kt` pasando `lugaresVisibles` a `MapaUbicacion` y `ListaLugares`. | (completar por el estudiante tras revisar el código) | (completar por el estudiante tras revisar el código) |
+| #3 | Punto azul nativo | Seguimos en la Fase 2 de CampusGPS. Ya existen la mejora 1 (Radio de cercanía) y la mejora 2 (Filtrar por categoría). Ahora quiero la mejora 3: "Punto azul nativo", SIN romper las anteriores ni la arquitectura... [activar isMyLocationEnabled y myLocationButtonEnabled solo si hay permiso de ubicación FINE o COARSE, evitar SecurityException si no hay permiso, actualizar dinámicamente al conceder permiso desde el lanzador o al reanudar la app con LifecycleEventObserver en ON_RESUME, mantener elementos existentes sin modificar ViewModel ni repositorios, usar MapProperties y MapUiSettings con remember]. | Gemini actualizó `PantallaMapa.kt` añadiendo verificación de permisos con `ContextCompat.checkSelfPermission` y observación del ciclo de vida con `DisposableEffect` (ON_RESUME), y actualizó `MapaUbicacion.kt` aceptando `permisoUbicacion: Boolean` y configurando `MapProperties(isMyLocationEnabled = ...)` y `MapUiSettings(myLocationButtonEnabled = ...)`. | (completar por el estudiante tras revisar el código) | (completar por el estudiante tras revisar el código) |
 
 ## Detalle de la mejora #1
 
@@ -44,7 +45,7 @@ Agregar la funcionalidad de "Filtrar por categoría" con:
 2. Filtrar tanto los marcadores del mapa como los elementos de la lista para mostrar únicamente los lugares de las categorías activas.
 3. Recalcular el lugar más cercano (`masCercano`) y el contador/marcas de radio sobre los lugares visibles/filtrados.
 4. Limpiar la selección actual (`seleccionar(null)`) si el lugar seleccionado queda oculto por el filtro activo.
-5. Arquitectura MVVM estricta: `lugaresVisibles` derivado en el ViewModel con `combine(lugares, categoriasActivas)` y `stateIn`, obteniendo las categorías disponibles desde el repositorio.
+5. Arquitectura MVVM estricta: `lugaresVisibles` derivado en el ViewModel con `combine` (`lugares`, `categoriasActivas`) y `stateIn`, obteniendo las categorías disponibles desde el repositorio.
 
 ### Archivos modificados y creados
 - **Creado:**
@@ -65,3 +66,28 @@ Agregar la funcionalidad de "Filtrar por categoría" con:
 3. Comprobar que en el mapa solo aparecen los marcadores de las categorías seleccionadas y en la lista solo dichos lugares.
 4. Verificar que el lugar más cercano y el contador de radio ("X lugares dentro de N m") se adaptan dinámicamente a los lugares visibles filtrados.
 5. Seleccionar un lugar y luego filtrar una categoría que lo oculte: comprobar que la selección se limpia automáticamente (`seleccionar(null)`).
+
+## Detalle de la mejora #3
+
+### Qué se pidió
+Activar el punto azul nativo de Google Maps y el botón de "mi ubicación" respetando la arquitectura:
+1. Habilitar `isMyLocationEnabled` y `myLocationButtonEnabled` en el mapa solo si el permiso de ubicación (FINE o COARSE) fue concedido.
+2. Prevenir `SecurityException` asegurando que nunca se habiliten sin permiso previo.
+3. Actualizar dinámicamente el estado del mapa cuando el usuario conceda el permiso desde el cuadro de diálogo de Android o al regresar de los Ajustes de la aplicación (`LifecycleEventObserver` en `ON_RESUME`).
+4. Mantener intactos los demás elementos (marcador rojo "Estás aquí", círculo de radio, marcadores de lugares y verde del más cercano) y la arquitectura (ViewModel intacto, permisos gestionados en la View).
+
+### Archivos modificados
+- **Modificados:**
+  - `ui/PantallaMapa.kt`: Gestión del estado de permisos con `remember` y `mutableStateOf`, verificación mediante `ContextCompat.checkSelfPermission`, observación del ciclo de vida (`DisposableEffect` con `ON_RESUME`), actualización en el callback del lanzador de permisos, y paso de `permisoUbicacion` a `MapaUbicacion`.
+  - `ui/MapaUbicacion.kt`: Recepción del parámetro `permisoUbicacion: Boolean` y configuración de `MapProperties(isMyLocationEnabled = permisoUbicacion)` y `MapUiSettings(myLocationButtonEnabled = permisoUbicacion)` con `remember(permisoUbicacion)`.
+
+### Cómo funciona el flujo
+1. **Verificación de permisos:** `PantallaMapa` comprueba el estado del permiso mediante `ContextCompat.checkSelfPermission` al iniciar y cada vez que la app vuelve a primer plano (`ON_RESUME`).
+2. **Lanzador:** Si el usuario pulsa "Obtener mi ubicación" sin permiso, se solicita mediante el lanzador de permisos. Al concederlo, se actualiza el estado `permisoUbicacion.value`.
+3. **Propiedades del mapa:** `MapaUbicacion` recibe `permisoUbicacion` y configura de forma reactiva `MapProperties` y `MapUiSettings`. Google Maps habilita automáticamente el punto azul nativo y el botón de ubicación en tiempo real sin reiniciar la app.
+
+### Cómo probarlo
+1. Ejecutar la aplicación. En el primer inicio sin permisos, verificar que no hay punto azul ni botón de ubicación (y que no hay cierres inesperados por `SecurityException`).
+2. Pulsar "Obtener mi ubicación" y aceptar los permisos en el diálogo del sistema.
+3. Comprobar que el punto azul nativo de Google Maps y el botón de ubicación aparecen inmediatamente en el mapa, conviviendo con el marcador rojo "Estás aquí", el círculo de radio y los marcadores de lugares.
+4. Ir a los Ajustes del dispositivo, revocar el permiso de ubicación y volver a la app: verificar que el punto azul se desactiva de forma dinámica gracias al observador de ciclo de vida (`ON_RESUME`).
