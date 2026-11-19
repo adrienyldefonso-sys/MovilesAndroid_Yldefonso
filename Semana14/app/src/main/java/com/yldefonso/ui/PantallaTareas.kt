@@ -2,6 +2,7 @@ package com.yldefonso.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -12,6 +13,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -61,6 +63,7 @@ fun PantallaTareas(vm: TareasViewModel) {
 private fun TarjetaProgreso(vm: TareasViewModel) {
     val mensaje by vm.mensaje.collectAsState()
     val progreso by vm.progreso.collectAsState()
+    val corriendo by vm.corriendo.collectAsState()
     var toques by remember { mutableIntStateOf(0) }
 
     Tarjeta("Tarea con progreso") {
@@ -68,11 +71,21 @@ private fun TarjetaProgreso(vm: TareasViewModel) {
         Button(onClick = { toques++ }) {
             Text("Tócame: $toques")
         }
-        // Paso 3: el botón se llama Iniciar y llama a tareaLarga()
-        Button(onClick = { vm.tareaLarga() }) {
-            Text("Iniciar")
+        // Paso 4: Iniciar se deshabilita mientras corre; Cancelar solo mientras corre
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Button(
+                onClick = { vm.tareaLarga() },
+                enabled = !corriendo
+            ) {
+                Text("Iniciar")
+            }
+            OutlinedButton(
+                onClick = { vm.cancelar() },
+                enabled = corriendo
+            ) {
+                Text("Cancelar")
+            }
         }
-        // Paso 3: barra de progreso y porcentaje debajo
         // (si marca error, usa progress = progreso en vez de la lambda)
         LinearProgressIndicator(
             progress = { progreso },
@@ -80,7 +93,6 @@ private fun TarjetaProgreso(vm: TareasViewModel) {
         )
         Text("${(progreso * 100).toInt()} %")
         Text(mensaje)
-        // TODO Paso 4: botones Iniciar / Cancelar
     }
 }
 
