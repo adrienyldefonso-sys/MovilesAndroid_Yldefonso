@@ -19,6 +19,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -171,10 +172,23 @@ private fun TarjetaPrimos(vm: TareasViewModel) {
 @Composable
 private fun TarjetaCargas(vm: TareasViewModel) {
     val carga by vm.carga.collectAsState()
+    val simularError by vm.simularError.collectAsState()
     val cargando = carga is CargaUi.Cargando
 
     Tarjeta("Dos cargas") {
-        // Paso 6: los botones se deshabilitan mientras carga (evita una segunda carga)
+        // Paso 7: interruptor para forzar el error en los pedidos
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Switch(
+                checked = simularError,
+                onCheckedChange = { vm.cambiarSimularError(it) },
+                enabled = !cargando
+            )
+            Text("Simular error")
+        }
+        // Los botones se deshabilitan mientras carga (evita una segunda carga)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedButton(
                 onClick = { vm.cargarUnaPorUna() },
@@ -203,14 +217,30 @@ private fun TarjetaCargas(vm: TareasViewModel) {
                 Text("Pedidos: ${estado.pedidos}", color = VerdeExitoTexto, style = estilo)
                 Text("Tiempo: ${estado.milisegundos} ms", color = VerdeExitoTexto, style = estilo)
             }
-            // TODO Paso 7: recuadro de error con botón Reintentar
-            is CargaUi.Error -> Text(estado.mensaje)
+            // Paso 7: recuadro de error con botón Reintentar (vuelve a cargar A la vez)
+            is CargaUi.Error -> {
+                Surface(
+                    color = MaterialTheme.colorScheme.errorContainer,
+                    shape = MaterialTheme.shapes.small,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = estado.mensaje,
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                        style = MaterialTheme.typography.bodySmall,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(12.dp)
+                    )
+                }
+                OutlinedButton(onClick = { vm.cargarALaVez() }) {
+                    Text("Reintentar")
+                }
+            }
         }
         Text(
             text = "«Una por una» tarda ≈ 5000 ms",
             style = MaterialTheme.typography.bodySmall
         )
-        // TODO Paso 7: Switch «Simular error»
     }
 }
 
