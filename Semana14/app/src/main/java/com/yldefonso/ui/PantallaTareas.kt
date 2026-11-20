@@ -1,372 +1,249 @@
+
 package com.yldefonso.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+
 import com.yldefonso.model.CargaUi
 import com.yldefonso.model.PrimosUi
-import com.yldefonso.ui.theme.VerdeExito
-import com.yldefonso.ui.theme.VerdeExitoTexto
 import com.yldefonso.viewmodel.TareasViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun PantallaTareas(vm: TareasViewModel) {
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("CentroTareas", fontWeight = FontWeight.Bold) },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary
-                )
-            )
-        }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(16.dp)
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            TarjetaProgreso(vm)
-            TarjetaPrimos(vm)
-            TarjetaCargas(vm)
-            TarjetaComparacion(vm)
-        }
-    }
+/**
+ * Colores de la pantalla principal CentroTareas.
+ * Cada tarjeta administra sus propios colores.
+ */
+private object ControlColors {
+    val Background = Color(0xFFF3F6FC)
+    val HeaderBackground = Color(0xFF101D3A)
+    val HeaderEyebrow = Color(0xFF9FB8FF)
+    val HeaderSubtitle = Color(0xFFBEC9DF)
+    val TextPrimary = Color(0xFF1B2844)
+    val TextSecondary = Color(0xFF75829A)
+    val StatusActive = Color(0xFF63DDB8)
+    val StatusIdle = Color(0xFF9CB4E4)
 }
 
+/**
+ * Pantalla principal.
+ *
+ * Organiza las tarjetas sin volver a declarar
+ * las funciones que están en archivos separados.
+ */
 @Composable
-private fun TarjetaProgreso(vm: TareasViewModel) {
-    val mensaje by vm.mensaje.collectAsState()
-    val progreso by vm.progreso.collectAsState()
+fun PantallaTareas(
+    vm: TareasViewModel,
+    modifier: Modifier = Modifier
+) {
+
+    // Observamos los estados reales del ViewModel.
     val corriendo by vm.corriendo.collectAsState()
-    var toques by remember { mutableIntStateOf(0) }
-
-    Tarjeta("Tarea con progreso") {
-        // Prueba de vida: si deja de sumar, la pantalla está congelada
-        Button(onClick = { toques++ }) {
-            Text("Tócame: $toques")
-        }
-        // Iniciar se deshabilita mientras corre; Cancelar solo mientras corre
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Button(
-                onClick = { vm.tareaLarga() },
-                enabled = !corriendo
-            ) {
-                Text("Iniciar")
-            }
-            OutlinedButton(
-                onClick = { vm.cancelar() },
-                enabled = corriendo
-            ) {
-                Text("Cancelar")
-            }
-        }
-        // (si marca error, usa progress = progreso en vez de la lambda)
-        LinearProgressIndicator(
-            progress = { progreso },
-            modifier = Modifier.fillMaxWidth()
-        )
-        Text("${(progreso * 100).toInt()} %")
-        Text(mensaje)
-    }
-}
-
-@Composable
-private fun TarjetaPrimos(vm: TareasViewModel) {
     val primos by vm.primos.collectAsState()
-    var texto by remember { mutableStateOf("500000") }
-    var calculado by remember { mutableIntStateOf(0) } // N usado en el último cálculo
-
-    val numero = texto.toIntOrNull()
-    val valido = numero != null && numero >= 2
-    val calculando = primos is PrimosUi.Calculando
-
-    Tarjeta("Contar números primos") {
-        // Solo acepta dígitos (máx. 9 para no desbordar Int)
-        OutlinedTextField(
-            value = texto,
-            onValueChange = { nuevo -> texto = nuevo.filter { it.isDigit() }.take(9) },
-            label = { Text("Hasta el número") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth()
-        )
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Button(
-                onClick = {
-                    // Ignora textos no numéricos o menores que 2
-                    if (valido) {
-                        calculado = numero!!
-                        vm.contar(numero)
-                    }
-                },
-                enabled = valido && !calculando
-            ) {
-                Text("Contar")
-            }
-            OutlinedButton(
-                onClick = { vm.cancelarPrimos() },
-                enabled = calculando
-            ) {
-                Text("Cancelar")
-            }
-        }
-        when (val estado = primos) {
-            is PrimosUi.Inicial -> Unit
-            is PrimosUi.Calculando -> Text("Calculando...")
-            is PrimosUi.Cancelado -> Text("Cancelado")
-            is PrimosUi.Listo -> CuadroVerde {
-                Text(
-                    text = "Primos hasta $calculado: ${estado.cantidad}",
-                    color = VerdeExitoTexto,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center
-                )
-                Text(
-                    text = "Tiempo: ${estado.milisegundos} ms",
-                    color = VerdeExitoTexto,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun TarjetaCargas(vm: TareasViewModel) {
     val carga by vm.carga.collectAsState()
-    val simularError by vm.simularError.collectAsState()
-    val cargando = carga is CargaUi.Cargando
 
-    Tarjeta("Dos cargas") {
-        // Paso 7: interruptor para forzar el error en los pedidos
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Switch(
-                checked = simularError,
-                onCheckedChange = { vm.cambiarSimularError(it) },
-                enabled = !cargando
-            )
-            Text("Simular error")
-        }
-        // Los botones se deshabilitan mientras carga (evita una segunda carga)
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedButton(
-                onClick = { vm.cargarUnaPorUna() },
-                enabled = !cargando
-            ) {
-                Text("Una por una")
-            }
-            Button(
-                onClick = { vm.cargarALaVez() },
-                enabled = !cargando
-            ) {
-                Text("A la vez")
-            }
-        }
-        when (val estado = carga) {
-            is CargaUi.Inicial -> Unit
-            is CargaUi.Cargando -> CircularProgressIndicator()
-            is CargaUi.Exito -> CuadroVerde {
-                val estilo = MaterialTheme.typography.bodySmall
-                Text(
-                    "Modo: ${estado.modo}",
-                    color = VerdeExitoTexto,
-                    fontWeight = FontWeight.Bold
-                )
-                Text("Perfil: ${estado.perfil}", color = VerdeExitoTexto, style = estilo)
-                Text("Pedidos: ${estado.pedidos}", color = VerdeExitoTexto, style = estilo)
-                Text("Tiempo: ${estado.milisegundos} ms", color = VerdeExitoTexto, style = estilo)
-            }
-            // Paso 7: recuadro de error con botón Reintentar (vuelve a cargar A la vez)
-            is CargaUi.Error -> {
-                Surface(
-                    color = MaterialTheme.colorScheme.errorContainer,
-                    shape = MaterialTheme.shapes.small,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = estado.mensaje,
-                        color = MaterialTheme.colorScheme.onErrorContainer,
-                        style = MaterialTheme.typography.bodySmall,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(12.dp)
-                    )
-                }
-                OutlinedButton(onClick = { vm.cargarALaVez() }) {
-                    Text("Reintentar")
-                }
-            }
-        }
-        Text(
-            text = "«Una por una» tarda ≈ 5000 ms",
-            style = MaterialTheme.typography.bodySmall
+    // Contamos las operaciones activas.
+    val tareasActivas = listOf(
+        corriendo,
+        primos is PrimosUi.Calculando,
+        carga is CargaUi.Cargando
+    ).count { it }
+
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(ControlColors.Background)
+            .verticalScroll(rememberScrollState())
+    ) {
+
+        CabeceraControl(
+            tareasActivas = tareasActivas
+        )
+
+        ContenidoOperaciones(
+            vm = vm
         )
     }
 }
 
-// Recuadro verde reutilizable para los resultados
+/**
+ * Encabezado de la aplicación.
+ */
 @Composable
-private fun CuadroVerde(contenido: @Composable () -> Unit) {
-    Surface(
-        color = VerdeExito,
-        shape = MaterialTheme.shapes.small,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(
-            modifier = Modifier.padding(12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            contenido()
-        }
-    }
-}
+private fun CabeceraControl(
+    tareasActivas: Int
+) {
 
-@Composable
-private fun Tarjeta(titulo: String, contenido: @Composable () -> Unit) {
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Text(
-                text = titulo,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.fillMaxWidth()
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(ControlColors.HeaderBackground)
+            .padding(
+                start = 22.dp,
+                end = 22.dp,
+                top = 28.dp,
+                bottom = 30.dp
             )
-            contenido()
-        }
+    ) {
+
+        Text(
+            text = "CENTRO DE CONTROL",
+            color = ControlColors.HeaderEyebrow,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 2.sp
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = "CentroTareas",
+            color = Color.White,
+            fontSize = 30.sp,
+            fontWeight = FontWeight.ExtraBold
+        )
+
+        Spacer(modifier = Modifier.height(5.dp))
+
+        Text(
+            text = "Gestiona procesos y compara resultados.",
+            color = ControlColors.HeaderSubtitle,
+            fontSize = 13.sp
+        )
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        IndicadorEstado(
+            tareasActivas = tareasActivas
+        )
     }
 }
 
+/**
+ * Muestra la cantidad de procesos activos.
+ */
 @Composable
-private fun TarjetaComparacion(vm: TareasViewModel) {
-    val comparacion by vm.comparacion.collectAsState()
+private fun IndicadorEstado(
+    tareasActivas: Int
+) {
 
-    if (comparacion.unaPorUna.isNotEmpty() || comparacion.aLaVez.isNotEmpty()) {
-        Tarjeta("Comparación de tiempos") {
-            val ultimosUna = comparacion.unaPorUna.takeLast(5)
-            val ultimosAlavez = comparacion.aLaVez.takeLast(5)
-            val maxFilas = maxOf(ultimosUna.size, ultimosAlavez.size)
+    val hayActivas = tareasActivas > 0
 
-            val promUna = if (comparacion.unaPorUna.isNotEmpty()) comparacion.unaPorUna.average().toLong() else null
-            val promAlavez = if (comparacion.aLaVez.isNotEmpty()) comparacion.aLaVez.average().toLong() else null
+    val colorIndicador = if (hayActivas) {
+        ControlColors.StatusActive
+    } else {
+        ControlColors.StatusIdle
+    }
 
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                // Cabecera
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        text = "Una por una",
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.weight(1f),
-                        textAlign = TextAlign.Center
-                    )
-                    Text(
-                        text = "A la vez",
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.weight(1f),
-                        textAlign = TextAlign.Center
-                    )
-                }
+    val textoEstado = if (hayActivas) {
+        "$tareasActivas proceso(s) activo(s)"
+    } else {
+        "Sistema listo"
+    }
 
-                // Filas de intentos (últimos 5)
-                for (i in 0 until maxFilas) {
-                    val tUna = ultimosUna.getOrNull(i)?.let { "$it ms" } ?: "-"
-                    val tAlavez = ultimosAlavez.getOrNull(i)?.let { "$it ms" } ?: "-"
-                    Row(modifier = Modifier.fillMaxWidth()) {
-                        Text(
-                            text = tUna,
-                            modifier = Modifier.weight(1f),
-                            textAlign = TextAlign.Center
-                        )
-                        Text(
-                            text = tAlavez,
-                            modifier = Modifier.weight(1f),
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                }
+    Row(
+        verticalAlignment = Alignment.CenterVertically
+    ) {
 
-                // Fila Promedio
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        text = promUna?.let { "Prom: $it ms" } ?: "Prom: -",
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.weight(1f),
-                        textAlign = TextAlign.Center
-                    )
-                    Text(
-                        text = promAlavez?.let { "Prom: $it ms" } ?: "Prom: -",
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.weight(1f),
-                        textAlign = TextAlign.Center
-                    )
-                }
-            }
-
-            // Línea de ahorro
-            if (promUna != null && promAlavez != null) {
-                val ahorro = promUna - promAlavez
-                Text(
-                    text = "A la vez ahorra ≈ $ahorro ms en promedio",
-                    style = MaterialTheme.typography.bodySmall,
-                    fontWeight = FontWeight.Medium,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
+        Box(
+            modifier = Modifier
+                .size(9.dp)
+                .background(
+                    color = colorIndicador,
+                    shape = CircleShape
                 )
-            }
+        )
 
-            OutlinedButton(onClick = { vm.limpiarComparacion() }) {
-                Text("Limpiar")
-            }
-        }
+        Spacer(modifier = Modifier.width(9.dp))
+
+        Text(
+            text = textoEstado,
+            color = Color.White,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 13.sp
+        )
+    }
+}
+
+/**
+ * Contenedor de las cuatro tarjetas.
+ *
+ * Cada función se encuentra en su propio archivo:
+ * TarjetaProgreso.kt
+ * TarjetaPrimos.kt
+ * TarjetaCargas.kt
+ * TarjetaComparacion.kt
+ */
+@Composable
+private fun ContenidoOperaciones(
+    vm: TareasViewModel
+) {
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(
+                horizontal = 16.dp,
+                vertical = 22.dp
+            ),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+
+        Text(
+            text = "Panel de operaciones",
+            color = ControlColors.TextPrimary,
+            fontSize = 21.sp,
+            fontWeight = FontWeight.Bold
+        )
+
+        Text(
+            text = "Ejecuta y supervisa cada tarea en tiempo real.",
+            color = ControlColors.TextSecondary,
+            fontSize = 13.sp
+        )
+
+        // Tarjeta 1: tarea larga con progreso.
+        TarjetaProgreso(vm)
+
+        // Tarjeta 2: cálculo de números primos.
+        TarjetaPrimos(vm)
+
+        // Tarjeta 3: cargas secuenciales y paralelas.
+        TarjetaCargas(vm)
+
+        // Tarjeta 4: comparación de tiempos.
+        TarjetaComparacion(vm)
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Text(
+            text = "CentroTareas • Kotlin + Jetpack Compose",
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center,
+            fontSize = 11.sp,
+            color = ControlColors.TextSecondary
+        )
     }
 }
