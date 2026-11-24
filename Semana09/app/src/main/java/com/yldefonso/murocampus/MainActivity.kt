@@ -14,9 +14,14 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.yldefonso.murocampus.data.PostRepositoryRemote
 import com.yldefonso.murocampus.data.remote.RetrofitClient
+import com.yldefonso.murocampus.ui.PantallaDetalle
 import com.yldefonso.murocampus.ui.PantallaLista
 import com.yldefonso.murocampus.ui.theme.MuroCampusTheme
 import com.yldefonso.murocampus.viewmodel.PostsViewModel
@@ -24,8 +29,6 @@ import com.yldefonso.murocampus.viewmodel.PostsViewModelFactory
 
 class MainActivity : ComponentActivity() {
 
-    // Crea el ViewModel con la fábrica y le entrega el Repository real.
-    // viewModels: el ViewModel sobrevive a la rotación de pantalla.
     private val vm: PostsViewModel by viewModels {
         PostsViewModelFactory(PostRepositoryRemote(RetrofitClient.api))
     }
@@ -43,6 +46,10 @@ class MainActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun PantallaBase(vm: PostsViewModel) {
+    // Estado de navegación: null = se ve la lista; un número = se ve el detalle de esa publicación.
+    // rememberSaveable: sobrevive a la rotación de pantalla.
+    var idSeleccionado by rememberSaveable { mutableStateOf<Int?>(null) }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -55,7 +62,13 @@ private fun PantallaBase(vm: PostsViewModel) {
         }
     ) { innerPadding ->
         Box(Modifier.fillMaxSize().padding(innerPadding)) {
-            PantallaLista(vm)
+            // Copia local: una propiedad delegada no permite smart cast.
+            val id = idSeleccionado
+            if (id == null) {
+                PantallaLista(vm, onAbrir = { idSeleccionado = it })
+            } else {
+                PantallaDetalle(vm, idPost = id, onVolver = { idSeleccionado = null })
+            }
         }
     }
 }

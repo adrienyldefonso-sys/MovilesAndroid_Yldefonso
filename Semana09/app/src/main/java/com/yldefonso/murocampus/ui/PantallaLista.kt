@@ -8,19 +8,18 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yldefonso.murocampus.viewmodel.PostsViewModel
 import com.yldefonso.murocampus.viewmodel.UiState
 
-// La pantalla NO llama a la API: solo observa el estado del ViewModel y lo dibuja.
+// onAbrir: se llama con el id de la publicación tocada. La pantalla no sabe navegar, solo avisa.
 @Composable
-fun PantallaLista(vm: PostsViewModel) {
-    // Se actualiza sola cada vez que cambia el StateFlow; respeta el ciclo de vida.
+fun PantallaLista(vm: PostsViewModel, onAbrir: (Int) -> Unit) {
     val estado by vm.lista.collectAsStateWithLifecycle()
 
-    // when sobre el sealed interface: el compilador obliga a cubrir los tres casos.
     when (val s = estado) {
         is UiState.Cargando -> Cargando()
         is UiState.Error -> ErrorConReintento(s.mensaje, onReintentar = { vm.cargar() })
         is UiState.Exito -> LazyColumn {
             items(s.datos) { post ->
-                TarjetaPost(post)
+                // Al tocar la tarjeta, avisamos a MainActivity con el id de la publicación.
+                TarjetaPost(post, onClick = { onAbrir(post.id) })
             }
         }
     }
