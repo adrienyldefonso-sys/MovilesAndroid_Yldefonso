@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.yldefonso.murocampus.data.PostRepository
 import com.yldefonso.murocampus.model.Comentario
 import com.yldefonso.murocampus.model.Post
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,15 +23,33 @@ class PostsViewModel(private val repo: PostRepository) : ViewModel() {
     private val _lista = MutableStateFlow<UiState<List<Post>>>(UiState.Cargando)
     val lista: StateFlow<UiState<List<Post>>> = _lista.asStateFlow()
 
+    // ---- Filtro ----
+    // null = Todos; un número = solo las publicaciones de ese usuario (1 a 10).
+    private val _usuarioFiltro = MutableStateFlow<Int?>(null)
+    val usuarioFiltro: StateFlow<Int?> = _usuarioFiltro.asStateFlow()
+
+    // Guarda la última carga. Si el usuario cambia el filtro rápido, cancelamos la anterior
+    // para que una respuesta vieja no pise a la nueva.
+    private var trabajoLista: Job? = null
+
     init { cargar() }
 
     fun cargar() {
-        viewModelScope.launch {
+        trabajoLista?.cancel()
+        trabajoLista = viewModelScope.launch {
             _lista.value = UiState.Cargando
-            repo.listar()
+            // Si hay filtro usa porUsuario (@Query); si no, listar. El ?: solo se usa cuando el filtro es null.
+            val resultado = _usuarioFiltro.value?.let { repo.porUsuario(it) } ?: repo.listar()
+            resultado
                 .onSuccess { _lista.value = UiState.Exito(it) }
                 .onFailure { _lista.value = UiState.Error(mensajeDe(it)) }
         }
+    }
+
+    // Guarda el filtro y recarga la lista con él.
+    fun filtrar(userId: Int?) {
+        _usuarioFiltro.value = userId
+        cargar()
     }
 
     // ---- Detalle ----
