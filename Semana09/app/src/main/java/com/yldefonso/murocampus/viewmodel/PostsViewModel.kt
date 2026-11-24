@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.yldefonso.murocampus.data.PostRepository
 import com.yldefonso.murocampus.model.Comentario
+import com.yldefonso.murocampus.model.NuevoPost
 import com.yldefonso.murocampus.model.Post
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
@@ -28,8 +29,7 @@ class PostsViewModel(private val repo: PostRepository) : ViewModel() {
     private val _usuarioFiltro = MutableStateFlow<Int?>(null)
     val usuarioFiltro: StateFlow<Int?> = _usuarioFiltro.asStateFlow()
 
-    // Guarda la última carga. Si el usuario cambia el filtro rápido, cancelamos la anterior
-    // para que una respuesta vieja no pise a la nueva.
+    // Guarda la última carga para cancelarla si el usuario cambia el filtro rápido.
     private var trabajoLista: Job? = null
 
     init { cargar() }
@@ -38,7 +38,7 @@ class PostsViewModel(private val repo: PostRepository) : ViewModel() {
         trabajoLista?.cancel()
         trabajoLista = viewModelScope.launch {
             _lista.value = UiState.Cargando
-            // Si hay filtro usa porUsuario (@Query); si no, listar. El ?: solo se usa cuando el filtro es null.
+            // Con filtro usa porUsuario (@Query); sin filtro, listar.
             val resultado = _usuarioFiltro.value?.let { repo.porUsuario(it) } ?: repo.listar()
             resultado
                 .onSuccess { _lista.value = UiState.Exito(it) }
@@ -46,7 +46,6 @@ class PostsViewModel(private val repo: PostRepository) : ViewModel() {
         }
     }
 
-    // Guarda el filtro y recarga la lista con él.
     fun filtrar(userId: Int?) {
         _usuarioFiltro.value = userId
         cargar()
@@ -59,13 +58,12 @@ class PostsViewModel(private val repo: PostRepository) : ViewModel() {
     fun abrir(id: Int) {
         viewModelScope.launch {
             _detalle.value = UiState.Cargando
-            // async: pide el post y los comentarios AL MISMO TIEMPO, no uno tras otro.
+            // async: pide el post y los comentarios AL MISMO TIEMPO.
             val (postRes, comRes) = coroutineScope {
                 val p = async { repo.detalle(id) }
                 val c = async { repo.comentarios(id) }
                 p.await() to c.await()
             }
-            // Si cualquiera de las dos falló, el detalle completo muestra el error.
             val error = postRes.exceptionOrNull() ?: comRes.exceptionOrNull()
             _detalle.value = if (error != null) {
                 UiState.Error(mensajeDe(error))
@@ -73,5 +71,25 @@ class PostsViewModel(private val repo: PostRepository) : ViewModel() {
                 UiState.Exito(DetalleUi(postRes.getOrThrow(), comRes.getOrThrow()))
             }
         }
+    }
+
+    // ---- Crear ----
+    // null = todavía no se envió nada; Cargando / Exito / Error según el POST.
+    private val _crear = MutableStateFlow<UiState<Post>?>(null)
+    val crear: StateFlow<UiState<Post>?> = _crear.asStateFlow()
+
+    fun publicar(titulo: String, texto: String) {
+        viewModelScope.launch {
+            _crear.value = UiState.Cargando
+            // userId = 1 es el usuario que publica; JSONPlaceholder responde con id 101.
+            repo.crear(NuevoPost(userId = 1, title = titulo, body = texto))
+                .onSuccess { _crear.value = UiState.Exito(it) }
+                .onFailure { _crear.value = UiState.Error(mensajeDe(it)) }
+        }
+    }
+
+    // Vuelve el estado de crear a null (al abrir o cerrar la pantalla).
+    fun limpiarCrear() {
+        _crear.value = null
     }
 }

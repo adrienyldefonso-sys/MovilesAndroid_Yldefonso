@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -21,6 +22,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.yldefonso.murocampus.data.PostRepositoryRemote
 import com.yldefonso.murocampus.data.remote.RetrofitClient
+import com.yldefonso.murocampus.ui.PantallaCrear
 import com.yldefonso.murocampus.ui.PantallaDetalle
 import com.yldefonso.murocampus.ui.PantallaLista
 import com.yldefonso.murocampus.ui.theme.MuroCampusTheme
@@ -46,9 +48,9 @@ class MainActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun PantallaBase(vm: PostsViewModel) {
-    // Estado de navegación: null = se ve la lista; un número = se ve el detalle de esa publicación.
-    // rememberSaveable: sobrevive a la rotación de pantalla.
-    var idSeleccionado by rememberSaveable { mutableStateOf<Int?>(null) }
+    // Estado de navegación. rememberSaveable: sobrevive a la rotación.
+    var idSeleccionado by rememberSaveable { mutableStateOf<Int?>(null) } // null = lista
+    var creando by rememberSaveable { mutableStateOf(false) }             // true = pantalla crear
 
     Scaffold(
         topBar = {
@@ -59,15 +61,26 @@ private fun PantallaBase(vm: PostsViewModel) {
                     titleContentColor = MaterialTheme.colorScheme.onPrimary
                 )
             )
+        },
+        floatingActionButton = {
+            // El + solo aparece en la lista: no en el detalle ni en crear.
+            if (!creando && idSeleccionado == null) {
+                FloatingActionButton(onClick = {
+                    vm.limpiarCrear() // formulario nuevo, sin el "Publicado" anterior
+                    creando = true
+                }) {
+                    Text("+")
+                }
+            }
         }
     ) { innerPadding ->
         Box(Modifier.fillMaxSize().padding(innerPadding)) {
-            // Copia local: una propiedad delegada no permite smart cast.
             val id = idSeleccionado
-            if (id == null) {
-                PantallaLista(vm, onAbrir = { idSeleccionado = it })
-            } else {
-                PantallaDetalle(vm, idPost = id, onVolver = { idSeleccionado = null })
+            // Orden importa: primero crear, luego lista o detalle.
+            when {
+                creando -> PantallaCrear(vm, onVolver = { creando = false })
+                id == null -> PantallaLista(vm, onAbrir = { idSeleccionado = it })
+                else -> PantallaDetalle(vm, idPost = id, onVolver = { idSeleccionado = null })
             }
         }
     }
