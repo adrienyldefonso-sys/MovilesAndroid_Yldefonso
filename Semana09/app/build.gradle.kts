@@ -33,6 +33,10 @@ android {
     }
 }
 
+kotlin {
+    jvmToolchain(17) // Kotlin y Java compilan con el mismo JDK 17
+}
+
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
