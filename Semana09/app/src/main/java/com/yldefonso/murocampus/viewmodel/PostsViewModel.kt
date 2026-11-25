@@ -92,4 +92,22 @@ class PostsViewModel(private val repo: PostRepository) : ViewModel() {
     fun limpiarCrear() {
         _crear.value = null
     }
+
+    // ---- Editar (PATCH) ----
+    // null = no se ha editado nada; Cargando / Exito / Error según la respuesta.
+    private val _editar = MutableStateFlow<UiState<Post>?>(null)
+    val editar: StateFlow<UiState<Post>?> = _editar.asStateFlow()
+
+    fun editarTitulo(id: Int, nuevoTitulo: String) {
+        viewModelScope.launch {
+            _editar.value = UiState.Cargando
+            repo.editar(id, nuevoTitulo)
+                .onSuccess { _editar.value = UiState.Exito(it) }
+                .onFailure { _editar.value = UiState.Error(mensajeDe(it)) }
+        }
+    }
+
+    fun limpiarEditar() {
+        _editar.value = null
+    }
 }

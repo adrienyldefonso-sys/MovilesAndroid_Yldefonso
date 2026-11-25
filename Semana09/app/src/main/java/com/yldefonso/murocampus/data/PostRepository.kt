@@ -2,30 +2,29 @@ package com.yldefonso.murocampus.data
 
 import com.yldefonso.murocampus.data.remote.PostApi
 import com.yldefonso.murocampus.model.Comentario
+import com.yldefonso.murocampus.model.EditarPost
 import com.yldefonso.murocampus.model.NuevoPost
 import com.yldefonso.murocampus.model.Post
 import kotlinx.coroutines.CancellationException
 
-// Contrato que usa el ViewModel. No conoce Retrofit ni excepciones de red.
 interface PostRepository {
     suspend fun listar(): Result<List<Post>>
     suspend fun detalle(id: Int): Result<Post>
     suspend fun comentarios(id: Int): Result<List<Comentario>>
     suspend fun porUsuario(userId: Int): Result<List<Post>>
     suspend fun crear(nuevo: NuevoPost): Result<Post>
+    suspend fun editar(id: Int, nuevoTitulo: String): Result<Post>
 }
 
-// Implementación real: llama a PostApi y convierte todo en Result.
 class PostRepositoryRemote(private val api: PostApi) : PostRepository {
 
-    // Función privada: evita repetir el try-catch en las cinco funciones.
     private suspend fun <T> llamar(bloque: suspend () -> T): Result<T> =
         try {
-            Result.success(bloque())     // éxito: envuelve el dato
+            Result.success(bloque())
         } catch (e: CancellationException) {
-            throw e                      // NUNCA atrapar la cancelación: rompe las corrutinas
+            throw e
         } catch (e: Exception) {
-            Result.failure(e)            // error de red o servidor: se devuelve, no se lanza
+            Result.failure(e)
         }
 
     override suspend fun listar(): Result<List<Post>> = llamar { api.listar() }
@@ -33,4 +32,8 @@ class PostRepositoryRemote(private val api: PostApi) : PostRepository {
     override suspend fun comentarios(id: Int): Result<List<Comentario>> = llamar { api.comentarios(id) }
     override suspend fun porUsuario(userId: Int): Result<List<Post>> = llamar { api.porUsuario(userId) }
     override suspend fun crear(nuevo: NuevoPost): Result<Post> = llamar { api.crear(nuevo) }
+
+    // Envía solo el título nuevo con PATCH.
+    override suspend fun editar(id: Int, nuevoTitulo: String): Result<Post> =
+        llamar { api.editar(id, EditarPost(nuevoTitulo)) }
 }
