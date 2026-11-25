@@ -16,6 +16,13 @@ interface PostApi {
     @GET("posts")
     suspend fun listar(): List<Post>
 
+    // GET posts?_start=N&_limit=M: paginación. _start es el primer índice y _limit cuántos trae.
+    @GET("posts")
+    suspend fun listarPagina(
+        @Query("_start") inicio: Int,
+        @Query("_limit") limite: Int
+    ): List<Post>
+
     @GET("posts/{id}")
     suspend fun detalle(@Path("id") id: Int): Post
 
@@ -28,8 +35,6 @@ interface PostApi {
     @POST("posts")
     suspend fun crear(@Body nuevo: NuevoPost): Post
 
-    // PATCH posts/{id}: cambia solo los campos enviados.
-    // Es el verbo correcto cuando se modifica una parte del recurso. PUT reemplazaría todo.
     @PATCH("posts/{id}")
     suspend fun editar(@Path("id") id: Int, @Body cambios: EditarPost): Post
 }

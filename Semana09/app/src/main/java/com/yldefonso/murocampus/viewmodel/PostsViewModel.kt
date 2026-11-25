@@ -14,22 +14,33 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-// Datos que necesita la pantalla de detalle: la publicación y sus comentarios.
 data class DetalleUi(val post: Post, val comentarios: List<Comentario>)
 
-// Prohibido aquí: Retrofit, PostApi, HttpException y Context.
+// Cuántas publicaciones se piden en cada página.
+private const val TAMANO_PAGINA = 20
+
 class PostsViewModel(private val repo: PostRepository) : ViewModel() {
 
-    // ---- Lista ----
+    // ---- Lista y paginación ----
     private val _lista = MutableStateFlow<UiState<List<Post>>>(UiState.Cargando)
     val lista: StateFlow<UiState<List<Post>>> = _lista.asStateFlow()
 
+    // true mientras queden páginas por pedir. Se apaga cuando llega una página incompleta.
+    private val _hayMas = MutableStateFlow(false)
+    val hayMas: StateFlow<Boolean> = _hayMas.asStateFlow()
+
+    // true mientras se pide la siguiente página (desactiva el botón).
+    private val _cargandoMas = MutableStateFlow(false)
+    val cargandoMas: StateFlow<Boolean> = _cargandoMas.asStateFlow()
+
+    // Error de la última página. La lista ya cargada se conserva.
+    private val _errorMas = MutableStateFlow<String?>(null)
+    val errorMas: StateFlow<String?> = _errorMas.asStateFlow()
+
     // ---- Filtro ----
-    // null = Todos; un número = solo las publicaciones de ese usuario (1 a 10).
     private val _usuarioFiltro = MutableStateFlow<Int?>(null)
     val usuarioFiltro: StateFlow<Int?> = _usuarioFiltro.asStateFlow()
 
-    // Guarda la última carga para cancelarla si el usuario cambia el filtro rápido.
     private var trabajoLista: Job? = null
 
     init { cargar() }
@@ -38,11 +49,42 @@ class PostsViewModel(private val repo: PostRepository) : ViewModel() {
         trabajoLista?.cancel()
         trabajoLista = viewModelScope.launch {
             _lista.value = UiState.Cargando
-            // Con filtro usa porUsuario (@Query); sin filtro, listar.
-            val resultado = _usuarioFiltro.value?.let { repo.porUsuario(it) } ?: repo.listar()
-            resultado
-                .onSuccess { _lista.value = UiState.Exito(it) }
-                .onFailure { _lista.value = UiState.Error(mensajeDe(it)) }
+            _errorMas.value = null
+            val filtro = _usuarioFiltro.value
+            if (filtro != null) {
+                // Con filtro: cada usuario tiene pocas publicaciones, así que no se pagina.
+                _hayMas.value = false
+                repo.porUsuario(filtro)
+                    .onSuccess { _lista.value = UiState.Exito(it) }
+                    .onFailure { _lista.value = UiState.Error(mensajeDe(it)) }
+            } else {
+                // Sin filtro: solo la primera página (índice 0).
+                repo.listarPagina(inicio = 0, limite = TAMANO_PAGINA)
+                    .onSuccess {
+                        // Si llegaron menos de 20, ya no hay más páginas.
+                        _hayMas.value = it.size == TAMANO_PAGINA
+                        _lista.value = UiState.Exito(it)
+                    }
+                    .onFailure { _lista.value = UiState.Error(mensajeDe(it)) }
+            }
+        }
+    }
+
+    // Pide la siguiente página y la añade al final de la lista que ya está en pantalla.
+    fun cargarMas() {
+        val actual = (_lista.value as? UiState.Exito)?.datos ?: return
+        if (!_hayMas.value || _cargandoMas.value) return
+        viewModelScope.launch {
+            _cargandoMas.value = true
+            _errorMas.value = null
+            // inicio = cuántas publicaciones ya tenemos, así no se repiten.
+            repo.listarPagina(inicio = actual.size, limite = TAMANO_PAGINA)
+                .onSuccess { nuevos ->
+                    _hayMas.value = nuevos.size == TAMANO_PAGINA
+                    _lista.value = UiState.Exito(actual + nuevos)
+                }
+                .onFailure { _errorMas.value = mensajeDe(it) }
+            _cargandoMas.value = false
         }
     }
 
@@ -58,7 +100,6 @@ class PostsViewModel(private val repo: PostRepository) : ViewModel() {
     fun abrir(id: Int) {
         viewModelScope.launch {
             _detalle.value = UiState.Cargando
-            // async: pide el post y los comentarios AL MISMO TIEMPO.
             val (postRes, comRes) = coroutineScope {
                 val p = async { repo.detalle(id) }
                 val c = async { repo.comentarios(id) }
@@ -74,27 +115,23 @@ class PostsViewModel(private val repo: PostRepository) : ViewModel() {
     }
 
     // ---- Crear ----
-    // null = todavía no se envió nada; Cargando / Exito / Error según el POST.
     private val _crear = MutableStateFlow<UiState<Post>?>(null)
     val crear: StateFlow<UiState<Post>?> = _crear.asStateFlow()
 
     fun publicar(titulo: String, texto: String) {
         viewModelScope.launch {
             _crear.value = UiState.Cargando
-            // userId = 1 es el usuario que publica; JSONPlaceholder responde con id 101.
             repo.crear(NuevoPost(userId = 1, title = titulo, body = texto))
                 .onSuccess { _crear.value = UiState.Exito(it) }
                 .onFailure { _crear.value = UiState.Error(mensajeDe(it)) }
         }
     }
 
-    // Vuelve el estado de crear a null (al abrir o cerrar la pantalla).
     fun limpiarCrear() {
         _crear.value = null
     }
 
     // ---- Editar (PATCH) ----
-    // null = no se ha editado nada; Cargando / Exito / Error según la respuesta.
     private val _editar = MutableStateFlow<UiState<Post>?>(null)
     val editar: StateFlow<UiState<Post>?> = _editar.asStateFlow()
 
