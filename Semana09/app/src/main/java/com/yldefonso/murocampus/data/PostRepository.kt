@@ -1,5 +1,8 @@
 package com.yldefonso.murocampus.data
 
+import com.yldefonso.murocampus.data.local.PostDao
+import com.yldefonso.murocampus.data.local.toEntity
+import com.yldefonso.murocampus.data.local.toPost
 import com.yldefonso.murocampus.data.remote.PostApi
 import com.yldefonso.murocampus.model.Comentario
 import com.yldefonso.murocampus.model.EditarPost
@@ -17,7 +20,11 @@ interface PostRepository {
     suspend fun editar(id: Int, nuevoTitulo: String): Result<Post>
 }
 
-class PostRepositoryRemote(private val api: PostApi) : PostRepository {
+// Repository con caché: la red es la fuente principal y Room guarda una copia para usarla sin internet.
+class PostRepositoryRemote(
+    private val api: PostApi,
+    private val dao: PostDao
+) : PostRepository {
 
     private suspend fun <T> llamar(bloque: suspend () -> T): Result<T> =
         try {
@@ -30,9 +37,23 @@ class PostRepositoryRemote(private val api: PostApi) : PostRepository {
 
     override suspend fun listar(): Result<List<Post>> = llamar { api.listar() }
 
-    // Pasa inicio y limite tal cual a la API: el Repository no decide cuántas páginas hay.
-    override suspend fun listarPagina(inicio: Int, limite: Int): Result<List<Post>> =
-        llamar { api.listarPagina(inicio, limite) }
+    // Decide entre red y base local: intenta la red y, si falla, usa la copia guardada.
+    override suspend fun listarPagina(inicio: Int, limite: Int): Result<List<Post>> {
+        val red = llamar { api.listarPagina(inicio, limite) }
+        return red.fold(
+            onSuccess = { posts ->
+                // Éxito: guardamos la página para poder mostrarla después sin internet.
+                llamar { dao.guardar(posts.map { it.toEntity() }) }
+                Result.success(posts)
+            },
+            onFailure = { error ->
+                // Fallo: si esa página está en Room, la mostramos. Si no, devolvemos el error.
+                val copia = llamar { dao.paginaDesde(inicio, limite).map { it.toPost() } }
+                    .getOrDefault(emptyList())
+                if (copia.isNotEmpty()) Result.success(copia) else Result.failure(error)
+            }
+        )
+    }
 
     override suspend fun detalle(id: Int): Result<Post> = llamar { api.detalle(id) }
     override suspend fun comentarios(id: Int): Result<List<Comentario>> = llamar { api.comentarios(id) }

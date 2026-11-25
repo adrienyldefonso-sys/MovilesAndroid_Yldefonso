@@ -21,6 +21,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.yldefonso.murocampus.data.PostRepositoryRemote
+import com.yldefonso.murocampus.data.local.AppDatabase
 import com.yldefonso.murocampus.data.remote.RetrofitClient
 import com.yldefonso.murocampus.ui.PantallaCrear
 import com.yldefonso.murocampus.ui.PantallaDetalle
@@ -31,8 +32,11 @@ import com.yldefonso.murocampus.viewmodel.PostsViewModelFactory
 
 class MainActivity : ComponentActivity() {
 
+    // Base de datos local (Room). Se crea una sola vez.
+    private val db by lazy { AppDatabase.crear(applicationContext) }
+
     private val vm: PostsViewModel by viewModels {
-        PostsViewModelFactory(PostRepositoryRemote(RetrofitClient.api))
+        PostsViewModelFactory(PostRepositoryRemote(RetrofitClient.api, db.postDao()))
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
