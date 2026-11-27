@@ -1,4 +1,4 @@
-// [G] Commit 7: el switch Escuchar el modo avión y el registro del receptor con DisposableEffect.
+// [G] Commit 8: la tarjeta Historial ahora usa HistorialAvisos con la lista del ViewModel.
 package com.yldefonso.ui
 
 import android.Manifest
@@ -50,6 +50,8 @@ fun PantallaAvisos(vm: AvisosViewModel) {
     val permiso by vm.permiso.collectAsState()
     val faltan by vm.faltan.collectAsState()
     val escuchando by vm.escuchandoAvion.collectAsState()
+    // Paso 7 (commit 8): la lista del historial. Se observa igual que el resto del estado.
+    val avisos by vm.avisos.collectAsState()
 
     val lanzador = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -70,19 +72,15 @@ fun PantallaAvisos(vm: AvisosViewModel) {
         }
     }
 
-    // Paso 6 (commit 7): el receptor se registra solo mientras el switch está activado.
-    // Si el switch se apaga, o la pantalla se destruye, el receptor se quita.
     DisposableEffect(escuchando) {
         if (escuchando) {
             val receptor = ModoAvionReceiver { activo -> vm.alCambiarModoAvion(activo) }
-            // RECEIVER_NOT_EXPORTED: solo la app recibe el anuncio, no otras apps.
             ContextCompat.registerReceiver(
                 contexto,
                 receptor,
                 IntentFilter(Intent.ACTION_AIRPLANE_MODE_CHANGED),
                 ContextCompat.RECEIVER_NOT_EXPORTED
             )
-            // Al salir del efecto, se quita el receptor para no filtrar memoria.
             onDispose { contexto.unregisterReceiver(receptor) }
         } else {
             onDispose { }
@@ -152,7 +150,6 @@ fun PantallaAvisos(vm: AvisosViewModel) {
                 }
             }
 
-            // Paso 6 (commit 7): switch que activa o desactiva la escucha
             TarjetaFuncion("Receptor de anuncios") {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -167,9 +164,8 @@ fun PantallaAvisos(vm: AvisosViewModel) {
                 }
             }
 
-            TarjetaFuncion("Historial") {
-                // TODO Paso 7
-            }
+            // Paso 7 (commit 8): historial con los avisos generados, lo más reciente arriba.
+            HistorialAvisos(avisos)
         }
     }
 }
