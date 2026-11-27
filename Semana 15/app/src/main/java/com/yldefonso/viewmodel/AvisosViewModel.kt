@@ -1,4 +1,4 @@
-// Commit 6: se implementa el recordatorio con corrutina y cancelación. Lo demás sigue como TODO.
+// Commit 7: se implementa la escucha del modo avión. El recordatorio (commit 6) ya estaba.
 // Regla de oro: en este archivo NO va Context, NotificationManager ni BroadcastReceiver.
 package com.yldefonso.viewmodel
 
@@ -42,41 +42,51 @@ class AvisosViewModel(private val repo: AvisosRepository) : ViewModel() {
         }
     }
 
-    // Paso 5 (commit 6): referencia al trabajo de la cuenta regresiva.
-    // Sirve para no iniciar dos recordatorios a la vez y para poder cancelar.
     private var trabajo: Job? = null
 
-    // Segundos que faltan: null = no hay recordatorio activo.
     private val _faltan = MutableStateFlow<Int?>(null)
     val faltan: StateFlow<Int?> = _faltan.asStateFlow()
 
-    // Inicia la cuenta regresiva de "segundos" a 1 y, al terminar, registra el aviso.
     fun recordarEn(segundos: Int = 10) {
-        // Si ya hay una cuenta en curso, no se inicia otra.
         if (trabajo?.isActive == true) return
 
         trabajo = viewModelScope.launch {
             try {
-                // Cuenta regresiva: actualiza "faltan" cada segundo (10, 9, ... 1).
                 for (s in segundos downTo 1) {
                     _faltan.value = s
-                    delay(1000)   // suspende la corrutina 1 segundo; no bloquea la pantalla
+                    delay(1000)
                 }
-                // Llegó a 0: se registra y se emite el aviso del recordatorio.
                 val aviso = repo.registrar("Recordatorio", "Revisa tu laboratorio pendiente", Origen.RECORDATORIO)
                 _eventos.emit(aviso)
             } finally {
-                // Se ejecuta siempre: terminó bien o fue cancelado. Así la pantalla vuelve a su estado normal.
                 _faltan.value = null
             }
         }
     }
 
-    // Cancela la corrutina. Como se cancela antes de llegar al emit, no se muestra ningún aviso.
     fun cancelarRecordatorio() {
         trabajo?.cancel()
     }
 
-    // TODO Paso 6: escuchandoAvion, cambiarEscucha(valor), alCambiarModoAvion(activo)
+    // Paso 6 (commit 7): estado del switch. Arranca en false.
+    // Se guarda en el ViewModel para que sobreviva a la rotación de pantalla.
+    private val _escuchandoAvion = MutableStateFlow(false)
+    val escuchandoAvion: StateFlow<Boolean> = _escuchandoAvion.asStateFlow()
+
+    // Lo llama el Switch de la pantalla.
+    fun cambiarEscucha(valor: Boolean) {
+        _escuchandoAvion.value = valor
+    }
+
+    // Lo llama la pantalla cuando el receptor informa un cambio de modo avión.
+    // El ViewModel decide qué avisar y lo registra; la pantalla muestra la notificación.
+    fun alCambiarModoAvion(activo: Boolean) {
+        viewModelScope.launch {
+            val texto = if (activo) "Activado" else "Desactivado"
+            val aviso = repo.registrar("Modo avión", texto, Origen.MODO_AVION)
+            _eventos.emit(aviso)
+        }
+    }
+
     // TODO Paso 8: fun noSePudoMostrar()
 }

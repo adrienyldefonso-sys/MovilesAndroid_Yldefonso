@@ -1,7 +1,9 @@
-// [G] Commit 6: la tarjeta Recordatorio tiene el botón de 10 s, Cancelar y el texto Faltan N s.
+// [G] Commit 7: el switch Escuchar el modo avión y el registro del receptor con DisposableEffect.
 package com.yldefonso.ui
 
 import android.Manifest
+import android.content.Intent
+import android.content.IntentFilter
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -20,20 +22,25 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import com.yldefonso.model.PermisoUi
 import com.yldefonso.notificacion.Notificador
+import com.yldefonso.receiver.ModoAvionReceiver
 import com.yldefonso.viewmodel.AvisosViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -42,6 +49,7 @@ fun PantallaAvisos(vm: AvisosViewModel) {
     val contexto = LocalContext.current
     val permiso by vm.permiso.collectAsState()
     val faltan by vm.faltan.collectAsState()
+    val escuchando by vm.escuchandoAvion.collectAsState()
 
     val lanzador = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -59,6 +67,25 @@ fun PantallaAvisos(vm: AvisosViewModel) {
         vm.eventos.collect { aviso ->
             val mostrado = Notificador.mostrar(contexto, aviso)
             // TODO Paso 8: si !mostrado, avisar al ViewModel con vm.noSePudoMostrar()
+        }
+    }
+
+    // Paso 6 (commit 7): el receptor se registra solo mientras el switch está activado.
+    // Si el switch se apaga, o la pantalla se destruye, el receptor se quita.
+    DisposableEffect(escuchando) {
+        if (escuchando) {
+            val receptor = ModoAvionReceiver { activo -> vm.alCambiarModoAvion(activo) }
+            // RECEIVER_NOT_EXPORTED: solo la app recibe el anuncio, no otras apps.
+            ContextCompat.registerReceiver(
+                contexto,
+                receptor,
+                IntentFilter(Intent.ACTION_AIRPLANE_MODE_CHANGED),
+                ContextCompat.RECEIVER_NOT_EXPORTED
+            )
+            // Al salir del efecto, se quita el receptor para no filtrar memoria.
+            onDispose { contexto.unregisterReceiver(receptor) }
+        } else {
+            onDispose { }
         }
     }
 
@@ -105,17 +132,14 @@ fun PantallaAvisos(vm: AvisosViewModel) {
                 }
             }
 
-            // Paso 5 (commit 6): cuenta regresiva con cancelación
             TarjetaFuncion("Recordatorio") {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    // Se deshabilita mientras la cuenta está corriendo
                     Button(
                         onClick = { vm.recordarEn(10) },
                         enabled = faltan == null
                     ) {
                         Text("Recordar en 10 s")
                     }
-                    // Solo se habilita mientras la cuenta está corriendo
                     OutlinedButton(
                         onClick = { vm.cancelarRecordatorio() },
                         enabled = faltan != null
@@ -123,14 +147,24 @@ fun PantallaAvisos(vm: AvisosViewModel) {
                         Text("Cancelar")
                     }
                 }
-                // Muestra "Faltan N s" solo mientras hay un recordatorio activo
                 faltan?.let { segundos ->
                     Text("Faltan $segundos s")
                 }
             }
 
+            // Paso 6 (commit 7): switch que activa o desactiva la escucha
             TarjetaFuncion("Receptor de anuncios") {
-                // TODO Paso 6
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text("Escuchar el modo avión")
+                    Switch(
+                        checked = escuchando,
+                        onCheckedChange = { vm.cambiarEscucha(it) }
+                    )
+                }
             }
 
             TarjetaFuncion("Historial") {
