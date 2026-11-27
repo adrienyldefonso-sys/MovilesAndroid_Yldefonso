@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Commit 3: se declara el permiso POST_NOTIFICATIONS (obligatorio desde Android 13 / API 33). -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Permiso para mostrar notificaciones. Debe ir antes de <application>. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
@@ -19,6 +17,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Mejora 3: receptor del botón Posponer. No es público: solo lo usa la propia notificación. -->
+        <receiver
+            android:name=".receiver.PosponerReceiver"
+            android:exported="false" />
 
     </application>
 
