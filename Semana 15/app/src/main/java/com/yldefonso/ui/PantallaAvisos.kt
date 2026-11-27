@@ -1,10 +1,11 @@
-// [G] Commit 8: la tarjeta Historial ahora usa HistorialAvisos con la lista del ViewModel.
+// [G] Commit 9: mensaje de error y botón Abrir ajustes en la tarjeta de permiso.
 package com.yldefonso.ui
 
 import android.Manifest
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Build
+import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -18,6 +19,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -50,8 +52,9 @@ fun PantallaAvisos(vm: AvisosViewModel) {
     val permiso by vm.permiso.collectAsState()
     val faltan by vm.faltan.collectAsState()
     val escuchando by vm.escuchandoAvion.collectAsState()
-    // Paso 7 (commit 8): la lista del historial. Se observa igual que el resto del estado.
     val avisos by vm.avisos.collectAsState()
+    // Paso 8 (commit 9): mensaje de error, null = no hay error
+    val mensaje by vm.mensaje.collectAsState()
 
     val lanzador = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -68,7 +71,10 @@ fun PantallaAvisos(vm: AvisosViewModel) {
     LaunchedEffect(Unit) {
         vm.eventos.collect { aviso ->
             val mostrado = Notificador.mostrar(contexto, aviso)
-            // TODO Paso 8: si !mostrado, avisar al ViewModel con vm.noSePudoMostrar()
+            // Paso 8: si no se mostró (sin permiso), la View avisa al ViewModel para mostrar el mensaje
+            if (!mostrado) {
+                vm.noSePudoMostrar()
+            }
         }
     }
 
@@ -113,6 +119,7 @@ fun PantallaAvisos(vm: AvisosViewModel) {
                     PermisoUi.Denegado -> "Denegado" to Color(0xFFC62828)
                 }
                 Text(text = textoEstado, color = colorEstado, fontWeight = FontWeight.Bold)
+
                 Button(onClick = {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                         lanzador.launch(Manifest.permission.POST_NOTIFICATIONS)
@@ -121,6 +128,31 @@ fun PantallaAvisos(vm: AvisosViewModel) {
                     }
                 }) {
                     Text("Permitir notificaciones")
+                }
+
+                // Recuadro de error: solo aparece si hay mensaje
+                mensaje?.let { texto ->
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer
+                        )
+                    ) {
+                        Text(
+                            text = texto,
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                            modifier = Modifier.padding(12.dp)
+                        )
+                    }
+                    // Abre la pantalla de notificaciones de esta app en Ajustes
+                    OutlinedButton(onClick = {
+                        val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                            putExtra(Settings.EXTRA_APP_PACKAGE, contexto.packageName)
+                        }
+                        contexto.startActivity(intent)
+                    }) {
+                        Text("Abrir ajustes")
+                    }
                 }
             }
 
@@ -164,7 +196,6 @@ fun PantallaAvisos(vm: AvisosViewModel) {
                 }
             }
 
-            // Paso 7 (commit 8): historial con los avisos generados, lo más reciente arriba.
             HistorialAvisos(avisos)
         }
     }

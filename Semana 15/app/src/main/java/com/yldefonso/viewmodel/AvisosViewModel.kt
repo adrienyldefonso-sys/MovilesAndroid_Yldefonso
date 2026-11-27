@@ -1,4 +1,4 @@
-// Commit 7: se implementa la escucha del modo avión. El recordatorio (commit 6) ya estaba.
+// Commit 9: se implementa noSePudoMostrar y el mensaje de error. Lo demás ya estaba.
 // Regla de oro: en este archivo NO va Context, NotificationManager ni BroadcastReceiver.
 package com.yldefonso.viewmodel
 
@@ -28,11 +28,14 @@ class AvisosViewModel(private val repo: AvisosRepository) : ViewModel() {
     private val _permiso = MutableStateFlow<PermisoUi>(PermisoUi.SinPedir)
     val permiso: StateFlow<PermisoUi> = _permiso.asStateFlow()
 
+    // Mensaje de error visible en la pantalla (Paso 8). null = no hay mensaje.
     private val _mensaje = MutableStateFlow<String?>(null)
     val mensaje: StateFlow<String?> = _mensaje.asStateFlow()
 
+    // Paso 8 (commit 9): al conceder el permiso, el mensaje de error desaparece.
     fun permisoRespondido(concedido: Boolean) {
         _permiso.value = if (concedido) PermisoUi.Concedido else PermisoUi.Denegado
+        if (concedido) _mensaje.value = null
     }
 
     fun avisarAhora() {
@@ -68,18 +71,13 @@ class AvisosViewModel(private val repo: AvisosRepository) : ViewModel() {
         trabajo?.cancel()
     }
 
-    // Paso 6 (commit 7): estado del switch. Arranca en false.
-    // Se guarda en el ViewModel para que sobreviva a la rotación de pantalla.
     private val _escuchandoAvion = MutableStateFlow(false)
     val escuchandoAvion: StateFlow<Boolean> = _escuchandoAvion.asStateFlow()
 
-    // Lo llama el Switch de la pantalla.
     fun cambiarEscucha(valor: Boolean) {
         _escuchandoAvion.value = valor
     }
 
-    // Lo llama la pantalla cuando el receptor informa un cambio de modo avión.
-    // El ViewModel decide qué avisar y lo registra; la pantalla muestra la notificación.
     fun alCambiarModoAvion(activo: Boolean) {
         viewModelScope.launch {
             val texto = if (activo) "Activado" else "Desactivado"
@@ -88,5 +86,9 @@ class AvisosViewModel(private val repo: AvisosRepository) : ViewModel() {
         }
     }
 
-    // TODO Paso 8: fun noSePudoMostrar()
+    // Paso 8 (commit 9): la pantalla llama a esta función cuando Notificador.mostrar devuelve false.
+    // El aviso ya quedó en el historial (se registró antes de emitirse); solo falló mostrarlo.
+    fun noSePudoMostrar() {
+        _mensaje.value = "Sin permiso: el aviso se guardó en el historial, pero no se mostró"
+    }
 }
