@@ -1,38 +1,39 @@
-// [G] GUIADO: en el commit 2 se completa crearCanal. Mostrar y tienePermiso siguen como TODO.
-// Solo esta capa (y la View) toca el sistema de notificaciones de Android.
+// Commit 3: se implementa tienePermiso. crearCanal ya estaba (commit 2); mostrar sigue en TODO (commit 4).
 package com.yldefonso.notificacion
 
+import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
+import android.content.pm.PackageManager
 import android.os.Build
+import androidx.core.content.ContextCompat
 import com.yldefonso.model.Aviso
 
 object Notificador {
 
-    // Id del canal: debe ser fijo, porque se usa al crear el canal y al notificar.
     const val CANAL = "avisos"
 
-    // Paso 1: crea el canal "Avisos". Desde Android 8 (API 26) todo aviso necesita un canal.
+    // Paso 1 (commit 2): crea el canal "Avisos".
     fun crearCanal(context: Context) {
-        // En versiones anteriores a API 26 los canales no existen, así que no hace nada.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            // IMPORTANCE_DEFAULT: el aviso suena, pero no aparece emergente en pantalla
             val canal = NotificationChannel(CANAL, "Avisos", NotificationManager.IMPORTANCE_DEFAULT)
-            // Obtiene el servicio del sistema que administra las notificaciones
             val manager = context.getSystemService(NotificationManager::class.java)
-            // Registra el canal. Si ya existe, Android lo actualiza y no lo duplica.
             manager.createNotificationChannel(canal)
         }
     }
 
-    // Paso 2: true si la app puede mostrar notificaciones (se completa en el commit 3).
+    // Paso 2 (commit 3): true si la app puede mostrar notificaciones.
     fun tienePermiso(context: Context): Boolean {
-        // TODO Paso 2: si SDK_INT < 33 devolver true; si no, ContextCompat.checkSelfPermission(POST_NOTIFICATIONS)
-        return false
+        // Antes de Android 13 (API 33) no existe el permiso en tiempo de ejecución: se considera concedido.
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return true
+        // Desde API 33 hay que consultar el permiso actual del usuario.
+        return ContextCompat.checkSelfPermission(
+            context, Manifest.permission.POST_NOTIFICATIONS
+        ) == PackageManager.PERMISSION_GRANTED
     }
 
-    // Paso 3: muestra la notificación (se completa en el commit 4).
+    // Paso 3 (commit 4): muestra la notificación.
     fun mostrar(context: Context, aviso: Aviso): Boolean {
         // TODO 1 (Paso 3): si !tienePermiso(context) -> return false
         // TODO 2 (Paso 3): construir NotificationCompat.Builder(context, CANAL)
