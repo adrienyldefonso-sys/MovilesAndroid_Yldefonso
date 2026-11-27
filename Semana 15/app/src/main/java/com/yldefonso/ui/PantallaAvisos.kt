@@ -1,4 +1,4 @@
-// [G] Commit 4: la tarjeta Avisos ya tiene el botón Mostrar aviso. Las demás tarjetas siguen con TODO.
+// [G] Commit 6: la tarjeta Recordatorio tiene el botón de 10 s, Cancelar y el texto Faltan N s.
 package com.yldefonso.ui
 
 import android.Manifest
@@ -8,6 +8,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -17,6 +18,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -39,6 +41,7 @@ import com.yldefonso.viewmodel.AvisosViewModel
 fun PantallaAvisos(vm: AvisosViewModel) {
     val contexto = LocalContext.current
     val permiso by vm.permiso.collectAsState()
+    val faltan by vm.faltan.collectAsState()
 
     val lanzador = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -52,7 +55,6 @@ fun PantallaAvisos(vm: AvisosViewModel) {
         }
     }
 
-    // Ejemplo resuelto (ya viene hecho): cada evento se convierte en una notificación.
     LaunchedEffect(Unit) {
         vm.eventos.collect { aviso ->
             val mostrado = Notificador.mostrar(contexto, aviso)
@@ -79,7 +81,6 @@ fun PantallaAvisos(vm: AvisosViewModel) {
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Paso 2 (commit 3): permiso, botón y etiqueta de estado
             TarjetaFuncion("Permiso de notificaciones") {
                 val (textoEstado, colorEstado) = when (permiso) {
                     PermisoUi.SinPedir -> "Sin pedir" to Color.Gray
@@ -98,24 +99,40 @@ fun PantallaAvisos(vm: AvisosViewModel) {
                 }
             }
 
-            // Paso 3 (commit 4): botón Mostrar aviso -> vm.avisarAhora()
             TarjetaFuncion("Avisos") {
                 Button(onClick = { vm.avisarAhora() }) {
                     Text("Mostrar aviso")
                 }
             }
 
-            // Paso 5: Recordar en 10 s, Cancelar y "Faltan N s"
+            // Paso 5 (commit 6): cuenta regresiva con cancelación
             TarjetaFuncion("Recordatorio") {
-                // TODO Paso 5
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    // Se deshabilita mientras la cuenta está corriendo
+                    Button(
+                        onClick = { vm.recordarEn(10) },
+                        enabled = faltan == null
+                    ) {
+                        Text("Recordar en 10 s")
+                    }
+                    // Solo se habilita mientras la cuenta está corriendo
+                    OutlinedButton(
+                        onClick = { vm.cancelarRecordatorio() },
+                        enabled = faltan != null
+                    ) {
+                        Text("Cancelar")
+                    }
+                }
+                // Muestra "Faltan N s" solo mientras hay un recordatorio activo
+                faltan?.let { segundos ->
+                    Text("Faltan $segundos s")
+                }
             }
 
-            // Paso 6: Switch "Escuchar el modo avión"
             TarjetaFuncion("Receptor de anuncios") {
                 // TODO Paso 6
             }
 
-            // Paso 7: historial
             TarjetaFuncion("Historial") {
                 // TODO Paso 7
             }
