@@ -1,5 +1,5 @@
-// Mejora 1 (commit 1): texto largo con BigTextStyle. Al expandir la notificación se ve el texto completo.
-// Cambia solo Notificador: la View y el ViewModel no se tocan.
+// Commit 2 (mejora 2): dos canales. Avisos (DEFAULT) y Urgentes (HIGH). El recordatorio usa Urgentes.
+// Mejora 1 (BigTextStyle) se mantiene.
 package com.yldefonso.notificacion
 
 import android.Manifest
@@ -21,12 +21,18 @@ import com.yldefonso.model.Aviso
 object Notificador {
 
     const val CANAL = "avisos"
+    // Mejora 2: id del canal urgente. Debe ser fijo, igual que CANAL.
+    const val CANAL_URGENTE = "urgentes"
 
+    // Crea los dos canales. Android no cambia la importancia de un canal ya creado,
+    // así que el canal avisos de la versión anterior se conserva como estaba.
     fun crearCanal(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val canal = NotificationChannel(CANAL, "Avisos", NotificationManager.IMPORTANCE_DEFAULT)
+            val avisos = NotificationChannel(CANAL, "Avisos", NotificationManager.IMPORTANCE_DEFAULT)
+            // IMPORTANCE_HIGH: el canal urgente muestra la notificación emergente (heads-up).
+            val urgentes = NotificationChannel(CANAL_URGENTE, "Urgentes", NotificationManager.IMPORTANCE_HIGH)
             val manager = context.getSystemService(NotificationManager::class.java)
-            manager.createNotificationChannel(canal)
+            manager.createNotificationChannels(listOf(avisos, urgentes))
         }
     }
 
@@ -46,12 +52,13 @@ object Notificador {
             context, 0, intent, PendingIntent.FLAG_IMMUTABLE
         )
 
-        val notificacion = NotificationCompat.Builder(context, CANAL)
+        // Elige el canal según el aviso: urgente va a Urgentes, lo demás a Avisos.
+        val canal = if (aviso.urgente) CANAL_URGENTE else CANAL
+
+        val notificacion = NotificationCompat.Builder(context, canal)
             .setSmallIcon(R.drawable.ic_notificacion)
             .setContentTitle(aviso.titulo)
-            .setContentText(aviso.texto)   // texto de una línea: se ve cuando la notificación está contraída
-            // Mejora 1: BigTextStyle muestra el texto completo cuando el usuario expande la notificación.
-            // bigText recibe el texto largo; si es corto, se ve igual que antes.
+            .setContentText(aviso.texto)
             .setStyle(NotificationCompat.BigTextStyle().bigText(aviso.texto))
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setAutoCancel(true)

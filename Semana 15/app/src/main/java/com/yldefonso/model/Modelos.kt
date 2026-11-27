@@ -1,23 +1,23 @@
-// [E] ENTREGADO: no modificar.
+// [E] con cambio de la mejora 2: se agrega el campo urgente.
 package com.yldefonso.model
 
-// Origen del aviso: de dónde vino (botón, recordatorio o modo avión)
 enum class Origen(val texto: String) {
     BOTON("Botón"),
     RECORDATORIO("Recordatorio"),
     MODO_AVION("Modo avión")
 }
 
-// Un aviso del historial. "id" distingue cada notificación (se usa como id de notify).
 data class Aviso(
     val id: Int,
     val titulo: String,
     val texto: String,
     val origen: Origen,
-    val hora: String
+    val hora: String,
+    // Mejora 2: si es true, la notificación usa el canal Urgentes (IMPORTANCE_HIGH).
+    // Tiene valor por defecto, así el Repository sigue creando avisos igual que antes.
+    val urgente: Boolean = false
 )
 
-// Estado del permiso que se muestra en la tarjeta "Permiso de notificaciones".
 sealed interface PermisoUi {
     data object SinPedir : PermisoUi
     data object Concedido : PermisoUi

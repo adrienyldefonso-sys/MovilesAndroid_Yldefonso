@@ -1,4 +1,4 @@
-// Commit 9: se implementa noSePudoMostrar y el mensaje de error. Lo demás ya estaba.
+// Commit 2: el recordatorio se emite como urgente. Sin la prueba de texto largo.
 // Regla de oro: en este archivo NO va Context, NotificationManager ni BroadcastReceiver.
 package com.yldefonso.viewmodel
 
@@ -28,11 +28,9 @@ class AvisosViewModel(private val repo: AvisosRepository) : ViewModel() {
     private val _permiso = MutableStateFlow<PermisoUi>(PermisoUi.SinPedir)
     val permiso: StateFlow<PermisoUi> = _permiso.asStateFlow()
 
-    // Mensaje de error visible en la pantalla (Paso 8). null = no hay mensaje.
     private val _mensaje = MutableStateFlow<String?>(null)
     val mensaje: StateFlow<String?> = _mensaje.asStateFlow()
 
-    // Paso 8 (commit 9): al conceder el permiso, el mensaje de error desaparece.
     fun permisoRespondido(concedido: Boolean) {
         _permiso.value = if (concedido) PermisoUi.Concedido else PermisoUi.Denegado
         if (concedido) _mensaje.value = null
@@ -60,7 +58,9 @@ class AvisosViewModel(private val repo: AvisosRepository) : ViewModel() {
                     delay(1000)
                 }
                 val aviso = repo.registrar("Recordatorio", "Revisa tu laboratorio pendiente", Origen.RECORDATORIO)
-                _eventos.emit(aviso)
+                // Mejora 2: el recordatorio sale por el canal Urgentes.
+                // El historial guarda el aviso normal; copy solo cambia la copia que se muestra.
+                _eventos.emit(aviso.copy(urgente = true))
             } finally {
                 _faltan.value = null
             }
@@ -86,8 +86,6 @@ class AvisosViewModel(private val repo: AvisosRepository) : ViewModel() {
         }
     }
 
-    // Paso 8 (commit 9): la pantalla llama a esta función cuando Notificador.mostrar devuelve false.
-    // El aviso ya quedó en el historial (se registró antes de emitirse); solo falló mostrarlo.
     fun noSePudoMostrar() {
         _mensaje.value = "Sin permiso: el aviso se guardó en el historial, pero no se mostró"
     }
