@@ -1,4 +1,5 @@
-// Commit 5: al tocar la notificación se abre MainActivity mediante un PendingIntent.
+// Mejora 1 (commit 1): texto largo con BigTextStyle. Al expandir la notificación se ve el texto completo.
+// Cambia solo Notificador: la View y el ViewModel no se tocan.
 package com.yldefonso.notificacion
 
 import android.Manifest
@@ -21,7 +22,6 @@ object Notificador {
 
     const val CANAL = "avisos"
 
-    // Paso 1 (commit 2): crea el canal "Avisos".
     fun crearCanal(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val canal = NotificationChannel(CANAL, "Avisos", NotificationManager.IMPORTANCE_DEFAULT)
@@ -30,7 +30,6 @@ object Notificador {
         }
     }
 
-    // Paso 2 (commit 3): true si la app puede mostrar notificaciones.
     fun tienePermiso(context: Context): Boolean {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return true
         return ContextCompat.checkSelfPermission(
@@ -38,17 +37,11 @@ object Notificador {
         ) == PackageManager.PERMISSION_GRANTED
     }
 
-    // Paso 3 (commit 4) y Paso 4 (commit 5): construye y muestra la notificación.
     @SuppressLint("MissingPermission")
     fun mostrar(context: Context, aviso: Aviso): Boolean {
         if (!tienePermiso(context)) return false
 
-        // Intent: la acción de abrir MainActivity cuando se toque la notificación.
         val intent = Intent(context, MainActivity::class.java)
-
-        // PendingIntent: Android lo ejecuta después, desde la notificación.
-        // FLAG_IMMUTABLE es obligatorio en Android 12 (API 31) o superior, para que nadie
-        // pueda cambiar el intent después de creado.
         val pendiente = PendingIntent.getActivity(
             context, 0, intent, PendingIntent.FLAG_IMMUTABLE
         )
@@ -56,10 +49,13 @@ object Notificador {
         val notificacion = NotificationCompat.Builder(context, CANAL)
             .setSmallIcon(R.drawable.ic_notificacion)
             .setContentTitle(aviso.titulo)
-            .setContentText(aviso.texto)
+            .setContentText(aviso.texto)   // texto de una línea: se ve cuando la notificación está contraída
+            // Mejora 1: BigTextStyle muestra el texto completo cuando el usuario expande la notificación.
+            // bigText recibe el texto largo; si es corto, se ve igual que antes.
+            .setStyle(NotificationCompat.BigTextStyle().bigText(aviso.texto))
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-            .setAutoCancel(true)                // al tocarla, la notificación desaparece
-            .setContentIntent(pendiente)        // al tocarla, se abre la app
+            .setAutoCancel(true)
+            .setContentIntent(pendiente)
             .build()
 
         NotificationManagerCompat.from(context).notify(aviso.id, notificacion)
