@@ -1,16 +1,19 @@
-// Commit 4: se implementa mostrar con NotificationCompat. crearCanal (commit 2) y tienePermiso (commit 3) ya estaban.
+// Commit 5: al tocar la notificación se abre MainActivity mediante un PendingIntent.
 package com.yldefonso.notificacion
 
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
+import com.yldefonso.MainActivity
 import com.yldefonso.R
 import com.yldefonso.model.Aviso
 
@@ -35,23 +38,30 @@ object Notificador {
         ) == PackageManager.PERMISSION_GRANTED
     }
 
-    // Paso 3 (commit 4): construye y muestra la notificación.
-    // SuppressLint: el permiso ya se comprueba en la línea de abajo, antes de llamar a notify.
+    // Paso 3 (commit 4) y Paso 4 (commit 5): construye y muestra la notificación.
     @SuppressLint("MissingPermission")
     fun mostrar(context: Context, aviso: Aviso): Boolean {
-        // Sin permiso no se lanza nada: se devuelve false y la pantalla lo informa.
         if (!tienePermiso(context)) return false
 
-        // Builder: ícono pequeño, título, texto y prioridad. setAutoCancel quita la notificación al tocarla.
+        // Intent: la acción de abrir MainActivity cuando se toque la notificación.
+        val intent = Intent(context, MainActivity::class.java)
+
+        // PendingIntent: Android lo ejecuta después, desde la notificación.
+        // FLAG_IMMUTABLE es obligatorio en Android 12 (API 31) o superior, para que nadie
+        // pueda cambiar el intent después de creado.
+        val pendiente = PendingIntent.getActivity(
+            context, 0, intent, PendingIntent.FLAG_IMMUTABLE
+        )
+
         val notificacion = NotificationCompat.Builder(context, CANAL)
             .setSmallIcon(R.drawable.ic_notificacion)
             .setContentTitle(aviso.titulo)
             .setContentText(aviso.texto)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-            .setAutoCancel(true)
+            .setAutoCancel(true)                // al tocarla, la notificación desaparece
+            .setContentIntent(pendiente)        // al tocarla, se abre la app
             .build()
 
-        // El id del aviso distingue cada notificación: dos avisos = dos notificaciones.
         NotificationManagerCompat.from(context).notify(aviso.id, notificacion)
         return true
     }
