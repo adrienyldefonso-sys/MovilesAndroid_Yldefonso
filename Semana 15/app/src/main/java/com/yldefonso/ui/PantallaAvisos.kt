@@ -1,4 +1,4 @@
-// [G] Commit 3: tarjeta de permiso con botón y etiqueta de estado. Las demás tarjetas siguen con TODO.
+// [G] Commit 4: la tarjeta Avisos ya tiene el botón Mostrar aviso. Las demás tarjetas siguen con TODO.
 package com.yldefonso.ui
 
 import android.Manifest
@@ -40,15 +40,12 @@ fun PantallaAvisos(vm: AvisosViewModel) {
     val contexto = LocalContext.current
     val permiso by vm.permiso.collectAsState()
 
-    // Lanzador del cuadro de permiso de Android (API 33+).
-    // Cuando el usuario responde, Android llama a este bloque con true (aceptó) o false (negó).
     val lanzador = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { concedido ->
         vm.permisoRespondido(concedido)
     }
 
-    // Al abrir la pantalla: si el permiso ya estaba concedido, se refleja en el ViewModel.
     LaunchedEffect(Unit) {
         if (Notificador.tienePermiso(contexto)) {
             vm.permisoRespondido(true)
@@ -84,19 +81,13 @@ fun PantallaAvisos(vm: AvisosViewModel) {
         ) {
             // Paso 2 (commit 3): permiso, botón y etiqueta de estado
             TarjetaFuncion("Permiso de notificaciones") {
-                // Etiqueta de color: gris = Sin pedir, verde = Permitido, rojo = Denegado
                 val (textoEstado, colorEstado) = when (permiso) {
                     PermisoUi.SinPedir -> "Sin pedir" to Color.Gray
                     PermisoUi.Concedido -> "Permitido" to Color(0xFF2E7D32)
                     PermisoUi.Denegado -> "Denegado" to Color(0xFFC62828)
                 }
-                Text(
-                    text = textoEstado,
-                    color = colorEstado,
-                    fontWeight = FontWeight.Bold
-                )
+                Text(text = textoEstado, color = colorEstado, fontWeight = FontWeight.Bold)
                 Button(onClick = {
-                    // API 33+: lanza el cuadro de Android. Antes: se considera concedido directamente.
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                         lanzador.launch(Manifest.permission.POST_NOTIFICATIONS)
                     } else {
@@ -107,9 +98,11 @@ fun PantallaAvisos(vm: AvisosViewModel) {
                 }
             }
 
-            // Paso 3: botón "Mostrar aviso" -> vm.avisarAhora()
+            // Paso 3 (commit 4): botón Mostrar aviso -> vm.avisarAhora()
             TarjetaFuncion("Avisos") {
-                // TODO Paso 3
+                Button(onClick = { vm.avisarAhora() }) {
+                    Text("Mostrar aviso")
+                }
             }
 
             // Paso 5: Recordar en 10 s, Cancelar y "Faltan N s"
